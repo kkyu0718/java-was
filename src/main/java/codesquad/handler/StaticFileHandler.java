@@ -35,7 +35,7 @@ public class StaticFileHandler implements HttpHandler {
         }
     }
 
-    private HttpResponse readStaticFile(HttpRequest request, Path filePath) throws IOException {
+    protected HttpResponse readStaticFile(HttpRequest request, Path filePath) throws IOException {
         byte[] bytes = Files.readAllBytes(filePath);
         String contentType = Files.probeContentType(filePath);
 
