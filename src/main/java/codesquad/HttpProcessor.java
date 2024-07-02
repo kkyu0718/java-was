@@ -7,5 +7,5 @@ import java.io.OutputStream;
 public interface HttpProcessor {
     HttpRequest parseRequest(InputStream is) throws IOException;
 
-    void createResponse(OutputStream os, HttpResponse response) throws IOException;
+    void writeResponse(OutputStream os, HttpResponse response) throws IOException;
 }
