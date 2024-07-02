@@ -1,4 +1,7 @@
-package codesquad;
+package codesquad.processor;
+
+import codesquad.http.HttpRequest;
+import codesquad.http.HttpResponse;
 
 import java.io.IOException;
 import java.io.InputStream;

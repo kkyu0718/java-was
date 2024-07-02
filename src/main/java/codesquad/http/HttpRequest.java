@@ -1,4 +1,4 @@
-package codesquad;
+package codesquad.http;
 
 import codesquad.utils.StringUtils;
 

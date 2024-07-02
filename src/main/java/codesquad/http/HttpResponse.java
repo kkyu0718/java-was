@@ -1,4 +1,4 @@
-package codesquad;
+package codesquad.http;
 
 public class HttpResponse {
     private HttpRequest request;

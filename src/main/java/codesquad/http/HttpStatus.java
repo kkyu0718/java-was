@@ -1,6 +1,6 @@
-package codesquad;
+package codesquad.http;
 
-enum HttpStatus {
+public enum HttpStatus {
     NOT_FOUND(404, "NOT FOUND"),
     OK(200, "OK");
 

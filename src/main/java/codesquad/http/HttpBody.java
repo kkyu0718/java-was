@@ -1,4 +1,4 @@
-package codesquad;
+package codesquad.http;
 
 public class HttpBody {
     private byte[] bytes; //TODO mime type 에 따른 구현 필요
