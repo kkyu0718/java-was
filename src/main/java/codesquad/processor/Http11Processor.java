@@ -72,7 +72,6 @@ public class Http11Processor implements HttpProcessor {
 
     private HttpHeaders parseHeaders(BufferedReader br) throws IOException {
         HttpHeaders headers = new HttpHeaders();
-//        BufferedReader reader = new BufferedReader(isr);
         String line;
 
         while (!(line = br.readLine()).isEmpty()) {
@@ -89,15 +88,12 @@ public class Http11Processor implements HttpProcessor {
     }
 
     private String[] parseStartLine(BufferedReader br) throws IOException {
-//        BufferedReader reader = new BufferedReader(isr);
         String startLine = br.readLine();
 
         return startLine.split(" ");
     }
 
     private String parseRequestLine(BufferedReader br) throws IOException {
-//        BufferedReader reader = new BufferedReader(isr);
-//        String requestLine = reader.readLine();
         String requestLine = br.readLine();
         return requestLine.split(":", 2)[1];
     }
