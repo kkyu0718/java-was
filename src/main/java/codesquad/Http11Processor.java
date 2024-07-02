@@ -63,6 +63,7 @@ public class Http11Processor implements HttpProcessor {
 
     private HttpBody parseBody(InputStream clientInput) throws IOException {
         //TODO
+        return null;
     }
 
     private void parseStartLine(String startLine, HttpHeaders headers) throws IOException {

@@ -11,13 +11,17 @@ public class HttpRequest {
         this.body = body;
     }
 
+    public HttpHeaders getHeaders() {
+        return this.headers;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("----headers----").append(StringUtils.LINE_SEPERATOR);
         sb.append(headers.toString());
         sb.append("----body----").append(StringUtils.LINE_SEPERATOR);
-        sb.append(body.toString());
+//        sb.append(body.toString());
         return sb.toString();
     }
 }
