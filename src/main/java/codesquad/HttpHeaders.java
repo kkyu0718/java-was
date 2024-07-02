@@ -8,12 +8,21 @@ import java.util.Map;
 public class HttpHeaders {
     private final Map<String, String> headers;
 
+    public static String HTTP_VERSION = "Http-Version";
+    public static String PATH = "Path";
+    public static String HTTP_METHOD = "Http-Method";
+    public static String CONTENT_TYPE = "Content-Type";
+
     public HttpHeaders() {
         this.headers = new HashMap<>();
     }
 
     public void put(String key, String value) {
         headers.put(key, value);
+    }
+
+    public String get(String key) {
+        return headers.get(key);
     }
 
     @Override

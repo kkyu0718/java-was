@@ -11,10 +11,13 @@ import java.net.Socket;
 
 public class WasServer {
     public static Logger logger = LoggerFactory.getLogger(WasServer.class);
+
     private ServerSocket serverSocket;
+    private StaticFileHandler staticFileHandler;
 
     public WasServer(int port) throws IOException {
         serverSocket = new ServerSocket(port);
+        staticFileHandler = new StaticFileHandler();
         logger.debug("Listening for connection on port 8080 ....");
     }
 
@@ -32,10 +35,10 @@ public class WasServer {
                 logger.debug(httpRequest.toString());
 
                 // do service
+                HttpResponse response = staticFileHandler.handle(httpRequest);
 
-                HttpResponse response = new HttpResponse(new HttpHeaders(), new HttpBody());
                 OutputStream clientOutput = clientSocket.getOutputStream();
-                processor.createResponse(clientOutput, response);
+                processor.writeResponse(clientOutput, response);
 
             } catch (IOException ex) {
                 logger.error("Server accept failed");
