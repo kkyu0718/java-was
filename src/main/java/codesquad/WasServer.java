@@ -31,8 +31,8 @@ public class WasServer {
     }
 
     public void run() {
-        while (true) {
-            executorService.execute(() -> {
+        executorService.execute(() -> {
+            while (true) {
                 InputStream clientInput;
 
                 try (Socket clientSocket = serverSocket.accept()) {
@@ -56,8 +56,8 @@ public class WasServer {
                     logger.error("Server accept failed ");
                     ex.printStackTrace();
                 }
-            });
-        }
+            }
+        });
     }
 
 
