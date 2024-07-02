@@ -2,7 +2,8 @@ package codesquad.http;
 
 public enum HttpStatus {
     NOT_FOUND(404, "NOT FOUND"),
-    OK(200, "OK");
+    OK(200, "OK"),
+    INTERNAL_SERVER_ERROR(500, "INTERNAL SERVER ERROR");
 
     private int statusCode;
     private String message;

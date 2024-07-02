@@ -18,6 +18,7 @@ import java.util.concurrent.Executors;
 public class WasServer {
     private static Logger logger = LoggerFactory.getLogger(WasServer.class);
     private static int MAX_THREAD_POOL_SIZE = 100;
+    private static String resourceRootPath = "src/main/resources/static";
 
     private ServerSocket serverSocket;
     private StaticFileHandler staticFileHandler;
@@ -25,7 +26,7 @@ public class WasServer {
 
     public WasServer(int port) throws IOException {
         serverSocket = new ServerSocket(port);
-        staticFileHandler = new StaticFileHandler();
+        staticFileHandler = new StaticFileHandler(resourceRootPath);
         executorService = Executors.newFixedThreadPool(MAX_THREAD_POOL_SIZE);
         logger.debug("Listening for connection on port 8080 ....");
     }
