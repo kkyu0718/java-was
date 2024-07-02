@@ -24,12 +24,10 @@ public class Http11Processor implements HttpProcessor {
         HttpHeaders headers = parseHeaders(br);
         headers.put(HttpHeaders.PATH, path);
 
-        if (!headers.get("Content-Length").isEmpty()) {
-            return new HttpRequest(method, path, httpVersion, headers, new HttpBody(null));
-        }
-        //TODO trasfer-encoding 이 chunked 인 경우 구현 필요
-
         //TODO body 가 존재하는 경우 parse 로직 필요
+        // content-length 에 따른 로직 구현 필요
+        // trasfer-encoding 이 chunked 인 경우 구현 필요
+
         return new HttpRequest(method, path, httpVersion, headers, new HttpBody(null));
     }
 
