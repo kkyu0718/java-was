@@ -21,7 +21,8 @@ public class Http11Processor implements HttpProcessor {
 
         String host = parseRequestLine(br);
         HttpHeaders headers = parseHeaders(br);
-
+        headers.put(HttpHeaders.PATH, path);
+        
         //TODO parseBody 구현 필요
         return new HttpRequest(method, path, httpVersion, headers, new HttpBody(null));
     }
