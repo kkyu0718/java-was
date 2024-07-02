@@ -23,6 +23,18 @@ public class HttpRequest {
         this.body = body;
     }
 
+    public HttpMethod getMethod() {
+        return method;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public HttpBody getBody() {
+        return body;
+    }
+
     public HttpVersion getHttpVersion() {
         return httpVersion;
     }

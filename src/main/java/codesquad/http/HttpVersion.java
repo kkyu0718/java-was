@@ -12,4 +12,13 @@ public enum HttpVersion {
     public String getRepresentation() {
         return representation;
     }
+
+    public static HttpVersion fromRepresentation(String representation) {
+        for (HttpVersion version : HttpVersion.values()) {
+            if (version.getRepresentation().equals(representation)) {
+                return version;
+            }
+        }
+        throw new IllegalArgumentException("No enum constant with representation " + representation);
+    }
 }

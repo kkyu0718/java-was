@@ -13,13 +13,14 @@ public class Http11Processor implements HttpProcessor {
 
     @Override
     public HttpRequest parseRequest(InputStream is) throws IOException {
-        String[] startLineSplits = parseStartLine(is);
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        String[] startLineSplits = parseStartLine(br);
         HttpMethod method = HttpMethod.valueOf(startLineSplits[0]);
         String path = startLineSplits[1];
-        HttpVersion httpVersion = HttpVersion.valueOf(startLineSplits[2]);
+        HttpVersion httpVersion = HttpVersion.fromRepresentation(startLineSplits[2]);
 
-        String host = parseRequestLine(is);
-        HttpHeaders headers = parseHeaders(is);
+        String host = parseRequestLine(br);
+        HttpHeaders headers = parseHeaders(br);
 
         //TODO parseBody 구현 필요
         return new HttpRequest(method, path, httpVersion, headers, new HttpBody(null));
@@ -39,7 +40,7 @@ public class Http11Processor implements HttpProcessor {
         os.write(response.getBody().getBytes());
     }
 
-    private void writeStatusLine(OutputStream os, HttpResponse response) {
+    private void writeStatusLine(OutputStream os, HttpResponse response) throws IOException {
         StringBuilder sb = new StringBuilder();
         HttpStatus status = response.getStatus();
         HttpVersion httpVersion = response.getRequest().getHttpVersion();
@@ -47,6 +48,8 @@ public class Http11Processor implements HttpProcessor {
         sb.append(httpVersion.getRepresentation()).append(" ")
                 .append(status.getStatusCode()).append(" ")
                 .append(status.getMessage()).append(LINE_SEPERATOR);
+
+        os.write(sb.toString().getBytes());
     }
 
     private void writeHeaders(OutputStream os, HttpResponse response) throws IOException {
@@ -60,12 +63,12 @@ public class Http11Processor implements HttpProcessor {
         os.write(sb.toString().getBytes());
     }
 
-    private HttpHeaders parseHeaders(InputStream clientInput) throws IOException {
+    private HttpHeaders parseHeaders(BufferedReader br) throws IOException {
         HttpHeaders headers = new HttpHeaders();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(clientInput));
+//        BufferedReader reader = new BufferedReader(isr);
         String line;
 
-        while (!(line = reader.readLine()).isEmpty()) {
+        while (!(line = br.readLine()).isEmpty()) {
             String[] headerSplits = line.split(":", 2);
             headers.put(headerSplits[0], headerSplits[1]);
         }
@@ -73,21 +76,22 @@ public class Http11Processor implements HttpProcessor {
         return headers;
     }
 
-    private HttpBody parseBody(InputStream clientInput) throws IOException {
+    private HttpBody parseBody(BufferedReader br) throws IOException {
         //TODO
         return null;
     }
 
-    private String[] parseStartLine(InputStream is) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        String startLine = reader.readLine();
+    private String[] parseStartLine(BufferedReader br) throws IOException {
+//        BufferedReader reader = new BufferedReader(isr);
+        String startLine = br.readLine();
 
         return startLine.split(" ");
     }
 
-    private String parseRequestLine(InputStream is) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        String requestLine = reader.readLine();
+    private String parseRequestLine(BufferedReader br) throws IOException {
+//        BufferedReader reader = new BufferedReader(isr);
+//        String requestLine = reader.readLine();
+        String requestLine = br.readLine();
         return requestLine.split(":", 2)[1];
     }
 }
