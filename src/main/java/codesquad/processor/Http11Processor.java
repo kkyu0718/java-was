@@ -13,14 +13,21 @@ public class Http11Processor implements HttpProcessor {
 
     @Override
     public HttpRequest parseRequest(InputStream is) throws IOException {
+        String[] startLineSplits = parseStartLine(is);
+        HttpMethod method = HttpMethod.valueOf(startLineSplits[0]);
+        String path = startLineSplits[1];
+        HttpVersion httpVersion = HttpVersion.valueOf(startLineSplits[2]);
+
+        String host = parseRequestLine(is);
         HttpHeaders headers = parseHeaders(is);
 
         //TODO parseBody 구현 필요
-        return new HttpRequest(headers, new HttpBody(null));
+        return new HttpRequest(method, path, httpVersion, headers, new HttpBody(null));
     }
 
     @Override
     public void writeResponse(OutputStream os, HttpResponse response) throws IOException {
+        writeStatusLine(os, response);
         writeHeaders(os, response);
         os.write(LINE_SEPERATOR.getBytes());
         writeBody(os, response);
@@ -32,15 +39,22 @@ public class Http11Processor implements HttpProcessor {
         os.write(response.getBody().getBytes());
     }
 
-    private void writeHeaders(OutputStream os, HttpResponse response) throws IOException {
+    private void writeStatusLine(OutputStream os, HttpResponse response) {
         StringBuilder sb = new StringBuilder();
         HttpStatus status = response.getStatus();
-        String httpVersion = response.getRequest().getHeaders().get(HttpHeaders.HTTP_VERSION);
+        HttpVersion httpVersion = response.getRequest().getHttpVersion();
 
-        sb.append(httpVersion).append(" ").append(status.getStatusCode()).append(" ").append(status.getMessage()).append(LINE_SEPERATOR);
+        sb.append(httpVersion.getRepresentation()).append(" ")
+                .append(status.getStatusCode()).append(" ")
+                .append(status.getMessage()).append(LINE_SEPERATOR);
+    }
+
+    private void writeHeaders(OutputStream os, HttpResponse response) throws IOException {
+        StringBuilder sb = new StringBuilder();
 
         String contentType = response.getHeaders().get(HttpHeaders.CONTENT_TYPE);
-        sb.append(HttpHeaders.CONTENT_TYPE).append(": ").append(contentType).append(LINE_SEPERATOR);
+        sb.append(HttpHeaders.CONTENT_TYPE).append(": ")
+                .append(contentType).append(LINE_SEPERATOR);
         sb.append(LINE_SEPERATOR);
 
         os.write(sb.toString().getBytes());
@@ -50,9 +64,6 @@ public class Http11Processor implements HttpProcessor {
         HttpHeaders headers = new HttpHeaders();
         BufferedReader reader = new BufferedReader(new InputStreamReader(clientInput));
         String line;
-
-        parseStartLine(reader.readLine(), headers);
-        parseRequestLine(reader.readLine(), headers);
 
         while (!(line = reader.readLine()).isEmpty()) {
             String[] headerSplits = line.split(":", 2);
@@ -67,19 +78,16 @@ public class Http11Processor implements HttpProcessor {
         return null;
     }
 
-    private void parseStartLine(String startLine, HttpHeaders headers) throws IOException {
-        String[] startLineSplits = startLine.split(" ");
-        String requestMethod = startLineSplits[0];
-        String requestTarget = startLineSplits[1];
-        String httpVersion = startLineSplits[2];
+    private String[] parseStartLine(InputStream is) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        String startLine = reader.readLine();
 
-        headers.put(HttpHeaders.HTTP_METHOD, requestMethod);
-        headers.put(HttpHeaders.PATH, requestTarget);
-        headers.put(HttpHeaders.HTTP_VERSION, httpVersion);
+        return startLine.split(" ");
     }
 
-    private void parseRequestLine(String requestLine, HttpHeaders headers) {
-        String host = requestLine.split(":", 2)[1];
-        headers.put("Host", host);
+    private String parseRequestLine(InputStream is) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        String requestLine = reader.readLine();
+        return requestLine.split(":", 2)[1];
     }
 }
