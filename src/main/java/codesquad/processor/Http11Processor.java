@@ -13,24 +13,24 @@ public class Http11Processor implements HttpProcessor {
 
     @Override
     public HttpRequest parseRequest(InputStream is) throws IOException {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
-            String[] startLineSplits = parseStartLine(br);
-            HttpMethod method = HttpMethod.valueOf(startLineSplits[0]);
-            String path = startLineSplits[1];
-            HttpVersion httpVersion = HttpVersion.fromRepresentation(startLineSplits[2]);
+        //TODO br 닫기
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        String[] startLineSplits = parseStartLine(br);
+        HttpMethod method = HttpMethod.valueOf(startLineSplits[0]);
+        String path = startLineSplits[1];
+        HttpVersion httpVersion = HttpVersion.fromRepresentation(startLineSplits[2]);
 
-            String host = parseRequestLine(br);
-            HttpHeaders headers = parseHeaders(br);
-            headers.put(HttpHeaders.PATH, path);
+        String host = parseRequestLine(br);
+        HttpHeaders headers = parseHeaders(br);
+        headers.put(HttpHeaders.PATH, path);
 
-            if (!headers.get("Content-Length").isEmpty()) {
-                return new HttpRequest(method, path, httpVersion, headers, new HttpBody(null));
-            }
-            //TODO trasfer-encoding 이 chunked 인 경우 구현 필요
-
-            //TODO body 가 존재하는 경우 parse 로직 필요
+        if (!headers.get("Content-Length").isEmpty()) {
             return new HttpRequest(method, path, httpVersion, headers, new HttpBody(null));
         }
+        //TODO trasfer-encoding 이 chunked 인 경우 구현 필요
+
+        //TODO body 가 존재하는 경우 parse 로직 필요
+        return new HttpRequest(method, path, httpVersion, headers, new HttpBody(null));
     }
 
     @Override
