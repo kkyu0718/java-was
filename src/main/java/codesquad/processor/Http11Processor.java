@@ -61,7 +61,9 @@ public class Http11Processor implements HttpProcessor {
 
         String contentType = response.getHeaders().get(HttpHeaders.CONTENT_TYPE);
         sb.append(HttpHeaders.CONTENT_TYPE).append(": ")
-                .append(contentType).append(LINE_SEPERATOR);
+                .append(contentType).append(",")
+                .append(HttpHeaders.CONTENT_LENGTH).append(": ")
+                .append(response.getBody().getBytes().length);
         sb.append(LINE_SEPERATOR);
 
         os.write(sb.toString().getBytes());

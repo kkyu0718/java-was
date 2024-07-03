@@ -12,6 +12,7 @@ public class HttpHeaders {
     public static String PATH = "Path";
     public static String HTTP_METHOD = "Http-Method";
     public static String CONTENT_TYPE = "Content-Type";
+    public static String CONTENT_LENGTH = "Content-Length";
 
     public HttpHeaders() {
         this.headers = new HashMap<>();
