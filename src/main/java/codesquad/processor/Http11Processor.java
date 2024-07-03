@@ -4,7 +4,9 @@ import codesquad.http.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.OutputStream;
 
 import static codesquad.utils.StringUtils.LINE_SEPERATOR;
 
@@ -12,9 +14,7 @@ public class Http11Processor implements HttpProcessor {
     public static Logger logger = LoggerFactory.getLogger(Http11Processor.class);
 
     @Override
-    public HttpRequest parseRequest(InputStream is) throws IOException {
-        //TODO br 닫기
-        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+    public HttpRequest parseRequest(BufferedReader br) throws IOException {
         String[] startLineSplits = parseStartLine(br);
         HttpMethod method = HttpMethod.valueOf(startLineSplits[0]);
         String path = startLineSplits[1];
@@ -27,7 +27,6 @@ public class Http11Processor implements HttpProcessor {
         //TODO body 가 존재하는 경우 parse 로직 필요
         // content-length 에 따른 로직 구현 필요
         // trasfer-encoding 이 chunked 인 경우 구현 필요
-
         return new HttpRequest(method, path, httpVersion, headers, new HttpBody(null));
     }
 
