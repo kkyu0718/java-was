@@ -1,6 +1,7 @@
 package codesquad;
 
 import codesquad.handler.StaticFileHandler;
+import codesquad.handler.StaticFileReader;
 import codesquad.http.HttpRequest;
 import codesquad.http.HttpResponse;
 import codesquad.processor.Http11Processor;
@@ -26,7 +27,7 @@ public class WasServer {
 
     public WasServer(int port) throws IOException {
         serverSocket = new ServerSocket(port);
-        staticFileHandler = new StaticFileHandler(resourceRootPath);
+        staticFileHandler = new StaticFileHandler(new StaticFileReader(resourceRootPath));
         executorService = Executors.newFixedThreadPool(MAX_THREAD_POOL_SIZE);
         logger.debug("Listening for connection on port 8080 ....");
     }

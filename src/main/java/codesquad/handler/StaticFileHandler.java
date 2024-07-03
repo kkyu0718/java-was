@@ -5,43 +5,38 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class StaticFileHandler implements HttpHandler {
     private static final Logger logger = LoggerFactory.getLogger(StaticFileHandler.class);
-    private String resourceRootPath;
+    private StaticFileReaderSpec staticFileReader;
 
-    public StaticFileHandler(String resourceRootPath) {
-        this.resourceRootPath = resourceRootPath;
+    public StaticFileHandler(StaticFileReaderSpec staticFileReader) {
+        this.staticFileReader = staticFileReader;
     }
 
     @Override
     public HttpResponse handle(HttpRequest request) {
         String path = request.getPath();
-        Path filePath = Paths.get(resourceRootPath, path);
-
-        if (!Files.exists(filePath)) {
-            logger.warn("File not found: " + filePath);
+        if (!staticFileReader.exists(path)) {
+            logger.warn("File not found: " + path);
             return createNotFoundResponse(request);
         }
 
         try {
-            return readStaticFile(request, filePath);
+            byte[] bytes = staticFileReader.readFile(path);
+            MimeType contentType = MimeType.fromExt(path);
+
+            return createOkResponse(request, bytes, contentType);
         } catch (IOException ex) {
-            logger.error("Error reading file: " + filePath, ex);
+            logger.error("Error reading file: " + path, ex);
             return createErrorResponse(request);
         }
     }
 
-    protected HttpResponse readStaticFile(HttpRequest request, Path filePath) throws IOException {
-        byte[] bytes = Files.readAllBytes(filePath);
-        String contentType = Files.probeContentType(filePath);
-
+    private static HttpResponse createOkResponse(HttpRequest request, byte[] bytes, MimeType contentType) {
         HttpHeaders resHeaders = new HttpHeaders();
         resHeaders.put(HttpHeaders.HTTP_VERSION, request.getHttpVersion().getRepresentation());
-        resHeaders.put(HttpHeaders.CONTENT_TYPE, contentType);
+        resHeaders.put(HttpHeaders.CONTENT_TYPE, contentType.getMimeType());
 
         return new HttpResponse(request, HttpStatus.OK, resHeaders, new HttpBody(bytes));
     }
