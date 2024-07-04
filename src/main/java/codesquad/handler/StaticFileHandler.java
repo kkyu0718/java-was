@@ -19,14 +19,25 @@ public class StaticFileHandler implements HttpHandler {
     public HttpResponse handle(HttpRequest request) {
         Path path = request.getPath();
         if (!staticFileReader.exists(path)) {
-            logger.warn("File not found: " + path);
-            return createNotFoundResponse(request);
+            return handleNotFoundPath(path, request);
         }
 
+        return readFileAndCreateResponse(path, request);
+    }
+
+    private HttpResponse handleNotFoundPath(Path path, HttpRequest request) {
+        Path indexPath = Path.of(path + "/index.html");
+        if (staticFileReader.exists(indexPath)) {
+            return readFileAndCreateResponse(indexPath, request);
+        }
+        logger.warn("File not found: " + path);
+        return createNotFoundResponse(request);
+    }
+
+    private HttpResponse readFileAndCreateResponse(Path path, HttpRequest request) {
         try {
             byte[] bytes = staticFileReader.readFile(path);
             MimeType contentType = MimeType.fromExt(path);
-
             return createOkResponse(request, bytes, contentType);
         } catch (IOException ex) {
             logger.error("Error reading file: " + path, ex);
@@ -40,7 +51,7 @@ public class StaticFileHandler implements HttpHandler {
 
         if (path.isFilePath()) {
             return true;
-        } else return staticFileReader.exists(Path.of(path.getPath() + "/index.html"));
+        } else return staticFileReader.exists(Path.of(path.toString() + "/index.html"));
     }
 
     private static HttpResponse createOkResponse(HttpRequest request, byte[] bytes, MimeType contentType) {

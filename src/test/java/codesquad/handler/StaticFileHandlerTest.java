@@ -15,7 +15,7 @@ class StaticFileHandlerTest {
     @Test
     void StaticFileHandler가_주어지고_존재하지않는_Path가_주어졌을때_404상태코드가_주어진다() {
         HttpHeaders httpHeaders = new HttpHeaders();
-        HttpRequest request = new HttpRequest(HttpMethod.GET, Path.of("/not-index.html"), HttpVersion.HTTP11, httpHeaders, null);
+        HttpRequest request = new HttpRequest(HttpMethod.GET, Path.of("/not-index.html"), HttpVersion.HTTP11, httpHeaders, null, null);
 
         HttpResponse response = handler.handle(request);
 
@@ -24,9 +24,20 @@ class StaticFileHandlerTest {
     }
 
     @Test
+    void StaticFileHandler가_주어지고_존재하지않는_Path가_주어졌으나_디렉토리의_index_html가_존재할때_200상태코드가_주어진다() {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        HttpRequest request = new HttpRequest(HttpMethod.GET, Path.of("/registration"), HttpVersion.HTTP11, httpHeaders, null, null);
+
+        HttpResponse response = handler.handle(request);
+
+        Assertions.assertEquals(HttpStatus.OK, response.getStatus());
+        Assertions.assertNotNull(response.getBody().getBytes());
+    }
+
+    @Test
     void StaticFileHandler가_주어지고_존재하는_Path가_주어졌을때_200상태코드가_주어진다() {
         HttpHeaders httpHeaders = new HttpHeaders();
-        HttpRequest request = new HttpRequest(HttpMethod.GET, Path.of("/index.html"), HttpVersion.HTTP11, httpHeaders, null);
+        HttpRequest request = new HttpRequest(HttpMethod.GET, Path.of("/index.html"), HttpVersion.HTTP11, httpHeaders, null, null);
 
         HttpResponse response = handler.handle(request);
 
@@ -38,7 +49,7 @@ class StaticFileHandlerTest {
     @Test
     void StaticFileHandler가_주어지고_CSS파일_요청시_200상태코드와_올바른_컨텐츠타입이_주어진다() {
         HttpHeaders httpHeaders = new HttpHeaders();
-        HttpRequest request = new HttpRequest(HttpMethod.GET, Path.of("/main.css"), HttpVersion.HTTP11, httpHeaders, null);
+        HttpRequest request = new HttpRequest(HttpMethod.GET, Path.of("/main.css"), HttpVersion.HTTP11, httpHeaders, null, null);
 
         HttpResponse response = handler.handle(request);
 
@@ -63,7 +74,7 @@ class StaticFileHandlerTest {
         });
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        HttpRequest request = new HttpRequest(HttpMethod.GET, Path.of("/index.html"), HttpVersion.HTTP11, httpHeaders, null);
+        HttpRequest request = new HttpRequest(HttpMethod.GET, Path.of("/index.html"), HttpVersion.HTTP11, httpHeaders, null, null);
 
         HttpResponse response = faultyHandler.handle(request);
 
