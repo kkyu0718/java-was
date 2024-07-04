@@ -1,5 +1,6 @@
 package codesquad;
 
+import codesquad.handler.HttpHandler;
 import codesquad.handler.StaticFileHandler;
 import codesquad.handler.StaticFileReader;
 import codesquad.http.HttpRequest;
@@ -8,9 +9,13 @@ import codesquad.processor.Http11Processor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,33 +25,38 @@ public class WasServer {
     private static String resourceRootPath = "src/main/resources/static";
 
     private ServerSocket serverSocket;
-    private StaticFileHandler staticFileHandler;
+    private List<HttpHandler> handlers;
     private ExecutorService executorService;
 
     public WasServer(int port) throws IOException {
+        StaticFileHandler staticFileHandler = new StaticFileHandler(new StaticFileReader(resourceRootPath));
+
         serverSocket = new ServerSocket(port);
-        staticFileHandler = new StaticFileHandler(new StaticFileReader(resourceRootPath));
+        handlers = List.of(staticFileHandler);
         executorService = Executors.newFixedThreadPool(MAX_THREAD_POOL_SIZE);
+
         logger.debug("Listening for connection on port 8080 ....");
     }
 
     public void run() {
         executorService.execute(() -> {
             while (true) {
-                InputStream clientInput;
-
                 try (Socket clientSocket = serverSocket.accept();
                      BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
                     logger.debug("Client connected");
-                    
+
                     //TODO http 버젼 별 분기처리 필요
                     Http11Processor processor = new Http11Processor();
                     HttpRequest httpRequest = processor.parseRequest(br);
                     logger.debug(httpRequest.toString());
 
+                    //TODO URI 패턴 제한
+                    //TODO Path Util 클래스 뺴기
+
                     //TODO handler 별 분기처리 필요
                     // do service
-                    HttpResponse response = staticFileHandler.handle(httpRequest);
+                    HttpHandler handler = getHandler(httpRequest);
+                    HttpResponse response = handler.handle(httpRequest);
 
                     OutputStream clientOutput = clientSocket.getOutputStream();
                     processor.writeResponse(clientOutput, response);
@@ -59,5 +69,13 @@ public class WasServer {
         });
     }
 
+    private HttpHandler getHandler(HttpRequest httpRequest) {
+        for (HttpHandler handler : handlers) {
+            if (handler.canHandle(httpRequest)) {
+                return handler;
+            }
+        }
 
+        throw new IllegalArgumentException("처리할 수 있는 handler 가 존재하지 않습니다. " + httpRequest.getPath());
+    }
 }

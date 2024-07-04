@@ -5,4 +5,6 @@ import codesquad.http.HttpResponse;
 
 public interface HttpHandler {
     HttpResponse handle(HttpRequest request);
+
+    boolean canHandle(HttpRequest request);
 }

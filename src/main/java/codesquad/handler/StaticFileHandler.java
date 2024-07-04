@@ -33,6 +33,16 @@ public class StaticFileHandler implements HttpHandler {
         }
     }
 
+    @Override
+    public boolean canHandle(HttpRequest request) {
+        String path = request.getPath();
+        String[] split = path.split("\\.");
+
+        if (split.length == 2) {
+            return true;
+        } else return staticFileReader.exists(path + "/index.html");
+    }
+
     private static HttpResponse createOkResponse(HttpRequest request, byte[] bytes, MimeType contentType) {
         HttpHeaders resHeaders = new HttpHeaders();
         resHeaders.put(HttpHeaders.HTTP_VERSION, request.getHttpVersion().getRepresentation());
