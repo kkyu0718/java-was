@@ -26,12 +26,12 @@ public class StaticFileReader implements StaticFileReaderSpec {
     }
 
     private File getFilePath(Path path) {
-        return new File(resourceRootPath + "/" + path.getPath());
+        return new File(resourceRootPath + "/" + path);
     }
 
     @Override
     public boolean exists(Path path) {
         File filePath = getFilePath(path);
-        return filePath.exists();
+        return filePath.isFile();
     }
 }

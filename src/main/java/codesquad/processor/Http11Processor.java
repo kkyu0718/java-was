@@ -1,6 +1,6 @@
 package codesquad.processor;
 
-import codesquad.global.Path;
+import codesquad.global.Url;
 import codesquad.http.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,17 +18,17 @@ public class Http11Processor implements HttpProcessor {
     public HttpRequest parseRequest(BufferedReader br) throws IOException {
         String[] startLineSplits = parseStartLine(br);
         HttpMethod method = HttpMethod.valueOf(startLineSplits[0]);
-        Path path = Path.of(startLineSplits[1]);
+        Url url = Url.of(startLineSplits[1]);
         HttpVersion httpVersion = HttpVersion.fromRepresentation(startLineSplits[2]);
 
         String host = parseRequestLine(br);
         HttpHeaders headers = parseHeaders(br);
-        headers.put(HttpHeaders.PATH, path.getPath());
+        headers.put(HttpHeaders.PATH, url.getPath().toString());
 
         //TODO body 가 존재하는 경우 parse 로직 필요
         // content-length 에 따른 로직 구현 필요
         // trasfer-encoding 이 chunked 인 경우 구현 필요
-        return new HttpRequest(method, path, httpVersion, headers, new HttpBody(null));
+        return new HttpRequest(method, url.getPath(), httpVersion, headers, new HttpBody(null), url.getParameters());
     }
 
     @Override

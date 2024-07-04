@@ -9,19 +9,22 @@ public class HttpRequest {
     private HttpVersion httpVersion;
     private HttpHeaders headers;
     private HttpBody body;
+    private Parameters parameters;
 
     public HttpRequest(
             HttpMethod method,
             Path path,
             HttpVersion httpVersion,
             HttpHeaders headers,
-            HttpBody body
+            HttpBody body,
+            Parameters parameters
     ) {
         this.method = method;
         this.path = path;
         this.httpVersion = httpVersion;
         this.headers = headers;
         this.body = body;
+        this.parameters = parameters;
     }
 
     public HttpMethod getMethod() {
@@ -42,6 +45,10 @@ public class HttpRequest {
 
     public HttpHeaders getHeaders() {
         return this.headers;
+    }
+
+    public Parameters getParameters() {
+        return parameters;
     }
 
     @Override

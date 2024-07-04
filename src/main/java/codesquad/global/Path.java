@@ -3,16 +3,12 @@ package codesquad.global;
 public class Path {
     private String path;
 
-    private Path(String path) {
+    public Path(String path) {
         this.path = path;
     }
 
-    public static Path of(String path) {
-        return new Path(path);
-    }
-
-    public String getPath() {
-        return path;
+    public static Path of(String pathString) {
+        return new Path(pathString);
     }
 
     public boolean isFilePath() {
@@ -25,5 +21,10 @@ public class Path {
         }
 
         throw new IllegalArgumentException("확장자가 존재하지 않습니다. " + path);
+    }
+
+    @Override
+    public String toString() {
+        return path;
     }
 }

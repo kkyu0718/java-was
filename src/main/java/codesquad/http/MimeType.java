@@ -27,8 +27,8 @@ public enum MimeType {
         return mimeType;
     }
 
-    public static MimeType fromExt(Path file) {
-        String ext = file.getExt();
+    public static MimeType fromExt(Path path) {
+        String ext = path.getExt();
         for (MimeType mimeType : MimeType.values()) {
             if (ext.equals(mimeType.ext)) {
                 return mimeType;
