@@ -94,7 +94,8 @@
         })
             .then(response => {
                 if (response.ok) {
-                    // window.location.href = '/';
+                    window.alert("회원가입 성공")
+                    window.location.href = '/';
                 } else {
                     return response.text().then(text => {
                         throw new Error(text)
