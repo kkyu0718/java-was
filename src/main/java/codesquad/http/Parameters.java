@@ -13,20 +13,28 @@ public class Parameters {
 
     public static Parameters of(String paramString) {
         HashMap<String, String> map = new HashMap<>();
-        String[] split = paramString.split("\\?");
+        String[] split = paramString.split("&");
         for (String entry : split) {
-            String[] keyValue = entry.split(":");
+            String[] keyValue = entry.split("=");
             map.put(keyValue[0], keyValue[1]);
         }
 
         return new Parameters(map);
     }
 
-    public Map<String, String> getParameter() {
+    public Map<String, String> getParameters() {
         return Collections.unmodifiableMap(parameter);
+    }
+
+    public String getParameter(String key) {
+        return parameter.get(key);
     }
 
     public void addParameter(String key, String value) {
         parameter.put(key, value);
+    }
+
+    public int size() {
+        return parameter.size();
     }
 }

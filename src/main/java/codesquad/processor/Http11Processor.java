@@ -21,9 +21,7 @@ public class Http11Processor implements HttpProcessor {
         Url url = Url.of(startLineSplits[1]);
         HttpVersion httpVersion = HttpVersion.fromRepresentation(startLineSplits[2]);
 
-        String host = parseRequestLine(br);
         HttpHeaders headers = parseHeaders(br);
-        headers.put(HttpHeaders.HOST, host);
         headers.put(HttpHeaders.PATH, url.getPath().toString());
 
         //TODO body 가 존재하는 경우 parse 로직 필요
@@ -77,7 +75,7 @@ public class Http11Processor implements HttpProcessor {
 
         while (!(line = br.readLine()).isEmpty()) {
             String[] headerSplits = line.split(":", 2);
-            headers.put(headerSplits[0], headerSplits[1]);
+            headers.put(headerSplits[0].trim(), headerSplits[1].trim());
         }
 
         return headers;
@@ -92,10 +90,5 @@ public class Http11Processor implements HttpProcessor {
         String startLine = br.readLine();
 
         return startLine.split(" ");
-    }
-
-    private String parseRequestLine(BufferedReader br) throws IOException {
-        String requestLine = br.readLine();
-        return requestLine.split(":", 2)[1];
     }
 }
