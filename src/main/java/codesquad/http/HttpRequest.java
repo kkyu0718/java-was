@@ -56,8 +56,12 @@ public class HttpRequest {
         StringBuilder sb = new StringBuilder();
         sb.append("----headers----").append(StringUtils.LINE_SEPERATOR);
         sb.append(headers.toString());
-        sb.append("----body----").append(StringUtils.LINE_SEPERATOR);
+
+        if (body != null) {
+            sb.append("----body----").append(StringUtils.LINE_SEPERATOR);
 //        sb.append(body.toString()); //TODO body 구현
+        }
+
         return sb.toString();
     }
 }
