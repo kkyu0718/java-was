@@ -3,9 +3,10 @@ package codesquad.http;
 import codesquad.utils.StringUtils;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class HttpHeaders {
-    private final HashMap<String, String> headers;
+    private final Map<String, String> headers;
 
     public static String HTTP_VERSION = "Http-Version";
     public static String PATH = "Path";
