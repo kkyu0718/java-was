@@ -23,6 +23,7 @@ public class Http11Processor implements HttpProcessor {
 
         String host = parseRequestLine(br);
         HttpHeaders headers = parseHeaders(br);
+        headers.put(HttpHeaders.HOST, host);
         headers.put(HttpHeaders.PATH, url.getPath().toString());
 
         //TODO body 가 존재하는 경우 parse 로직 필요
