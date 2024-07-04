@@ -1,5 +1,6 @@
 package codesquad.handler;
 
+import codesquad.global.Path;
 import codesquad.http.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,7 @@ public class StaticFileHandler implements HttpHandler {
 
     @Override
     public HttpResponse handle(HttpRequest request) {
-        String path = request.getPath();
+        Path path = request.getPath();
         if (!staticFileReader.exists(path)) {
             logger.warn("File not found: " + path);
             return createNotFoundResponse(request);
@@ -35,12 +36,11 @@ public class StaticFileHandler implements HttpHandler {
 
     @Override
     public boolean canHandle(HttpRequest request) {
-        String path = request.getPath();
-        String[] split = path.split("\\.");
+        Path path = request.getPath();
 
-        if (split.length == 2) {
+        if (path.isFilePath()) {
             return true;
-        } else return staticFileReader.exists(path + "/index.html");
+        } else return staticFileReader.exists(Path.of(path.getPath() + "/index.html"));
     }
 
     private static HttpResponse createOkResponse(HttpRequest request, byte[] bytes, MimeType contentType) {

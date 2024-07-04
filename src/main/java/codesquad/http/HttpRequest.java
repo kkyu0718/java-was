@@ -1,17 +1,18 @@
 package codesquad.http;
 
+import codesquad.global.Path;
 import codesquad.utils.StringUtils;
 
 public class HttpRequest {
     private HttpMethod method;
-    private String path;
+    private Path path;
     private HttpVersion httpVersion;
     private HttpHeaders headers;
     private HttpBody body;
 
     public HttpRequest(
             HttpMethod method,
-            String path,
+            Path path,
             HttpVersion httpVersion,
             HttpHeaders headers,
             HttpBody body
@@ -27,7 +28,7 @@ public class HttpRequest {
         return method;
     }
 
-    public String getPath() {
+    public Path getPath() {
         return path;
     }
 

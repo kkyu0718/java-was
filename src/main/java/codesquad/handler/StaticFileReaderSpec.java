@@ -1,10 +1,12 @@
 package codesquad.handler;
 
+import codesquad.global.Path;
+
 import java.io.IOException;
 
 public interface StaticFileReaderSpec {
 
-    byte[] readFile(String path) throws IOException;
+    byte[] readFile(Path path) throws IOException;
 
-    boolean exists(String path);
+    boolean exists(Path path);
 }

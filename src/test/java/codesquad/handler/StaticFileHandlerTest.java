@@ -1,5 +1,6 @@
 package codesquad.handler;
 
+import codesquad.global.Path;
 import codesquad.http.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,7 +15,7 @@ class StaticFileHandlerTest {
     @Test
     void StaticFileHandler가_주어지고_존재하지않는_Path가_주어졌을때_404상태코드가_주어진다() {
         HttpHeaders httpHeaders = new HttpHeaders();
-        HttpRequest request = new HttpRequest(HttpMethod.GET, "/not-index.html", HttpVersion.HTTP11, httpHeaders, null);
+        HttpRequest request = new HttpRequest(HttpMethod.GET, Path.of("/not-index.html"), HttpVersion.HTTP11, httpHeaders, null);
 
         HttpResponse response = handler.handle(request);
 
@@ -25,7 +26,7 @@ class StaticFileHandlerTest {
     @Test
     void StaticFileHandler가_주어지고_존재하는_Path가_주어졌을때_200상태코드가_주어진다() {
         HttpHeaders httpHeaders = new HttpHeaders();
-        HttpRequest request = new HttpRequest(HttpMethod.GET, "/index.html", HttpVersion.HTTP11, httpHeaders, null);
+        HttpRequest request = new HttpRequest(HttpMethod.GET, Path.of("/index.html"), HttpVersion.HTTP11, httpHeaders, null);
 
         HttpResponse response = handler.handle(request);
 
@@ -37,7 +38,7 @@ class StaticFileHandlerTest {
     @Test
     void StaticFileHandler가_주어지고_CSS파일_요청시_200상태코드와_올바른_컨텐츠타입이_주어진다() {
         HttpHeaders httpHeaders = new HttpHeaders();
-        HttpRequest request = new HttpRequest(HttpMethod.GET, "/main.css", HttpVersion.HTTP11, httpHeaders, null);
+        HttpRequest request = new HttpRequest(HttpMethod.GET, Path.of("/main.css"), HttpVersion.HTTP11, httpHeaders, null);
 
         HttpResponse response = handler.handle(request);
 
@@ -51,18 +52,18 @@ class StaticFileHandlerTest {
         StaticFileHandler faultyHandler = new StaticFileHandler(new StaticFileReaderSpec() {
 
             @Override
-            public byte[] readFile(String path) throws IOException {
+            public byte[] readFile(Path path) throws IOException {
                 throw new IOException("IO 에러 발생");
             }
 
             @Override
-            public boolean exists(String path) {
+            public boolean exists(Path path) {
                 return true;
             }
         });
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        HttpRequest request = new HttpRequest(HttpMethod.GET, "/index.html", HttpVersion.HTTP11, httpHeaders, null);
+        HttpRequest request = new HttpRequest(HttpMethod.GET, Path.of("/index.html"), HttpVersion.HTTP11, httpHeaders, null);
 
         HttpResponse response = faultyHandler.handle(request);
 
