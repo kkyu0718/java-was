@@ -1,5 +1,8 @@
 package codesquad;
 
+import codesquad.adapter.Adapter;
+import codesquad.adapter.UserAdapter;
+import codesquad.handler.DynamicHandler;
 import codesquad.handler.HttpHandler;
 import codesquad.handler.StaticFileHandler;
 import codesquad.handler.StaticFileReader;
@@ -31,8 +34,11 @@ public class WasServer {
     public WasServer(int port) throws IOException {
         StaticFileHandler staticFileHandler = new StaticFileHandler(new StaticFileReader(resourceRootPath));
 
+        Adapter userAdapter = new UserAdapter();
+        DynamicHandler dynamicHandler = new DynamicHandler(List.of(userAdapter));
+
         serverSocket = new ServerSocket(port);
-        handlers = List.of(staticFileHandler);
+        handlers = List.of(staticFileHandler, dynamicHandler);
         executorService = Executors.newFixedThreadPool(MAX_THREAD_POOL_SIZE);
 
         logger.debug("Listening for connection on port 8080 ....");
@@ -61,7 +67,7 @@ public class WasServer {
                     OutputStream clientOutput = clientSocket.getOutputStream();
                     processor.writeResponse(clientOutput, response);
 
-                } catch (IOException ex) {
+                } catch (Exception ex) {
                     logger.error("Server accept failed ");
                     ex.printStackTrace();
                 }
