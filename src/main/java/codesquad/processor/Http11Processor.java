@@ -72,17 +72,22 @@ public class Http11Processor implements HttpProcessor {
     private HttpHeaders parseHeaders(BufferedReader br) throws IOException {
         HttpHeaders headers = new HttpHeaders();
         String line;
+        String headerPattern = "^[\\w-]+:\\s*.*\\s*$"; // 정규 표현식 패턴
 
+        //header-field   = field-name ":" OWS field-value OWS
         while (!(line = br.readLine()).isEmpty()) {
+            if (!line.matches(headerPattern)) {
+                throw new IllegalArgumentException("Invalid header field format: " + line);
+            }
             String[] headerSplits = line.split(":", 2);
-            headers.put(headerSplits[0].trim(), headerSplits[1].trim());
+            headers.put(headerSplits[0], headerSplits[1].trim());
         }
 
         return headers;
     }
 
     private HttpBody parseBody(BufferedReader br) throws IOException {
-        //TODO
+
         return null;
     }
 
