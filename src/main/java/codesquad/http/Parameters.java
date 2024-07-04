@@ -5,9 +5,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Parameters {
-    private HashMap<String, String> parameter;
+    private Map<String, String> parameter;
 
-    private Parameters(HashMap<String, String> parameter) {
+    private Parameters(Map<String, String> parameter) {
         this.parameter = parameter;
     }
 
