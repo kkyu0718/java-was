@@ -1,15 +1,14 @@
 package codesquad;
 
 import codesquad.handler.StaticFileHandler;
+import codesquad.handler.StaticFileReader;
 import codesquad.http.HttpRequest;
 import codesquad.http.HttpResponse;
 import codesquad.processor.Http11Processor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
@@ -26,7 +25,7 @@ public class WasServer {
 
     public WasServer(int port) throws IOException {
         serverSocket = new ServerSocket(port);
-        staticFileHandler = new StaticFileHandler(resourceRootPath);
+        staticFileHandler = new StaticFileHandler(new StaticFileReader(resourceRootPath));
         executorService = Executors.newFixedThreadPool(MAX_THREAD_POOL_SIZE);
         logger.debug("Listening for connection on port 8080 ....");
     }
@@ -36,14 +35,13 @@ public class WasServer {
             while (true) {
                 InputStream clientInput;
 
-                try (Socket clientSocket = serverSocket.accept()) {
+                try (Socket clientSocket = serverSocket.accept();
+                     BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
                     logger.debug("Client connected");
-
-                    clientInput = clientSocket.getInputStream();
-
+                    
                     //TODO http 버젼 별 분기처리 필요
                     Http11Processor processor = new Http11Processor();
-                    HttpRequest httpRequest = processor.parseRequest(clientInput);
+                    HttpRequest httpRequest = processor.parseRequest(br);
                     logger.debug(httpRequest.toString());
 
                     //TODO handler 별 분기처리 필요

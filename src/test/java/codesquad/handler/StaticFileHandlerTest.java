@@ -6,7 +6,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 class StaticFileHandlerTest {
     private StaticFileHandler handler;
@@ -31,7 +30,7 @@ class StaticFileHandlerTest {
         HttpResponse response = handler.handle(request);
 
         Assertions.assertEquals(HttpStatus.OK, response.getStatus());
-        Assertions.assertEquals("text/html", response.getHeaders().get(HttpHeaders.CONTENT_TYPE));
+        Assertions.assertEquals(MimeType.HTML.getMimeType(), response.getHeaders().get(HttpHeaders.CONTENT_TYPE));
         Assertions.assertNotNull(response.getBody());
     }
 
@@ -43,18 +42,24 @@ class StaticFileHandlerTest {
         HttpResponse response = handler.handle(request);
 
         Assertions.assertEquals(HttpStatus.OK, response.getStatus());
-        Assertions.assertEquals("text/css", response.getHeaders().get(HttpHeaders.CONTENT_TYPE));
+        Assertions.assertEquals(MimeType.CSS.getMimeType(), response.getHeaders().get(HttpHeaders.CONTENT_TYPE));
         Assertions.assertNotNull(response.getBody());
     }
 
     @Test
     void StaticFileHandler가_주어지고_파일읽기_중_에러가_발생했을때_500상태코드가_주어진다() throws IOException {
-        StaticFileHandler faultyHandler = new StaticFileHandler(resourcePath) {
+        StaticFileHandler faultyHandler = new StaticFileHandler(new StaticFileReaderSpec() {
+
             @Override
-            protected HttpResponse readStaticFile(HttpRequest request, Path filePath) throws IOException {
-                throw new IOException("Simulated IO Exception");
+            public byte[] readFile(String path) throws IOException {
+                throw new IOException("IO 에러 발생");
             }
-        };
+
+            @Override
+            public boolean exists(String path) {
+                return true;
+            }
+        });
 
         HttpHeaders httpHeaders = new HttpHeaders();
         HttpRequest request = new HttpRequest(HttpMethod.GET, "/index.html", HttpVersion.HTTP11, httpHeaders, null);
@@ -66,6 +71,6 @@ class StaticFileHandlerTest {
 
     @BeforeEach
     void setup() {
-        handler = new StaticFileHandler(resourcePath);
+        handler = new StaticFileHandler(new StaticFileReader(resourcePath));
     }
 }
