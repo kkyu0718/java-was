@@ -1,15 +1,11 @@
 package codesquad.adapter;
 
+import codesquad.db.UserDb;
 import codesquad.global.Path;
 import codesquad.http.*;
 import codesquad.model.User;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class UserAdapter implements Adapter {
-    private List<User> users = new ArrayList<>();
-
     @Override
     public boolean supports(Path path) {
         return path.toString().startsWith("/user");
@@ -26,7 +22,7 @@ public class UserAdapter implements Adapter {
 
             User user = User.of(userId, password, name, email);
 
-            users.add(user);
+            UserDb.add(user);
             return new HttpResponse(request, HttpStatus.OK, new HttpHeaders(), null);
         }
 
