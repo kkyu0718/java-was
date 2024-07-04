@@ -23,7 +23,7 @@ public class UserAdapter implements Adapter {
             User user = User.of(userId, password, name, email);
 
             UserDb.add(user);
-            return new HttpResponse(request, HttpStatus.OK, new HttpHeaders(), null);
+            return new HttpResponse(request, HttpStatus.NO_CONTENT, new HttpHeaders(), null);
         }
 
         throw new IllegalArgumentException("처리 가능한 메소드가 존재하지 않습니다." + request.getPath().toString());

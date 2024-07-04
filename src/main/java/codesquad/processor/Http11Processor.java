@@ -35,7 +35,10 @@ public class Http11Processor implements HttpProcessor {
         writeStatusLine(os, response);
         writeHeaders(os, response);
         os.write(LINE_SEPERATOR.getBytes());
-        writeBody(os, response);
+
+        if (response.getBody() != null) {
+            writeBody(os, response);
+        }
 
         os.flush();
     }
@@ -59,11 +62,13 @@ public class Http11Processor implements HttpProcessor {
     private void writeHeaders(OutputStream os, HttpResponse response) throws IOException {
         StringBuilder sb = new StringBuilder();
 
-        String contentType = response.getHeaders().get(HttpHeaders.CONTENT_TYPE);
-        sb.append(HttpHeaders.CONTENT_TYPE).append(": ")
-                .append(contentType).append(",")
-                .append(HttpHeaders.CONTENT_LENGTH).append(": ")
-                .append(response.getBody().getBytes().length);
+        if (response.getBody() != null) {
+            String contentType = response.getHeaders().get(HttpHeaders.CONTENT_TYPE);
+            sb.append(HttpHeaders.CONTENT_TYPE).append(": ")
+                    .append(contentType).append(LINE_SEPERATOR)
+                    .append(HttpHeaders.CONTENT_LENGTH).append(": ")
+                    .append(response.getBody().getBytes().length);
+        }
         sb.append(LINE_SEPERATOR);
 
         os.write(sb.toString().getBytes());
