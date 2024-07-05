@@ -38,10 +38,10 @@ class UserAdapterTest {
         HttpResponse response1 = userAdapter.handle(request1);
         HttpResponse response2 = userAdapter.handle(request2);
 
-        assertEquals(HttpStatus.OK, response1.getStatus());
-        assertEquals(HttpStatus.OK, response2.getStatus());
+        assertEquals(HttpStatus.NO_CONTENT, response1.getStatus());
+        assertEquals(HttpStatus.NO_CONTENT, response2.getStatus());
         assertEquals(2, UserDb.size());
     }
 
-    
+
 }
