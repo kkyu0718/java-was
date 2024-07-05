@@ -1,5 +1,7 @@
 package codesquad.handler;
 
+import codesquad.global.Path;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -12,7 +14,7 @@ public class StaticFileReader implements StaticFileReaderSpec {
     }
 
     @Override
-    public byte[] readFile(String path) throws IOException {
+    public byte[] readFile(Path path) throws IOException {
         File filePath = getFilePath(path);
         byte[] bytes = new byte[(int) filePath.length()];
 
@@ -23,13 +25,13 @@ public class StaticFileReader implements StaticFileReaderSpec {
         return bytes;
     }
 
-    private File getFilePath(String path) {
+    private File getFilePath(Path path) {
         return new File(resourceRootPath + "/" + path);
     }
 
     @Override
-    public boolean exists(String path) {
+    public boolean exists(Path path) {
         File filePath = getFilePath(path);
-        return filePath.exists();
+        return filePath.isFile();
     }
 }

@@ -1,5 +1,6 @@
 package codesquad.handler;
 
+import codesquad.global.Path;
 import codesquad.http.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,21 +17,41 @@ public class StaticFileHandler implements HttpHandler {
 
     @Override
     public HttpResponse handle(HttpRequest request) {
-        String path = request.getPath();
+        Path path = request.getPath();
         if (!staticFileReader.exists(path)) {
-            logger.warn("File not found: " + path);
-            return createNotFoundResponse(request);
+            return handleNotFoundPath(path, request);
         }
 
+        return readFileAndCreateResponse(path, request);
+    }
+
+    private HttpResponse handleNotFoundPath(Path path, HttpRequest request) {
+        Path indexPath = Path.of(path + "/index.html");
+        if (staticFileReader.exists(indexPath)) {
+            return readFileAndCreateResponse(indexPath, request);
+        }
+        logger.warn("File not found: " + path);
+        return createNotFoundResponse(request);
+    }
+
+    private HttpResponse readFileAndCreateResponse(Path path, HttpRequest request) {
         try {
             byte[] bytes = staticFileReader.readFile(path);
             MimeType contentType = MimeType.fromExt(path);
-
             return createOkResponse(request, bytes, contentType);
         } catch (IOException ex) {
             logger.error("Error reading file: " + path, ex);
             return createErrorResponse(request);
         }
+    }
+
+    @Override
+    public boolean canHandle(HttpRequest request) {
+        Path path = request.getPath();
+
+        if (path.isFilePath()) {
+            return true;
+        } else return staticFileReader.exists(Path.of(path.toString() + "/index.html"));
     }
 
     private static HttpResponse createOkResponse(HttpRequest request, byte[] bytes, MimeType contentType) {

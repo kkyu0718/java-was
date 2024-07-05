@@ -13,6 +13,7 @@ public class HttpHeaders {
     public static String HTTP_METHOD = "Http-Method";
     public static String CONTENT_TYPE = "Content-Type";
     public static String CONTENT_LENGTH = "Content-Length";
+    public static String HOST = "Host";
 
     public HttpHeaders() {
         this.headers = new HashMap<>();
@@ -24,6 +25,10 @@ public class HttpHeaders {
 
     public String get(String key) {
         return headers.get(key);
+    }
+
+    public int size() {
+        return headers.size();
     }
 
     @Override

@@ -1,5 +1,7 @@
 package codesquad.http;
 
+import codesquad.global.Path;
+
 public enum MimeType {
     HTML("html", "text/html"),
     CSS("css", "text/css"),
@@ -25,8 +27,8 @@ public enum MimeType {
         return mimeType;
     }
 
-    public static MimeType fromExt(String file) {
-        String ext = file.split("\\.", 2)[1];
+    public static MimeType fromExt(Path path) {
+        String ext = path.getExt();
         for (MimeType mimeType : MimeType.values()) {
             if (ext.equals(mimeType.ext)) {
                 return mimeType;
