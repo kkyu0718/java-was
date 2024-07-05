@@ -16,4 +16,8 @@ public class User {
     public static User of(String userId, String password, String name, String email) {
         return new User(userId, password, name, email);
     }
+
+    public String getUserId() {
+        return userId;
+    }
 }
