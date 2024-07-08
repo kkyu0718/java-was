@@ -8,5 +8,5 @@ public interface StaticFileReaderSpec {
 
     byte[] readFile(Path path) throws IOException;
 
-    boolean exists(Path path);
+    boolean exists(Path path) throws IOException;
 }

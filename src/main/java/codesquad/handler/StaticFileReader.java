@@ -1,37 +1,30 @@
 package codesquad.handler;
 
 import codesquad.global.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class StaticFileReader implements StaticFileReaderSpec {
-    private final String resourceRootPath;
+    private static Logger logger = LoggerFactory.getLogger(StaticFileReader.class);
+    private static String staticPath = "static";
 
-    public StaticFileReader(String resourceRootPath) {
-        this.resourceRootPath = resourceRootPath;
+    public StaticFileReader() {
     }
 
     @Override
     public byte[] readFile(Path path) throws IOException {
-        File filePath = getFilePath(path);
-        byte[] bytes = new byte[(int) filePath.length()];
-
-        try (FileInputStream fis = new FileInputStream(filePath)) {
-            fis.read(bytes);
+        try (InputStream resource = this.getClass().getClassLoader().getResourceAsStream(staticPath + "/" + path.toString())) {
+            return resource.readAllBytes();
         }
-
-        return bytes;
-    }
-
-    private File getFilePath(Path path) {
-        return new File(resourceRootPath + "/" + path);
     }
 
     @Override
-    public boolean exists(Path path) {
-        File filePath = getFilePath(path);
-        return filePath.isFile();
+    public boolean exists(Path path) throws IOException {
+        try (InputStream resourceAsStream = this.getClass().getClassLoader().getResourceAsStream(staticPath + "/" + path.toString())) {
+            return resourceAsStream != null;
+        }
     }
 }
