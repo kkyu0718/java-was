@@ -1,46 +1,40 @@
 package codesquad.handler;
 
 import codesquad.global.Path;
-import codesquad.http.*;
+import codesquad.http.HttpRequest;
+import codesquad.http.HttpResponse;
+import codesquad.http.MimeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.List;
 
-import static codesquad.http.HttpResponse.createErrorResponse;
-import static codesquad.http.HttpResponse.createOkResponse;
+import static codesquad.http.HttpResponse.*;
 
-public class StaticFileHandler implements HttpHandler {
-    private static final Logger logger = LoggerFactory.getLogger(StaticFileHandler.class);
+public class RedirectStaticFileHandler implements HttpHandler {
+    private static final Logger logger = LoggerFactory.getLogger(RedirectStaticFileHandler.class);
     private StaticFileReaderSpec staticFileReader;
+    private List<Path> whitelist;
 
-    public StaticFileHandler(StaticFileReaderSpec staticFileReader) {
+    public RedirectStaticFileHandler(StaticFileReaderSpec staticFileReader, List<Path> whitelist) {
         this.staticFileReader = staticFileReader;
+        this.whitelist = whitelist;
     }
 
     @Override
     public HttpResponse handle(HttpRequest request) {
         Path path = request.getPath();
+        Path indexPath = new Path(path.toString() + "/index.html");
         try {
-            if (!isValid(path)) {
+            if (!staticFileReader.exists(indexPath)) {
                 return createNotFoundResponse(request);
             }
         } catch (IOException e) {
-            throw new RuntimeException("error reading file " + path);
+            throw new RuntimeException("error reading file " + indexPath);
         }
 
-        return readFileAndCreateResponse(path, request);
-    }
-
-    private boolean isValid(Path path) throws IOException {
-        return staticFileReader.exists(path);
-    }
-
-    private HttpResponse createNotFoundResponse(HttpRequest request) {
-        HttpHeaders resHeaders = new HttpHeaders();
-        resHeaders.put(HttpHeaders.HTTP_VERSION, request.getHttpVersion().getRepresentation());
-
-        return new HttpResponse(request, HttpStatus.NOT_FOUND, resHeaders, new HttpBody(null));
+        return readFileAndCreateResponse(indexPath, request);
     }
 
     private HttpResponse readFileAndCreateResponse(Path path, HttpRequest request) {
@@ -57,7 +51,6 @@ public class StaticFileHandler implements HttpHandler {
     @Override
     public boolean canHandle(HttpRequest request) {
         Path path = request.getPath();
-        return path.isFilePath();
+        return whitelist.contains(path);
     }
-
 }

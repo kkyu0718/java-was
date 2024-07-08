@@ -2,13 +2,15 @@ package codesquad;
 
 import codesquad.adapter.Adapter;
 import codesquad.adapter.UserAdapter;
+import codesquad.global.Path;
 import codesquad.handler.DynamicHandler;
-import codesquad.handler.HttpHandler;
+import codesquad.handler.RedirectStaticFileHandler;
 import codesquad.handler.StaticFileHandler;
 import codesquad.handler.StaticFileReader;
 import codesquad.http.HttpRequest;
 import codesquad.http.HttpResponse;
 import codesquad.processor.Http11Processor;
+import codesquad.processor.HttpProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,23 +24,30 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static codesquad.http.HttpResponse.createNotFoundResponse;
+
 public class WasServer {
     private static Logger logger = LoggerFactory.getLogger(WasServer.class);
     private static int MAX_THREAD_POOL_SIZE = 100;
-    private static String resourceRootPath = "src/main/resources/static";
 
     private ServerSocket serverSocket;
-    private List<HttpHandler> handlers;
+    //    private List<HttpHandler> handlers;
+    private DynamicHandler dynamicHandler;
+    private StaticFileHandler staticFileHandler;
+    private RedirectStaticFileHandler redirectStaticFileHandler;
     private ExecutorService executorService;
 
     public WasServer(int port) throws IOException {
-        StaticFileHandler staticFileHandler = new StaticFileHandler(new StaticFileReader(resourceRootPath));
-
         Adapter userAdapter = new UserAdapter();
-        DynamicHandler dynamicHandler = new DynamicHandler(List.of(userAdapter));
+        List<Path> whitelist = List.of(
+                Path.of("/"),
+                Path.of("/registration")
+        );
 
         serverSocket = new ServerSocket(port);
-        handlers = List.of(staticFileHandler, dynamicHandler);
+        dynamicHandler = new DynamicHandler(List.of(userAdapter));
+        staticFileHandler = new StaticFileHandler(new StaticFileReader());
+        redirectStaticFileHandler = new RedirectStaticFileHandler(new StaticFileReader(), whitelist);
         executorService = Executors.newFixedThreadPool(MAX_THREAD_POOL_SIZE);
 
         logger.debug("Listening for connection on port 8080 ....");
@@ -52,20 +61,27 @@ public class WasServer {
                     logger.debug("Client connected");
 
                     //TODO http 버젼 별 분기처리 필요
-                    Http11Processor processor = new Http11Processor();
+                    HttpProcessor processor = new Http11Processor();
                     HttpRequest httpRequest = processor.parseRequest(br);
                     logger.debug(httpRequest.toString());
 
                     //TODO URI 패턴 제한
-                    //TODO Path Util 클래스 뺴기
 
-                    //TODO handler 별 분기처리 필요
-                    // do service
-                    HttpHandler handler = getHandler(httpRequest);
-                    HttpResponse response = handler.handle(httpRequest);
+                    HttpResponse httpResponse = null;
+
+                    // file 로 요청이 오거나 정해진 view 로 요청이 오는 경우
+                    if (staticFileHandler.canHandle(httpRequest)) {
+                        httpResponse = staticFileHandler.handle(httpRequest);
+                    } else if (redirectStaticFileHandler.canHandle(httpRequest)) {
+                        httpResponse = redirectStaticFileHandler.handle(httpRequest);
+                    } else if (dynamicHandler.canHandle(httpRequest)) {
+                        httpResponse = dynamicHandler.handle(httpRequest);
+                    } else {
+                        httpResponse = createNotFoundResponse(httpRequest);
+                    }
 
                     OutputStream clientOutput = clientSocket.getOutputStream();
-                    processor.writeResponse(clientOutput, response);
+                    processor.writeResponse(clientOutput, httpResponse);
 
                 } catch (Exception ex) {
                     logger.error("Server accept failed ");
@@ -75,13 +91,4 @@ public class WasServer {
         });
     }
 
-    private HttpHandler getHandler(HttpRequest httpRequest) {
-        for (HttpHandler handler : handlers) {
-            if (handler.canHandle(httpRequest)) {
-                return handler;
-            }
-        }
-
-        throw new IllegalArgumentException("처리할 수 있는 handler 가 존재하지 않습니다. " + httpRequest.getPath());
-    }
 }

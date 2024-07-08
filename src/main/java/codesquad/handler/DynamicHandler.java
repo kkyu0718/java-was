@@ -33,6 +33,9 @@ public class DynamicHandler implements HttpHandler {
 
     @Override
     public boolean canHandle(HttpRequest request) {
-        return true;
+        Path path = request.getPath();
+
+        //TODO 리플렉션으로 리팩토링 필요
+        return path.equals(Path.of("/user/create"));
     }
 }
