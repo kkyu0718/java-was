@@ -1,5 +1,7 @@
 package codesquad.global;
 
+import java.util.Objects;
+
 public class Path {
     private String path;
 
@@ -26,5 +28,18 @@ public class Path {
     @Override
     public String toString() {
         return path;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Path path1 = (Path) o;
+        return Objects.equals(path, path1.path);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(path);
     }
 }
