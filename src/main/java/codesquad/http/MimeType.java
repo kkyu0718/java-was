@@ -8,6 +8,7 @@ public enum MimeType {
     PNG("png", "image/png"),
     JPG("jpg", "image/jpeg"),
     SVG("svg", "image/svg+xml"),
+    X_WWW_FORM_URLENCODED(null, "application/x-www-form-urlencoded"),
     NONE(null, null);
 
     private String ext;
@@ -34,5 +35,15 @@ public enum MimeType {
         }
 
         throw new IllegalArgumentException("No mimetype enum constant with extension " + ext);
+    }
+
+    public static MimeType fromMimeType(String other) {
+        for (MimeType mimeType : MimeType.values()) {
+            if (other.equals(mimeType.mimeType)) {
+                return mimeType;
+            }
+        }
+
+        throw new IllegalArgumentException("No mimetype enum constant with mimetype " + other);
     }
 }

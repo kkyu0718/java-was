@@ -39,7 +39,7 @@ public class StaticFileHandler implements HttpHandler {
         HttpHeaders resHeaders = new HttpHeaders();
         resHeaders.put(HttpHeaders.HTTP_VERSION, request.getHttpVersion().getRepresentation());
 
-        return new HttpResponse(request, HttpStatus.NOT_FOUND, resHeaders, new HttpBody(null));
+        return new HttpResponse(request, HttpStatus.NOT_FOUND, resHeaders, new HttpBody(null, MimeType.NONE));
     }
 
     private HttpResponse readFileAndCreateResponse(HttpRequest request) {

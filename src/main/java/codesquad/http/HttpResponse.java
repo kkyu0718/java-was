@@ -34,14 +34,14 @@ public class HttpResponse {
         resHeaders.put(HttpHeaders.HTTP_VERSION, request.getHttpVersion().getRepresentation());
         resHeaders.put(HttpHeaders.CONTENT_TYPE, contentType.getMimeType());
 
-        return new HttpResponse(request, HttpStatus.OK, resHeaders, new HttpBody(bytes));
+        return new HttpResponse(request, HttpStatus.OK, resHeaders, new HttpBody(bytes, contentType));
     }
 
     public static HttpResponse createErrorResponse(HttpRequest request) {
         HttpHeaders resHeaders = new HttpHeaders();
         resHeaders.put(HttpHeaders.HTTP_VERSION, request.getHttpVersion().getRepresentation());
 
-        return new HttpResponse(request, HttpStatus.INTERNAL_SERVER_ERROR, resHeaders, new HttpBody(null));
+        return new HttpResponse(request, HttpStatus.INTERNAL_SERVER_ERROR, resHeaders, new HttpBody(null, MimeType.NONE));
     }
 
 
@@ -49,6 +49,13 @@ public class HttpResponse {
         HttpHeaders resHeaders = new HttpHeaders();
         resHeaders.put(HttpHeaders.HTTP_VERSION, request.getHttpVersion().getRepresentation());
 
-        return new HttpResponse(request, HttpStatus.NOT_FOUND, resHeaders, new HttpBody(null));
+        return new HttpResponse(request, HttpStatus.NOT_FOUND, resHeaders, new HttpBody(null, MimeType.NONE));
+    }
+
+    public static HttpResponse createNoContentResponse(HttpRequest request) {
+        HttpHeaders resHeaders = new HttpHeaders();
+        resHeaders.put(HttpHeaders.HTTP_VERSION, request.getHttpVersion().getRepresentation());
+
+        return new HttpResponse(request, HttpStatus.NO_CONTENT, resHeaders, null);
     }
 }
