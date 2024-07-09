@@ -1,7 +1,6 @@
 package codesquad.handler;
 
 import codesquad.adapter.Adapter;
-import codesquad.adapter.UserAdapter;
 import codesquad.global.Path;
 import codesquad.http.HttpRequest;
 import codesquad.http.HttpResponse;
@@ -12,7 +11,7 @@ public class DynamicHandler implements HttpHandler {
     private List<Adapter> adapters;
 
     public DynamicHandler(List<Adapter> adapters) {
-        this.adapters = List.of(new UserAdapter());
+        this.adapters = adapters;
     }
 
     @Override
@@ -34,8 +33,11 @@ public class DynamicHandler implements HttpHandler {
     @Override
     public boolean canHandle(HttpRequest request) {
         Path path = request.getPath();
-
-        //TODO 리플렉션으로 리팩토링 필요
-        return path.equals(Path.of("/user/create"));
+        for (Adapter adapter : adapters) {
+            if (adapter.supports(path)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

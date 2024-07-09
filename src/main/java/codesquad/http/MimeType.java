@@ -9,7 +9,8 @@ public enum MimeType {
     ICO("ico", "image/x-icon"),
     PNG("png", "image/png"),
     JPG("jpg", "image/jpeg"),
-    SVG("svg", "image/svg+xml");
+    SVG("svg", "image/svg+xml"),
+    NONE(null, null);
 
     private String ext;
     private String mimeType;
