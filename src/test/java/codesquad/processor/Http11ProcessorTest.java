@@ -1,5 +1,6 @@
 package codesquad.processor;
 
+import codesquad.global.Path;
 import codesquad.http.HttpHeaders;
 import codesquad.http.HttpMethod;
 import codesquad.http.HttpRequest;
@@ -119,6 +120,52 @@ class Http11ProcessorTest {
         HttpRequest httpRequest = processor.parseRequest(br);
         HttpHeaders headers = httpRequest.getHeaders();
         Assertions.assertEquals("localhost", headers.get("Host"));
+    }
+
+    @Test
+    void 유효한_URL_검증() throws IOException {
+        String validRequest = "GET http://example.com/path/to/resource HTTP/1.1\r\nHost: example.com\r\n\r\n";
+        BufferedReader reader = new BufferedReader(new StringReader(validRequest));
+
+        HttpRequest request = processor.parseRequest(reader);
+
+        Assertions.assertNotNull(request);
+        Assertions.assertEquals(HttpMethod.GET, request.getMethod());
+        Assertions.assertEquals(Path.of("/path/to/resource"), request.getPath());
+        Assertions.assertEquals(HttpVersion.HTTP11, request.getHttpVersion());
+    }
+
+    @Test
+    void 시작_라인에_HTTP_버전이_없는_경우_검증() {
+        Http11Processor processor = new Http11Processor();
+        String invalidStartLine = "GET http://example.com/path/to/resource\r\nHost: example.com\r\n\r\n"; // HTTP 버전 없음
+        BufferedReader reader = new BufferedReader(new StringReader(invalidStartLine));
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            processor.parseRequest(reader);
+        });
+    }
+
+    @Test
+    void 시작_라인에_URI가_없는_경우_검증() {
+        Http11Processor processor = new Http11Processor();
+        String invalidStartLine = "GET /path/to/resource HTTP/1.1"; // URI 없음
+        BufferedReader reader = new BufferedReader(new StringReader(invalidStartLine));
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            processor.parseRequest(reader);
+        });
+    }
+
+    @Test
+    void 시작_라인에_HTTP_메서드가_없는_경우_검증() {
+        Http11Processor processor = new Http11Processor();
+        String invalidStartLine = "/path/to/resource HTTP/1.1"; // 메서드 없음
+        BufferedReader reader = new BufferedReader(new StringReader(invalidStartLine));
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            processor.parseRequest(reader);
+        });
     }
 
     @BeforeEach
