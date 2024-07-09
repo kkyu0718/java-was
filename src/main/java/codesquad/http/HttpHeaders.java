@@ -31,6 +31,10 @@ public class HttpHeaders {
         return headers.size();
     }
 
+    public boolean contains(String key) {
+        return headers.containsKey(key);
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

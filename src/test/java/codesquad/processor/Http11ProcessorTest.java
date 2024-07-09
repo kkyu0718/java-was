@@ -21,7 +21,11 @@ class Http11ProcessorTest {
 
     @Test
     public void request가_주어지면_start_line를_적절히_파싱을_할수있다() throws IOException {
-        String requestString = "GET /index.html HTTP/1.1" + "Host : localhost" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR + LINE_SEPERATOR + LINE_SEPERATOR;
+        String requestString = "GET /index.html HTTP/1.1" + LINE_SEPERATOR
+                + "Host: localhost" + LINE_SEPERATOR
+                + "Connection: keep-alive" + LINE_SEPERATOR
+                + LINE_SEPERATOR
+                + LINE_SEPERATOR;
         BufferedReader br = new BufferedReader(new StringReader(requestString));
 
         HttpRequest request = processor.parseRequest(br);
@@ -33,7 +37,15 @@ class Http11ProcessorTest {
 
     @Test
     public void request가_주어지면_start_line과_적절한_규약을_지키는_헤더를_적절히_파싱을_할수있다() throws IOException {
-        String requestString = "GET /index.html HTTP/1.1" + LINE_SEPERATOR + "Host: localhost:8080" + LINE_SEPERATOR + "Accept: */*" + LINE_SEPERATOR + "Accept-Encoding: gzip, deflate, br, zstd" + LINE_SEPERATOR + "Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR + "Content-Length: 144" + LINE_SEPERATOR + "Content-Type: text/plain;charset=UTF-8" + LINE_SEPERATOR + LINE_SEPERATOR;
+        String requestString = "GET /index.html HTTP/1.1" + LINE_SEPERATOR
+                + "Host: localhost:8080" + LINE_SEPERATOR
+                + "Accept: */*" + LINE_SEPERATOR
+                + "Accept-Encoding: gzip, deflate, br, zstd" + LINE_SEPERATOR
+                + "Accept-Language: ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7" + LINE_SEPERATOR
+                + "Connection: keep-alive" + LINE_SEPERATOR
+                + "Content-Length: 0" + LINE_SEPERATOR
+                + "Content-Type: text/plain;charset=UTF-8" + LINE_SEPERATOR
+                + LINE_SEPERATOR;
 
         BufferedReader br = new BufferedReader(new StringReader(requestString));
 
@@ -48,7 +60,7 @@ class Http11ProcessorTest {
         assertEquals("gzip, deflate, br, zstd", request.getHeaders().get("Accept-Encoding"));
         assertEquals("ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7", request.getHeaders().get("Accept-Language"));
         assertEquals("keep-alive", request.getHeaders().get("Connection"));
-        assertEquals("144", request.getHeaders().get("Content-Length"));
+        assertEquals("0", request.getHeaders().get("Content-Length"));
         assertEquals("text/plain;charset=UTF-8", request.getHeaders().get("Content-Type"));
     }
 
@@ -156,17 +168,6 @@ class Http11ProcessorTest {
     }
 
     @Test
-    void 시작_라인에_URI가_없는_경우_검증() {
-        String invalidStartLine = "GET /path/to/resource HTTP/1.1" + LINE_SEPERATOR
-                + "Host: localhost:8080" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR; // URI 없음
-        BufferedReader reader = new BufferedReader(new StringReader(invalidStartLine));
-
-        assertThrows(IllegalArgumentException.class, () -> {
-            processor.parseRequest(reader);
-        });
-    }
-
-    @Test
     void 시작_라인에_HTTP_메서드가_없는_경우_검증() {
         String invalidStartLine = "/path/to/resource HTTP/1.1" + LINE_SEPERATOR
                 + "Host: localhost:8080" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR; // 메서드 없음
@@ -179,7 +180,10 @@ class Http11ProcessorTest {
 
     @Test
     void Host헤더와_Connection혜더는_항상_존재해야한다() {
-        String validStartLine = "GET /path/to/resource HTTP/1.1" + "Host: localhost:8080" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR;
+        String validStartLine = "GET /path/to/resource HTTP/1.1" + LINE_SEPERATOR
+                + "Host: localhost:8080" + LINE_SEPERATOR
+                + "Connection: keep-alive" + LINE_SEPERATOR
+                + LINE_SEPERATOR;
         BufferedReader reader = new BufferedReader(new StringReader(validStartLine));
 
         assertDoesNotThrow(() -> {
@@ -189,7 +193,8 @@ class Http11ProcessorTest {
 
     @Test
     void Host헤더가_존재하지않으면_에러를_던진다() {
-        String validStartLine = "/path/to/resource HTTP/1.1" + "Connection: keep-alive" + LINE_SEPERATOR;
+        String validStartLine = "/path/to/resource HTTP/1.1" + LINE_SEPERATOR
+                + "Connection: keep-alive" + LINE_SEPERATOR;
         BufferedReader reader = new BufferedReader(new StringReader(validStartLine));
 
         assertThrows(IllegalArgumentException.class, () -> {
@@ -209,7 +214,11 @@ class Http11ProcessorTest {
 
     @Test
     void 시작라인O_헤더O_바디X() throws IOException {
-        String requestString = "GET /path/to/resource HTTP/1.1" + LINE_SEPERATOR + "Host: localhost:8080" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR + LINE_SEPERATOR + LINE_SEPERATOR;
+        String requestString = "GET /path/to/resource HTTP/1.1" + LINE_SEPERATOR
+                + "Host: localhost:8080" + LINE_SEPERATOR
+                + "Connection: keep-alive" + LINE_SEPERATOR
+                + LINE_SEPERATOR
+                + LINE_SEPERATOR;
         ;
         BufferedReader reader = new BufferedReader(new StringReader(requestString));
 
@@ -228,8 +237,14 @@ class Http11ProcessorTest {
 
     @Test
     void 시작라인O_헤더O_바디O() throws IOException {
-        String requestString = "GET /path/to/resource HTTP/1.1" + LINE_SEPERATOR + "Host: localhost:8080" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR + LINE_SEPERATOR + "body body body" + LINE_SEPERATOR;
-        ;
+        String body = "body body body";
+        String requestString = "GET /path/to/resource HTTP/1.1" + LINE_SEPERATOR
+                + "Host: localhost:8080" + LINE_SEPERATOR
+                + "Connection: keep-alive" + LINE_SEPERATOR
+                + "Content-Length: " + body.getBytes().length + LINE_SEPERATOR
+                + LINE_SEPERATOR
+                + body + LINE_SEPERATOR;
+
         BufferedReader reader = new BufferedReader(new StringReader(requestString));
 
         HttpRequest request = processor.parseRequest(reader);
@@ -238,7 +253,7 @@ class Http11ProcessorTest {
         assertEquals(HttpVersion.HTTP11, request.getHttpVersion());
 
         assertNotNull(request);
-        assertEquals(2, request.getHeaders().size());
+        assertEquals(3, request.getHeaders().size());
         assertEquals("keep-alive", request.getHeaders().get("Connection"));
         assertEquals("localhost:8080", request.getHeaders().get("Host"));
 
