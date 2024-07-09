@@ -93,10 +93,9 @@
             },
             body: data.toString()
         })
-            .then(response => {
-                if (response.ok) {
+            .then((response) => {
+                if (response.status === 302) {
                     window.alert("회원가입 성공");
-                    window.location.href = '/';
                 } else {
                     return response.text().then(text => {
                         throw new Error(text);

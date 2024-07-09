@@ -37,9 +37,20 @@ class UserAdapterTest {
         HttpResponse response1 = userAdapter.handle(request1);
         HttpResponse response2 = userAdapter.handle(request2);
 
-        assertEquals(HttpStatus.NO_CONTENT, response1.getStatus());
-        assertEquals(HttpStatus.NO_CONTENT, response2.getStatus());
+        assertEquals(HttpStatus.FOUND, response1.getStatus());
+        assertEquals(HttpStatus.FOUND, response2.getStatus());
         assertEquals(2, UserDb.size());
+    }
+
+    @Test
+    public void UserAdapter가_주어졌을때_create메소드를_실행하면_메인화면으로_리다이렉트된다() {
+        byte[] bytes = "userId=id1&password=1234&name=kyu1&email=email1".getBytes();
+        HttpRequest request = new HttpRequest(HttpMethod.POST, "/user/create", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(bytes, MimeType.X_WWW_FORM_URLENCODED), null);
+
+        HttpResponse response = userAdapter.handle(request);
+
+        assertEquals(HttpStatus.FOUND, response.getStatus());
+        assertEquals("/index.html", response.getHeaders().get("Location"));
     }
 
 
