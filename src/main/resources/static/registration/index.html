@@ -91,10 +91,14 @@
                 'Accept': '*/*',
                 'Connection': 'keep-alive'
             },
-            body: data.toString()
+            body: data.toString(),
+            redirect: 'follow' // Ensure redirects are followed
         })
             .then((response) => {
-                if (response.status === 302) {
+                console.log(response)
+                if (response.redirected) {
+                    window.location.href = response.url; // Manually handle the redirect if necessary
+                } else if (response.status === 200) {
                     window.alert("회원가입 성공");
                 } else {
                     return response.text().then(text => {
