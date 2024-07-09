@@ -28,11 +28,11 @@ class UserAdapterTest {
 
     @Test
     public void UserAdapter가_주어졌을때_create메소드를_통해_유저를_저장한다() {
-        Parameters parameters1 = Parameters.of("userId=id1&password=1234&name=kyu1&email=email1");
-        Parameters parameters2 = Parameters.of("userId=id2&password=1234&name=kyu2&email=email2");
+        byte[] bytes1 = "userId=id1&password=1234&name=kyu1&email=email1".getBytes();
+        byte[] bytes2 = "userId=id2&password=1234&name=kyu2&email=email2".getBytes();
 
-        HttpRequest request1 = new HttpRequest(HttpMethod.POST, "/user/create", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(null), parameters1);
-        HttpRequest request2 = new HttpRequest(HttpMethod.POST, "/user/create", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(null), parameters2);
+        HttpRequest request1 = new HttpRequest(HttpMethod.POST, "/user/create", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(bytes1, MimeType.X_WWW_FORM_URLENCODED), null);
+        HttpRequest request2 = new HttpRequest(HttpMethod.POST, "/user/create", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(bytes2, MimeType.X_WWW_FORM_URLENCODED), null);
 
         HttpResponse response1 = userAdapter.handle(request1);
         HttpResponse response2 = userAdapter.handle(request2);

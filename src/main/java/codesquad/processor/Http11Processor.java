@@ -143,6 +143,8 @@ public class Http11Processor implements HttpProcessor {
         }
 
         int contentLength = Integer.parseInt(headers.get(HttpHeaders.CONTENT_LENGTH));
+        MimeType mimeType = MimeType.fromMimeType(headers.get(HttpHeaders.CONTENT_TYPE));
+
         char[] bodyChars = new char[contentLength];
         int read = br.read(bodyChars, 0, contentLength);
 
@@ -150,8 +152,7 @@ public class Http11Processor implements HttpProcessor {
             throw new IOException("Expected " + contentLength + " bytes but read " + read + " bytes.");
         }
 
-        logger.debug(new HttpBody(new String(bodyChars).getBytes(StandardCharsets.US_ASCII)).toString());
-        return new HttpBody(new String(bodyChars).getBytes(StandardCharsets.US_ASCII));
+        return new HttpBody(new String(bodyChars).getBytes(StandardCharsets.US_ASCII), mimeType);
     }
 
     private String[] parseStartLine(BufferedReader br) throws IOException {

@@ -1,14 +1,28 @@
 package codesquad.http;
 
-public class HttpBody {
-    private byte[] bytes; //TODO mime type 에 따른 구현 필요
+import java.net.URLDecoder;
 
-    public HttpBody(byte[] bytes) {
+public class HttpBody {
+    private byte[] bytes;
+    private MimeType contentType;
+
+    public HttpBody(byte[] bytes, MimeType contentType) {
         this.bytes = bytes;
+        this.contentType = contentType;
     }
 
     public byte[] getBytes() {
         return bytes;
+    }
+
+    public Parameters getParameters() {
+        if (contentType == MimeType.X_WWW_FORM_URLENCODED) {
+            String decode = URLDecoder.decode(new String(bytes));
+            return Parameters.of(decode);
+        }
+
+        //TODO contentType 처리
+        return null;
     }
 
     @Override

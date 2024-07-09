@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static codesquad.utils.StringUtils.LINE_SEPERATOR;
+
 public class Parameters {
     private Map<String, String> parameter;
 
@@ -39,5 +41,14 @@ public class Parameters {
 
     public int size() {
         return parameter.size();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (String key : parameter.keySet()) {
+            sb.append("(" + key + ", " + parameter.get(key) + ")").append(LINE_SEPERATOR);
+        }
+        return sb.toString();
     }
 }
