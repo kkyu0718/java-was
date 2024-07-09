@@ -1,6 +1,5 @@
 package codesquad.processor;
 
-import codesquad.global.Path;
 import codesquad.http.HttpHeaders;
 import codesquad.http.HttpMethod;
 import codesquad.http.HttpRequest;
@@ -131,7 +130,7 @@ class Http11ProcessorTest {
 
         Assertions.assertNotNull(request);
         Assertions.assertEquals(HttpMethod.GET, request.getMethod());
-        Assertions.assertEquals(Path.of("/path/to/resource"), request.getPath());
+        Assertions.assertEquals("/path/to/resource", request.getPath());
         Assertions.assertEquals(HttpVersion.HTTP11, request.getHttpVersion());
     }
 

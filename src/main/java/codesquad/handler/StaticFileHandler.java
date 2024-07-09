@@ -1,6 +1,5 @@
 package codesquad.handler;
 
-import codesquad.global.Path;
 import codesquad.http.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +19,7 @@ public class StaticFileHandler implements HttpHandler {
 
     @Override
     public HttpResponse handle(HttpRequest request) {
-        Path path = request.getPath();
+        String path = request.getPath();
         try {
             if (!isValid(path)) {
                 return createNotFoundResponse(request);
@@ -29,10 +28,10 @@ public class StaticFileHandler implements HttpHandler {
             throw new RuntimeException("error reading file " + path);
         }
 
-        return readFileAndCreateResponse(path, request);
+        return readFileAndCreateResponse(request);
     }
 
-    private boolean isValid(Path path) throws IOException {
+    private boolean isValid(String path) throws IOException {
         return staticFileReader.exists(path);
     }
 
@@ -43,21 +42,20 @@ public class StaticFileHandler implements HttpHandler {
         return new HttpResponse(request, HttpStatus.NOT_FOUND, resHeaders, new HttpBody(null));
     }
 
-    private HttpResponse readFileAndCreateResponse(Path path, HttpRequest request) {
+    private HttpResponse readFileAndCreateResponse(HttpRequest request) {
         try {
-            byte[] bytes = staticFileReader.readFile(path);
-            MimeType contentType = MimeType.fromExt(path);
+            byte[] bytes = staticFileReader.readFile(request.getPath());
+            MimeType contentType = MimeType.fromExt(request.getExt());
             return createOkResponse(request, bytes, contentType);
         } catch (IOException ex) {
-            logger.error("Error reading file: " + path);
+            logger.error("Error reading file: " + request.getPath());
             return createErrorResponse(request);
         }
     }
 
     @Override
     public boolean canHandle(HttpRequest request) {
-        Path path = request.getPath();
-        return path.isFilePath();
+        return request.isFilePath();
     }
 
 }

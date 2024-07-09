@@ -1,7 +1,6 @@
 package codesquad.handler;
 
 import codesquad.adapter.Adapter;
-import codesquad.global.Path;
 import codesquad.http.HttpRequest;
 import codesquad.http.HttpResponse;
 
@@ -16,12 +15,12 @@ public class DynamicHandler implements HttpHandler {
 
     @Override
     public HttpResponse handle(HttpRequest request) {
-        Path path = request.getPath();
+        String path = request.getPath();
         Adapter adapter = getAdapter(path);
         return adapter.handle(request);
     }
 
-    private Adapter getAdapter(Path path) {
+    private Adapter getAdapter(String path) {
         for (Adapter adapter : adapters) {
             if (adapter.supports(path)) {
                 return adapter;
@@ -32,7 +31,7 @@ public class DynamicHandler implements HttpHandler {
 
     @Override
     public boolean canHandle(HttpRequest request) {
-        Path path = request.getPath();
+        String path = request.getPath();
         for (Adapter adapter : adapters) {
             if (adapter.supports(path)) {
                 return true;

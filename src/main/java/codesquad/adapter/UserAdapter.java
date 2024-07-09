@@ -1,19 +1,18 @@
 package codesquad.adapter;
 
 import codesquad.db.UserDb;
-import codesquad.global.Path;
 import codesquad.http.*;
 import codesquad.model.User;
 
 public class UserAdapter implements Adapter {
     @Override
-    public boolean supports(Path path) {
-        return path.toString().startsWith("/user");
+    public boolean supports(String path) {
+        return path.startsWith("/user");
     }
 
     @Override
     public HttpResponse handle(HttpRequest request) {
-        if (request.getPath().toString().equals("/user/create")) {
+        if (request.getPath().equals("/user/create")) {
             Parameters parameters = request.getParameters();
             String userId = parameters.getParameter("userId");
             String password = parameters.getParameter("password");

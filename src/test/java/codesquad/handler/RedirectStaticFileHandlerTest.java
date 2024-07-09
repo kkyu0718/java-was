@@ -1,6 +1,5 @@
 package codesquad.handler;
 
-import codesquad.global.Path;
 import codesquad.http.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,15 +10,17 @@ import java.util.List;
 
 class RedirectStaticFileHandlerTest {
     private RedirectStaticFileHandler handler;
-    private Path redirectNeededPath;
+    private String redirectNeededPath;
+    private String nonExistentPath;
 
     @BeforeEach
     void setup() {
-        redirectNeededPath = Path.of("/registration");
+        redirectNeededPath = "/registration";
         handler = new RedirectStaticFileHandler(
                 new StaticFileReader(),
                 List.of(redirectNeededPath)
         );
+        nonExistentPath = "/non-existent";
     }
 
     @Test
@@ -35,7 +36,6 @@ class RedirectStaticFileHandlerTest {
 
     @Test
     void RedirectStaticFileHandler가_주어지고_존재하지않는_Path와_디렉토리의_index_html이_없을때_404상태코드가_주어진다() {
-        Path nonExistentPath = Path.of("/non-existent");
         handler = new RedirectStaticFileHandler(
                 new StaticFileReader(),
                 List.of(nonExistentPath)
@@ -55,12 +55,12 @@ class RedirectStaticFileHandlerTest {
         RedirectStaticFileHandler faultyHandler = new RedirectStaticFileHandler(
                 new StaticFileReaderSpec() {
                     @Override
-                    public byte[] readFile(Path path) throws IOException {
+                    public byte[] readFile(String path) throws IOException {
                         throw new IOException("IO 에러 발생");
                     }
 
                     @Override
-                    public boolean exists(Path path) {
+                    public boolean exists(String path) {
                         return true;
                     }
                 },
@@ -82,7 +82,6 @@ class RedirectStaticFileHandlerTest {
         Assertions.assertTrue(handler.canHandle(validRequest));
 
         // whitelist에 존재하지 않는 경로에 대한 요청
-        Path nonExistentPath = Path.of("/non-existent");
         HttpRequest invalidRequest = new HttpRequest(HttpMethod.GET, nonExistentPath, HttpVersion.HTTP11, new HttpHeaders(), null, null);
         Assertions.assertFalse(handler.canHandle(invalidRequest));
     }

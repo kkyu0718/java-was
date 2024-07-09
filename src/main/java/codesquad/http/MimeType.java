@@ -1,7 +1,5 @@
 package codesquad.http;
 
-import codesquad.global.Path;
-
 public enum MimeType {
     HTML("html", "text/html"),
     CSS("css", "text/css"),
@@ -28,14 +26,13 @@ public enum MimeType {
         return mimeType;
     }
 
-    public static MimeType fromExt(Path path) {
-        String ext = path.getExt();
+    public static MimeType fromExt(String ext) {
         for (MimeType mimeType : MimeType.values()) {
             if (ext.equals(mimeType.ext)) {
                 return mimeType;
             }
         }
 
-        throw new IllegalArgumentException("No mimetype enum constant with extension" + ext);
+        throw new IllegalArgumentException("No mimetype enum constant with extension " + ext);
     }
 }

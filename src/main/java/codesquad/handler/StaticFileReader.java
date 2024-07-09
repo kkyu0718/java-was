@@ -1,6 +1,5 @@
 package codesquad.handler;
 
-import codesquad.global.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,14 +14,14 @@ public class StaticFileReader implements StaticFileReaderSpec {
     }
 
     @Override
-    public byte[] readFile(Path path) throws IOException {
+    public byte[] readFile(String path) throws IOException {
         try (InputStream resource = this.getClass().getClassLoader().getResourceAsStream(staticPath + "/" + path.toString())) {
             return resource.readAllBytes();
         }
     }
 
     @Override
-    public boolean exists(Path path) throws IOException {
+    public boolean exists(String path) throws IOException {
         try (InputStream resourceAsStream = this.getClass().getClassLoader().getResourceAsStream(staticPath + "/" + path.toString())) {
             return resourceAsStream != null;
         }

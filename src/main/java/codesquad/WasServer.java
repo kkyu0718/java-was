@@ -2,7 +2,6 @@ package codesquad;
 
 import codesquad.adapter.Adapter;
 import codesquad.adapter.UserAdapter;
-import codesquad.global.Path;
 import codesquad.handler.DynamicHandler;
 import codesquad.handler.RedirectStaticFileHandler;
 import codesquad.handler.StaticFileHandler;
@@ -38,9 +37,9 @@ public class WasServer {
 
     public WasServer(int port) throws IOException {
         Adapter userAdapter = new UserAdapter();
-        List<Path> whitelist = List.of(
-                Path.of("/"),
-                Path.of("/registration")
+        List<String> whitelist = List.of(
+                "/",
+                "/registration"
         );
 
         serverSocket = new ServerSocket(port);

@@ -27,6 +27,9 @@ public class Parameters {
     }
 
     public String getParameter(String key) {
+        if (!parameter.containsKey(key)) {
+            throw new IllegalArgumentException("해당 parameter 가 존재하지 않습니다." + key);
+        }
         return parameter.get(key);
     }
 

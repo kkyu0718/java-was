@@ -1,6 +1,5 @@
 package codesquad.handler;
 
-import codesquad.global.Path;
 import codesquad.http.HttpRequest;
 import codesquad.http.HttpResponse;
 import codesquad.http.MimeType;
@@ -15,17 +14,17 @@ import static codesquad.http.HttpResponse.*;
 public class RedirectStaticFileHandler implements HttpHandler {
     private static final Logger logger = LoggerFactory.getLogger(RedirectStaticFileHandler.class);
     private StaticFileReaderSpec staticFileReader;
-    private List<Path> whitelist;
+    private List<String> whitelist;
 
-    public RedirectStaticFileHandler(StaticFileReaderSpec staticFileReader, List<Path> whitelist) {
+    public RedirectStaticFileHandler(StaticFileReaderSpec staticFileReader, List<String> whitelist) {
         this.staticFileReader = staticFileReader;
         this.whitelist = whitelist;
     }
 
     @Override
     public HttpResponse handle(HttpRequest request) {
-        Path path = request.getPath();
-        Path indexPath = new Path(path.toString() + "/index.html");
+        String path = request.getPath();
+        String indexPath = path + "/index.html";
         try {
             if (!staticFileReader.exists(indexPath)) {
                 return createNotFoundResponse(request);
@@ -37,10 +36,10 @@ public class RedirectStaticFileHandler implements HttpHandler {
         return readFileAndCreateResponse(indexPath, request);
     }
 
-    private HttpResponse readFileAndCreateResponse(Path path, HttpRequest request) {
+    private HttpResponse readFileAndCreateResponse(String path, HttpRequest request) {
         try {
             byte[] bytes = staticFileReader.readFile(path);
-            MimeType contentType = MimeType.fromExt(path);
+            MimeType contentType = MimeType.fromExt("html");
             return createOkResponse(request, bytes, contentType);
         } catch (IOException ex) {
             logger.error("Error reading file: " + path);
@@ -50,7 +49,6 @@ public class RedirectStaticFileHandler implements HttpHandler {
 
     @Override
     public boolean canHandle(HttpRequest request) {
-        Path path = request.getPath();
-        return whitelist.contains(path);
+        return whitelist.contains(request.getPath());
     }
 }

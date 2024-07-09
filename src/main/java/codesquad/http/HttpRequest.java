@@ -1,11 +1,10 @@
 package codesquad.http;
 
-import codesquad.global.Path;
 import codesquad.utils.StringUtils;
 
 public class HttpRequest {
     private HttpMethod method;
-    private Path path;
+    private String path;
     private HttpVersion httpVersion;
     private HttpHeaders headers;
     private HttpBody body;
@@ -13,7 +12,7 @@ public class HttpRequest {
 
     public HttpRequest(
             HttpMethod method,
-            Path path,
+            String path,
             HttpVersion httpVersion,
             HttpHeaders headers,
             HttpBody body,
@@ -31,7 +30,7 @@ public class HttpRequest {
         return method;
     }
 
-    public Path getPath() {
+    public String getPath() {
         return path;
     }
 
@@ -51,6 +50,18 @@ public class HttpRequest {
         return parameters;
     }
 
+    public boolean isFilePath() {
+        return path.split("\\.").length == 2;
+    }
+
+    public String getExt() {
+        if (isFilePath()) {
+            return path.split("\\.")[1];
+        }
+
+        throw new IllegalArgumentException("확장자가 존재하지 않습니다. " + path);
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -59,7 +70,7 @@ public class HttpRequest {
 
         if (body != null) {
             sb.append("----body----").append(StringUtils.LINE_SEPERATOR);
-//        sb.append(body.toString()); //TODO body 구현
+            sb.append(body.toString()); //TODO body 구현
         }
 
         return sb.toString();
