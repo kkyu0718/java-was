@@ -87,6 +87,7 @@ public class WasServer {
                 httpResponse = createNotFoundResponse(httpRequest);
             }
 
+            logger.debug(httpResponse.toString());
             OutputStream clientOutput = clientSocket.getOutputStream();
             processor.writeResponse(clientOutput, httpResponse);
         } catch (Exception ex) {

@@ -65,12 +65,13 @@ public class HttpRequest {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("----headers----").append(StringUtils.LINE_SEPERATOR);
+        sb.append("----request----").append(StringUtils.LINE_SEPERATOR);
+        sb.append("*headers*").append(StringUtils.LINE_SEPERATOR);
         sb.append(headers.toString());
 
         if (body != null) {
-            sb.append("----body----").append(StringUtils.LINE_SEPERATOR);
-            sb.append(body.toString()); //TODO body 구현
+            sb.append("*body*").append(StringUtils.LINE_SEPERATOR);
+            sb.append(body); //TODO body 구현
         }
 
         return sb.toString();
