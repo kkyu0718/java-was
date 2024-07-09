@@ -70,6 +70,21 @@ class StaticFileHandlerTest {
         Assertions.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatus());
     }
 
+    @Test
+    void StaticFileHandler_canHandle_메서드가_정확하게_작동하는지_검증한다() {
+        // 파일 경로에 대한 요청
+        HttpRequest fileRequest = new HttpRequest(HttpMethod.GET, Path.of("/index.html"), HttpVersion.HTTP11, new HttpHeaders(), null, null);
+        Assertions.assertTrue(handler.canHandle(fileRequest));
+
+        // 디렉토리 경로에 대한 요청
+        HttpRequest directoryRequest = new HttpRequest(HttpMethod.GET, Path.of("/directory/"), HttpVersion.HTTP11, new HttpHeaders(), null, null);
+        Assertions.assertFalse(handler.canHandle(directoryRequest));
+
+        // 비어 있는 경로에 대한 요청
+        HttpRequest emptyRequest = new HttpRequest(HttpMethod.GET, Path.of(""), HttpVersion.HTTP11, new HttpHeaders(), null, null);
+        Assertions.assertFalse(handler.canHandle(emptyRequest));
+    }
+
     @BeforeEach
     void setup() {
         handler = new StaticFileHandler(new StaticFileReader());

@@ -74,4 +74,16 @@ class RedirectStaticFileHandlerTest {
 
         Assertions.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatus());
     }
+
+    @Test
+    void RedirectStaticFileHandler_canHandle_메서드가_정확하게_작동하는지_검증한다() {
+        // whitelist에 존재하는 경로에 대한 요청
+        HttpRequest validRequest = new HttpRequest(HttpMethod.GET, redirectNeededPath, HttpVersion.HTTP11, new HttpHeaders(), null, null);
+        Assertions.assertTrue(handler.canHandle(validRequest));
+
+        // whitelist에 존재하지 않는 경로에 대한 요청
+        Path nonExistentPath = Path.of("/non-existent");
+        HttpRequest invalidRequest = new HttpRequest(HttpMethod.GET, nonExistentPath, HttpVersion.HTTP11, new HttpHeaders(), null, null);
+        Assertions.assertFalse(handler.canHandle(invalidRequest));
+    }
 }
