@@ -31,7 +31,6 @@ public class WasServer {
     private static int MAX_THREAD_POOL_SIZE = 100;
 
     private ServerSocket serverSocket;
-    //    private List<HttpHandler> handlers;
     private DynamicHandler dynamicHandler;
     private StaticFileHandler staticFileHandler;
     private RedirectStaticFileHandler redirectStaticFileHandler;
@@ -58,31 +57,7 @@ public class WasServer {
             while (true) {
                 try (Socket clientSocket = serverSocket.accept();
                      BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
-                    logger.debug("Client connected");
-
-                    //TODO http 버젼 별 분기처리 필요
-                    HttpProcessor processor = new Http11Processor();
-                    HttpRequest httpRequest = processor.parseRequest(br);
-                    logger.debug(httpRequest.toString());
-
-                    //TODO URI 패턴 제한
-
-                    HttpResponse httpResponse = null;
-
-                    // file 로 요청이 오거나 정해진 view 로 요청이 오는 경우
-                    if (staticFileHandler.canHandle(httpRequest)) {
-                        httpResponse = staticFileHandler.handle(httpRequest);
-                    } else if (redirectStaticFileHandler.canHandle(httpRequest)) {
-                        httpResponse = redirectStaticFileHandler.handle(httpRequest);
-                    } else if (dynamicHandler.canHandle(httpRequest)) {
-                        httpResponse = dynamicHandler.handle(httpRequest);
-                    } else {
-                        httpResponse = createNotFoundResponse(httpRequest);
-                    }
-
-                    OutputStream clientOutput = clientSocket.getOutputStream();
-                    processor.writeResponse(clientOutput, httpResponse);
-
+                    handleClientSocket(clientSocket, br);
                 } catch (Exception ex) {
                     logger.error("Server accept failed ");
                     ex.printStackTrace();
@@ -91,4 +66,32 @@ public class WasServer {
         });
     }
 
+    public void handleClientSocket(Socket clientSocket, BufferedReader br) {
+        try {
+            logger.debug("Client connected");
+
+            //TODO http 버젼 별 분기처리 필요
+            HttpProcessor processor = new Http11Processor();
+            HttpRequest httpRequest = processor.parseRequest(br);
+            logger.debug(httpRequest.toString());
+
+            HttpResponse httpResponse = null;
+
+            // file 로 요청이 오거나 정해진 view 로 요청이 오는 경우
+            if (staticFileHandler.canHandle(httpRequest)) {
+                httpResponse = staticFileHandler.handle(httpRequest);
+            } else if (redirectStaticFileHandler.canHandle(httpRequest)) {
+                httpResponse = redirectStaticFileHandler.handle(httpRequest);
+            } else if (dynamicHandler.canHandle(httpRequest)) {
+                httpResponse = dynamicHandler.handle(httpRequest);
+            } else {
+                httpResponse = createNotFoundResponse(httpRequest);
+            }
+
+            OutputStream clientOutput = clientSocket.getOutputStream();
+            processor.writeResponse(clientOutput, httpResponse);
+        } catch (Exception ex) {
+            logger.error("Error handling client socket", ex);
+        }
+    }
 }
