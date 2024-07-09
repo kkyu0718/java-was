@@ -4,6 +4,7 @@ public enum HttpStatus {
     NOT_FOUND(404, "NOT FOUND"),
     OK(200, "OK"),
     NO_CONTENT(204, "NO CONTENT"),
+    FOUND(302, "FOUND"),
     INTERNAL_SERVER_ERROR(500, "INTERNAL SERVER ERROR");
 
     private int statusCode;

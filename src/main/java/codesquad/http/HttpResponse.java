@@ -1,5 +1,7 @@
 package codesquad.http;
 
+import codesquad.utils.StringUtils;
+
 public class HttpResponse {
     private HttpRequest request;
     private HttpStatus status;
@@ -33,6 +35,7 @@ public class HttpResponse {
         HttpHeaders resHeaders = new HttpHeaders();
         resHeaders.put(HttpHeaders.HTTP_VERSION, request.getHttpVersion().getRepresentation());
         resHeaders.put(HttpHeaders.CONTENT_TYPE, contentType.getMimeType());
+        resHeaders.put(HttpHeaders.CONTENT_LENGTH, String.valueOf(bytes.length));
 
         return new HttpResponse(request, HttpStatus.OK, resHeaders, new HttpBody(bytes, contentType));
     }
@@ -57,5 +60,28 @@ public class HttpResponse {
         resHeaders.put(HttpHeaders.HTTP_VERSION, request.getHttpVersion().getRepresentation());
 
         return new HttpResponse(request, HttpStatus.NO_CONTENT, resHeaders, null);
+    }
+
+    public static HttpResponse createRedirectResponse(HttpRequest request, String location) {
+        HttpHeaders resHeaders = new HttpHeaders();
+        resHeaders.put(HttpHeaders.HTTP_VERSION, request.getHttpVersion().getRepresentation());
+        resHeaders.put("Location", location);
+
+        return new HttpResponse(request, HttpStatus.FOUND, resHeaders, null);  // 302 Found
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("----response----").append(StringUtils.LINE_SEPERATOR);
+        sb.append("*headers*").append(StringUtils.LINE_SEPERATOR);
+        sb.append(headers.toString());
+
+        if (body != null) {
+            sb.append("*body*").append(StringUtils.LINE_SEPERATOR);
+            sb.append(body); //TODO body 구현
+        }
+
+        return sb.toString();
     }
 }

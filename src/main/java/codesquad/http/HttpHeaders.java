@@ -4,6 +4,7 @@ import codesquad.utils.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class HttpHeaders {
     private final Map<String, String> headers;
@@ -33,6 +34,10 @@ public class HttpHeaders {
 
     public boolean contains(String key) {
         return headers.containsKey(key);
+    }
+
+    public Set<String> keySet() {
+        return headers.keySet();
     }
 
     @Override

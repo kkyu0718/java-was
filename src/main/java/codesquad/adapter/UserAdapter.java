@@ -30,7 +30,7 @@ public class UserAdapter implements Adapter {
             UserDb.add(User.of(userId, password, name, email));
 
             UserDb.print();
-            return HttpResponse.createNoContentResponse(request);
+            return HttpResponse.createRedirectResponse(request, "/index.html");
         }
 
         throw new IllegalArgumentException("처리 가능한 메소드가 존재하지 않습니다." + request.getPath().toString());
