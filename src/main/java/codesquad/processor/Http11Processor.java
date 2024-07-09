@@ -63,15 +63,13 @@ public class Http11Processor implements HttpProcessor {
         writeHeaders(os, response);
         os.write(LINE_SEPERATOR.getBytes());
 
-        if (response.getBody() != null) {
-            writeBody(os, response);
-        }
+        writeBody(os, response);
 
         os.flush();
     }
 
     private void writeBody(OutputStream os, HttpResponse response) throws IOException {
-        os.write(response.getBody().getBytes());
+        os.write(response.getBody() != null ? response.getBody().getBytes() : "0".getBytes());
     }
 
     private void writeStatusLine(OutputStream os, HttpResponse response) throws IOException {
@@ -79,9 +77,7 @@ public class Http11Processor implements HttpProcessor {
         HttpStatus status = response.getStatus();
         HttpVersion httpVersion = response.getRequest().getHttpVersion();
 
-        sb.append(httpVersion.getRepresentation()).append(" ")
-                .append(status.getStatusCode()).append(" ")
-                .append(status.getMessage()).append(LINE_SEPERATOR);
+        sb.append(httpVersion.getRepresentation()).append(" ").append(status.getStatusCode()).append(" ").append(status.getMessage()).append(LINE_SEPERATOR);
 
         os.write(sb.toString().getBytes());
     }
@@ -89,15 +85,10 @@ public class Http11Processor implements HttpProcessor {
     private void writeHeaders(OutputStream os, HttpResponse response) throws IOException {
         StringBuilder sb = new StringBuilder();
 
-        if (response.getBody() != null) {
-            String contentType = response.getHeaders().get(HttpHeaders.CONTENT_TYPE);
-            sb.append(HttpHeaders.CONTENT_TYPE).append(": ")
-                    .append(contentType).append(LINE_SEPERATOR)
-                    .append(HttpHeaders.CONTENT_LENGTH).append(": ")
-                    .append(response.getBody().getBytes().length);
+        for (String key : response.getHeaders().keySet()) {
+            sb.append(key).append(": ").append(response.getHeaders().get(key)).append(LINE_SEPERATOR);
         }
-        sb.append(LINE_SEPERATOR);
-
+        
         os.write(sb.toString().getBytes());
     }
 
