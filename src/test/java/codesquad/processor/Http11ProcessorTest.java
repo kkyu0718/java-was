@@ -20,7 +20,7 @@ class Http11ProcessorTest {
     HttpProcessor processor;
 
     @Test
-    public void request가_주어지면_start_line를_적절히_파싱을_할수있다() throws IOException {
+    public void 주어진_유효한_요청에서_스타트라인을_파싱하면_올바르게_파싱된다() throws IOException {
         String requestString = "GET /index.html HTTP/1.1" + LINE_SEPERATOR
                 + "Host: localhost" + LINE_SEPERATOR
                 + "Connection: keep-alive" + LINE_SEPERATOR
@@ -36,7 +36,7 @@ class Http11ProcessorTest {
     }
 
     @Test
-    public void request가_주어지면_start_line과_적절한_규약을_지키는_헤더를_적절히_파싱을_할수있다() throws IOException {
+    public void 주어진_유효한_요청에서_헤더를_파싱하면_올바르게_파싱된다() throws IOException {
         String requestString = "GET /index.html HTTP/1.1" + LINE_SEPERATOR
                 + "Host: localhost:8080" + LINE_SEPERATOR
                 + "Accept: */*" + LINE_SEPERATOR
@@ -65,7 +65,7 @@ class Http11ProcessorTest {
     }
 
     @Test
-    public void request가_주어지면_start_line과_쿼리파라미터를_적절히_파싱을_할수있다() throws IOException {
+    public void 주어진_유효한_요청에서_쿼리파라미터를_파싱하면_올바르게_파싱된다() throws IOException {
         String param1 = "p1";
         String param2 = "p2";
 
@@ -85,7 +85,7 @@ class Http11ProcessorTest {
     }
 
     @Test
-    public void request가_주어지면_헤더에_세미콜론이_생략된경우_400에러가_발생한다() {
+    public void 헤더에_세미콜론이_누락된_경우_400_에러가_발생한다(() {
         String headerString = "Host localhost" + LINE_SEPERATOR // ':' 누락
                 + "Content-Type: text/html" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR + LINE_SEPERATOR;
         BufferedReader br = new BufferedReader(new StringReader("GET /index.html HTTP/1.1\r\n" + headerString));
@@ -96,7 +96,7 @@ class Http11ProcessorTest {
     }
 
     @Test
-    public void request가_주어지면_헤더의_key와_세미콜론_사이에_공백이_존재하는경우_400에러가_발생한다() {
+    public void 헤더의_키와_세미콜론_사이에_공백이_존재하는_경우_400_에러가_발생한다() {
         String headerString = "Host : localhost" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR + LINE_SEPERATOR;
         BufferedReader br = new BufferedReader(new StringReader("GET /index.html HTTP/1.1\r\n" + headerString));
 
@@ -107,7 +107,7 @@ class Http11ProcessorTest {
 
     @ParameterizedTest
     @CsvSource({"Host:localhost", "Host:localhost", "Host: localhost", "Host: localhost "})
-    public void request가_주어지면_헤더의_value양옆으로_옵션공백이_존재하는경우_적절히_파싱된다(String header) throws IOException {
+    public void 헤더의_값_양옆에_공백이_존재하는_경우_적절히_파싱된다(String header) throws IOException {
         BufferedReader br = new BufferedReader(new StringReader("GET /index.html HTTP/1.1" + LINE_SEPERATOR + header + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR + LINE_SEPERATOR));
 
         HttpRequest httpRequest = processor.parseRequest(br);
@@ -115,21 +115,9 @@ class Http11ProcessorTest {
         assertEquals("localhost", headers.get("Host"));
     }
 
-//    @Test
-//    void 유효한_URL_검증() throws IOException {
-//        String validRequest = "GET http://example.com/path/to/resource HTTP/1.1\r\nHost: example.com\r\n\r\n";
-//        BufferedReader reader = new BufferedReader(new StringReader(validRequest));
-//
-//        HttpRequest request = processor.parseRequest(reader);
-//
-//        assertNotNull(request);
-//        assertEquals(HttpMethod.GET, request.getMethod());
-//        assertEquals("/path/to/resource", request.getPath());
-//        assertEquals(HttpVersion.HTTP11, request.getHttpVersion());
-//    }
 
     @Test
-    void 중복되는_header가_오는_경우_뒤에_오는_것으로_덮어씌워진다() throws IOException {
+    void 중복되는_헤더가_존재하는_경우_뒤에_오는_값으로_덮어쓴다() throws IOException {
         String requestString = "GET /index.html HTTP/1.1" + LINE_SEPERATOR + "Host: localhost:8080" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR + "header1: a" + LINE_SEPERATOR + "header1: b" + LINE_SEPERATOR + LINE_SEPERATOR;
         ;
         BufferedReader reader = new BufferedReader(new StringReader(requestString));
@@ -138,13 +126,12 @@ class Http11ProcessorTest {
 
         assertNotNull(request);
         assertEquals(HttpMethod.GET, request.getMethod());
-//        Assertions.assertEquals("/path/to/resource", request.getPath());
         assertEquals(HttpVersion.HTTP11, request.getHttpVersion());
         assertEquals("b", request.getHeaders().get("header1"));
     }
 
     @Test
-    void 중복되는_parameter가_오는_경우_뒤에_오는_것으로_덮어씌워진다() throws IOException {
+    void 중복되는_파라미터가_존재하는_경우_뒤에_오는_값으로_덮어쓴다() throws IOException {
         String requestString = "GET /index.html?param1=a&param1=b HTTP/1.1" + LINE_SEPERATOR + "Host: localhost:8080" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR + LINE_SEPERATOR;
         BufferedReader reader = new BufferedReader(new StringReader(requestString));
 
@@ -152,13 +139,12 @@ class Http11ProcessorTest {
 
         assertNotNull(request);
         assertEquals(HttpMethod.GET, request.getMethod());
-//        Assertions.assertEquals("/path/to/resource", request.getPath());
         assertEquals(HttpVersion.HTTP11, request.getHttpVersion());
         assertEquals("b", request.getParameters().getParameter("param1"));
     }
 
     @Test
-    void 시작_라인에_HTTP_버전이_없는_경우_검증() {
+    void 시작_라인에_HTTP_버전이_없는_경우_예외가_발생한다() {
         String invalidStartLine = "GET http://example.com/path/to/resource" + "Host: localhost:8080" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR; // HTTP 버전 없음
         BufferedReader reader = new BufferedReader(new StringReader(invalidStartLine));
 
@@ -168,7 +154,7 @@ class Http11ProcessorTest {
     }
 
     @Test
-    void 시작_라인에_HTTP_메서드가_없는_경우_검증() {
+    void 시작_라인에_HTTP_메서드가_없는_경우_예외가_발생한다() {
         String invalidStartLine = "/path/to/resource HTTP/1.1" + LINE_SEPERATOR
                 + "Host: localhost:8080" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR; // 메서드 없음
         BufferedReader reader = new BufferedReader(new StringReader(invalidStartLine));
@@ -192,7 +178,7 @@ class Http11ProcessorTest {
     }
 
     @Test
-    void Host헤더가_존재하지않으면_에러를_던진다() {
+    void Host헤더가_존재하지않으면_400에러를_던진다() {
         String validStartLine = "/path/to/resource HTTP/1.1" + LINE_SEPERATOR
                 + "Connection: keep-alive" + LINE_SEPERATOR;
         BufferedReader reader = new BufferedReader(new StringReader(validStartLine));
@@ -203,7 +189,7 @@ class Http11ProcessorTest {
     }
 
     @Test
-    void Connection헤더가_존재하지않으면_에러를_던진다() {
+    void Connection헤더가_존재하지않으면_400에러를_던진다() {
         String validStartLine = "/path/to/resource HTTP/1.1" + "Host: localhost:8080" + LINE_SEPERATOR;
         BufferedReader reader = new BufferedReader(new StringReader(validStartLine));
 
@@ -213,7 +199,7 @@ class Http11ProcessorTest {
     }
 
     @Test
-    void 시작라인O_헤더O_바디X() throws IOException {
+    void 시작라인O_헤더O_바디X로_존재하는_경우_파싱하면_올바르게_파싱된다() throws IOException {
         String requestString = "GET /path/to/resource HTTP/1.1" + LINE_SEPERATOR
                 + "Host: localhost:8080" + LINE_SEPERATOR
                 + "Connection: keep-alive" + LINE_SEPERATOR
@@ -236,7 +222,7 @@ class Http11ProcessorTest {
     }
 
     @Test
-    void 시작라인O_헤더O_바디O() throws IOException {
+    void 시작라인O_헤더O_바디O로_존재하는_경우_파싱하면_올바르게_파싱된다() throws IOException {
         String body = "body body body";
         String requestString = "GET /path/to/resource HTTP/1.1" + LINE_SEPERATOR
                 + "Host: localhost:8080" + LINE_SEPERATOR
