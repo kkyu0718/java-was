@@ -1,10 +1,7 @@
 package codesquad.adapter;
 
 import codesquad.db.UserDb;
-import codesquad.http.HttpBody;
-import codesquad.http.HttpRequest;
-import codesquad.http.HttpResponse;
-import codesquad.http.Parameters;
+import codesquad.http.*;
 import codesquad.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +16,7 @@ public class UserAdapter implements Adapter {
 
     @Override
     public HttpResponse handle(HttpRequest request) {
-        if (request.getPath().equals("/user/create")) {
+        if (request.getPath().equals("/user/create") && request.getMethod() == HttpMethod.POST) {
             HttpBody body = request.getBody();
 
             Parameters parameters = body.getParameters();

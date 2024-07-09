@@ -2,6 +2,7 @@ package codesquad.adapter;
 
 import codesquad.db.UserDb;
 import codesquad.http.*;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -53,5 +54,12 @@ class UserAdapterTest {
         assertEquals("/index.html", response.getHeaders().get("Location"));
     }
 
+    @Test
+    public void UserAdapter가_주어졌을때_create메소드는_GET으로_동작하지_않는다() {
+        byte[] bytes = "userId=id1&password=1234&name=kyu1&email=email1".getBytes();
 
+        HttpRequest request = new HttpRequest(HttpMethod.GET, "/user/create", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(bytes, MimeType.X_WWW_FORM_URLENCODED), null);
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> userAdapter.handle(request));
+    }
 }

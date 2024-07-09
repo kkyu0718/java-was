@@ -95,7 +95,6 @@
             redirect: 'follow' // Ensure redirects are followed
         })
             .then((response) => {
-                console.log(response)
                 if (response.redirected) {
                     window.location.href = response.url; // Manually handle the redirect if necessary
                 } else if (response.status === 200) {
