@@ -88,7 +88,7 @@ public class Http11Processor implements HttpProcessor {
         for (String key : response.getHeaders().keySet()) {
             sb.append(key).append(": ").append(response.getHeaders().get(key)).append(LINE_SEPERATOR);
         }
-        
+
         os.write(sb.toString().getBytes());
     }
 
@@ -134,7 +134,13 @@ public class Http11Processor implements HttpProcessor {
         }
 
         int contentLength = Integer.parseInt(headers.get(HttpHeaders.CONTENT_LENGTH));
-        MimeType mimeType = MimeType.fromMimeType(headers.get(HttpHeaders.CONTENT_TYPE));
+        String contentType = headers.get(HttpHeaders.CONTENT_TYPE);
+
+        if (contentLength == 0 || contentType == null) {
+            return null;
+        }
+
+        MimeType mimeType = MimeType.fromMimeType(contentType);
 
         char[] bodyChars = new char[contentLength];
         int read = br.read(bodyChars, 0, contentLength);

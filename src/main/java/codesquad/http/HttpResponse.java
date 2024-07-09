@@ -34,7 +34,7 @@ public class HttpResponse {
     public static HttpResponse createOkResponse(HttpRequest request, byte[] bytes, MimeType contentType) {
         HttpHeaders resHeaders = new HttpHeaders();
         resHeaders.put(HttpHeaders.CONTENT_TYPE, contentType.getMimeType());
-        resHeaders.put(HttpHeaders.CONTENT_LENGTH, String.valueOf(bytes.length));
+        resHeaders.put(HttpHeaders.CONTENT_LENGTH, String.valueOf(bytes != null ? bytes.length : 0));
 
         return new HttpResponse(request, HttpStatus.OK, resHeaders, new HttpBody(bytes, contentType));
     }

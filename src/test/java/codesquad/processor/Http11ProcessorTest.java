@@ -1,9 +1,6 @@
 package codesquad.processor;
 
-import codesquad.http.HttpHeaders;
-import codesquad.http.HttpMethod;
-import codesquad.http.HttpRequest;
-import codesquad.http.HttpVersion;
+import codesquad.http.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -85,7 +82,7 @@ class Http11ProcessorTest {
     }
 
     @Test
-    public void 헤더에_세미콜론이_누락된_경우_400_에러가_발생한다(() {
+    public void 헤더에_세미콜론이_누락된_경우_400_에러가_발생한다() {
         String headerString = "Host localhost" + LINE_SEPERATOR // ':' 누락
                 + "Content-Type: text/html" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR + LINE_SEPERATOR;
         BufferedReader br = new BufferedReader(new StringReader("GET /index.html HTTP/1.1\r\n" + headerString));
@@ -228,6 +225,7 @@ class Http11ProcessorTest {
                 + "Host: localhost:8080" + LINE_SEPERATOR
                 + "Connection: keep-alive" + LINE_SEPERATOR
                 + "Content-Length: " + body.getBytes().length + LINE_SEPERATOR
+                + "Content-Type: " + "text/html" + LINE_SEPERATOR
                 + LINE_SEPERATOR
                 + body + LINE_SEPERATOR;
 
@@ -239,9 +237,11 @@ class Http11ProcessorTest {
         assertEquals(HttpVersion.HTTP11, request.getHttpVersion());
 
         assertNotNull(request);
-        assertEquals(3, request.getHeaders().size());
+        assertEquals(4, request.getHeaders().size());
         assertEquals("keep-alive", request.getHeaders().get("Connection"));
         assertEquals("localhost:8080", request.getHeaders().get("Host"));
+        assertEquals("body body body".getBytes().length, Integer.parseInt(request.getHeaders().get(HttpHeaders.CONTENT_LENGTH)));
+        assertEquals(MimeType.HTML.getMimeType(), request.getHeaders().get(HttpHeaders.CONTENT_TYPE));
 
         assertNotNull(request.getBody());
     }
