@@ -115,7 +115,7 @@ class UserAdapterTest {
         HttpResponse loginResponse = userAdapter.handle(loginRequest);
 
         Assertions.assertEquals(302, loginResponse.getStatus().getStatusCode());
-        assertTrue(UserSession.contains(userId));
+        assertTrue(UserSession.isActive(userId));
     }
 
     @Test
