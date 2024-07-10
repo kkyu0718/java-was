@@ -1,6 +1,7 @@
 package codesquad.adapter;
 
 import codesquad.db.UserDb;
+import codesquad.db.UserSession;
 import codesquad.http.*;
 import codesquad.model.User;
 import org.slf4j.Logger;
@@ -34,7 +35,28 @@ public class UserAdapter implements Adapter {
             UserDb.print();
             return HttpResponse.createRedirectResponse(request, "/index.html");
         } else if (request.getPath().equals("/user/login") && request.getMethod() == HttpMethod.POST) {
-            // user session
+            HttpBody body = request.getBody();
+
+            Parameters parameters = body.getParameters();
+            String userId = parameters.getParameter("userId");
+            String password = parameters.getParameter("password");
+
+            if (!UserDb.exists(userId)) {
+                return HttpResponse.createIllegalArgumentResponse(request);
+            }
+
+            User user = UserDb.get(userId);
+            if (user.getPassword().equals(password)) {
+                String sessionId = UserSession.create(userId);
+
+                logger.debug("로그인 성공 " + sessionId);
+                HttpHeaders httpHeaders = new HttpHeaders();
+                httpHeaders.put(HttpHeaders.SET_COOKIE, String.format("sid=%s; Path=/", sessionId));
+
+                return HttpResponse.createOkResponse(request, httpHeaders, null, null);
+            } else {
+                return HttpResponse.createIllegalArgumentResponse(request);
+            }
         }
 
         throw new IllegalArgumentException("처리 가능한 메소드가 존재하지 않습니다." + request.getPath().toString());
