@@ -60,7 +60,7 @@ public class UserAdapter implements Adapter {
                 cookies.setCookie(cookie);
                 return HttpResponse.createOkResponse(request, httpHeaders, null, null, cookies);
             } else {
-                return HttpResponse.createIllegalArgumentResponse(request);
+                return HttpResponse.createRedirectResponse(request, "/login/error.html");
             }
         }
 
