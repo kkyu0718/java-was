@@ -114,7 +114,7 @@ class UserAdapterTest {
                 .build();
         HttpResponse loginResponse = userAdapter.handle(loginRequest);
 
-        Assertions.assertEquals(200, loginResponse.getStatus().getStatusCode());
+        Assertions.assertEquals(302, loginResponse.getStatus().getStatusCode());
         assertTrue(UserSession.contains(userId));
     }
 
@@ -147,7 +147,7 @@ class UserAdapterTest {
                 .build();
         HttpResponse loginResponse = userAdapter.handle(loginRequest);
 
-        Assertions.assertEquals(200, loginResponse.getStatus().getStatusCode());
+        Assertions.assertEquals(302, loginResponse.getStatus().getStatusCode());
 
         HttpCookies httpCookies = loginResponse.getHttpCookies();
         Assertions.assertNotNull(httpCookies);
