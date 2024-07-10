@@ -1,7 +1,5 @@
 package codesquad.http;
 
-import codesquad.global.Path;
-
 public enum MimeType {
     HTML("html", "text/html"),
     CSS("css", "text/css"),
@@ -9,7 +7,9 @@ public enum MimeType {
     ICO("ico", "image/x-icon"),
     PNG("png", "image/png"),
     JPG("jpg", "image/jpeg"),
-    SVG("svg", "image/svg+xml");
+    SVG("svg", "image/svg+xml"),
+    X_WWW_FORM_URLENCODED(null, "application/x-www-form-urlencoded"),
+    NONE(null, null);
 
     private String ext;
     private String mimeType;
@@ -27,14 +27,23 @@ public enum MimeType {
         return mimeType;
     }
 
-    public static MimeType fromExt(Path path) {
-        String ext = path.getExt();
+    public static MimeType fromExt(String ext) {
         for (MimeType mimeType : MimeType.values()) {
             if (ext.equals(mimeType.ext)) {
                 return mimeType;
             }
         }
 
-        throw new IllegalArgumentException("No mimetype enum constant with extension" + ext);
+        throw new IllegalArgumentException("No mimetype enum constant with extension " + ext);
+    }
+
+    public static MimeType fromMimeType(String other) {
+        for (MimeType mimeType : MimeType.values()) {
+            if (other.equals(mimeType.mimeType)) {
+                return mimeType;
+            }
+        }
+
+        throw new IllegalArgumentException("No mimetype enum constant with mimetype " + other);
     }
 }

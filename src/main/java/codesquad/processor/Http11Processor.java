@@ -1,6 +1,5 @@
 package codesquad.processor;
 
-import codesquad.global.Url;
 import codesquad.http.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,26 +7,54 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 
 import static codesquad.utils.StringUtils.LINE_SEPERATOR;
 
 public class Http11Processor implements HttpProcessor {
     public static Logger logger = LoggerFactory.getLogger(Http11Processor.class);
 
+    /*
+         HTTP-message   = start-line CRLF
+                      *( header-field CRLF )
+                      CRLF
+                      [ message-body ]
+
+     */
     @Override
     public HttpRequest parseRequest(BufferedReader br) throws IOException {
         String[] startLineSplits = parseStartLine(br);
+
+        if (startLineSplits.length != 3) {
+            throw new IllegalArgumentException("Invalid start line format");
+        }
+
         HttpMethod method = HttpMethod.valueOf(startLineSplits[0]);
-        Url url = Url.of(startLineSplits[1]);
+        String uri = startLineSplits[1];
+
+        /*
+        In particular, the Host and Connection
+       header fields ought to be implemented by all HTTP/1.x implementations
+       whether or not they advertise conformance with HTTP/1.1.
+         */
+        URI url = URI.create(uri);
         HttpVersion httpVersion = HttpVersion.fromRepresentation(startLineSplits[2]);
 
         HttpHeaders headers = parseHeaders(br);
-        headers.put(HttpHeaders.PATH, url.getPath().toString());
+        verifyMendatoryHeaders(headers);
 
-        //TODO body 가 존재하는 경우 parse 로직 필요
-        // content-length 에 따른 로직 구현 필요
-        // trasfer-encoding 이 chunked 인 경우 구현 필요
-        return new HttpRequest(method, url.getPath(), httpVersion, headers, new HttpBody(null), url.getParameters());
+        String query = url.getQuery();
+        Parameters parameters = query != null ? Parameters.of(query) : null;
+
+        HttpBody httpBody = parseBody(br, headers);
+        return new HttpRequest(method, url.getPath(), httpVersion, headers, httpBody, parameters);
+    }
+
+    private void verifyMendatoryHeaders(HttpHeaders headers) {
+        if (!headers.contains("Connection") || !headers.contains("Host")) {
+            throw new IllegalArgumentException("필수 헤더 Connection 과 Host 가 존재하지 않습니다.");
+        }
     }
 
     @Override
@@ -36,15 +63,13 @@ public class Http11Processor implements HttpProcessor {
         writeHeaders(os, response);
         os.write(LINE_SEPERATOR.getBytes());
 
-        if (response.getBody() != null) {
-            writeBody(os, response);
-        }
+        writeBody(os, response);
 
         os.flush();
     }
 
     private void writeBody(OutputStream os, HttpResponse response) throws IOException {
-        os.write(response.getBody().getBytes());
+        os.write(response.getBody() != null ? response.getBody().getBytes() : "0".getBytes());
     }
 
     private void writeStatusLine(OutputStream os, HttpResponse response) throws IOException {
@@ -52,9 +77,7 @@ public class Http11Processor implements HttpProcessor {
         HttpStatus status = response.getStatus();
         HttpVersion httpVersion = response.getRequest().getHttpVersion();
 
-        sb.append(httpVersion.getRepresentation()).append(" ")
-                .append(status.getStatusCode()).append(" ")
-                .append(status.getMessage()).append(LINE_SEPERATOR);
+        sb.append(httpVersion.getRepresentation()).append(" ").append(status.getStatusCode()).append(" ").append(status.getMessage()).append(LINE_SEPERATOR);
 
         os.write(sb.toString().getBytes());
     }
@@ -62,14 +85,9 @@ public class Http11Processor implements HttpProcessor {
     private void writeHeaders(OutputStream os, HttpResponse response) throws IOException {
         StringBuilder sb = new StringBuilder();
 
-        if (response.getBody() != null) {
-            String contentType = response.getHeaders().get(HttpHeaders.CONTENT_TYPE);
-            sb.append(HttpHeaders.CONTENT_TYPE).append(": ")
-                    .append(contentType).append(LINE_SEPERATOR)
-                    .append(HttpHeaders.CONTENT_LENGTH).append(": ")
-                    .append(response.getBody().getBytes().length);
+        for (String key : response.getHeaders().keySet()) {
+            sb.append(key).append(": ").append(response.getHeaders().get(key)).append(LINE_SEPERATOR);
         }
-        sb.append(LINE_SEPERATOR);
 
         os.write(sb.toString().getBytes());
     }
@@ -91,14 +109,54 @@ public class Http11Processor implements HttpProcessor {
         return headers;
     }
 
-    private HttpBody parseBody(BufferedReader br) throws IOException {
+    /*
 
-        return null;
+   A recipient MUST parse an HTTP message as a sequence of octets in an
+   encoding that is a superset of US-ASCII [USASCII].  Parsing an HTTP
+   message as a stream of Unicode characters, without regard for the
+   specific encoding, creates security vulnerabilities due to the
+   varying ways that string processing libraries handle invalid
+   multibyte character sequences that contain the octet LF (%x0A).
+   String-based parsers can only be safely used within protocol elements
+   after the element has been extracted from the message, such as within
+   a header field-value after message parsing has delineated the
+   individual fields.
+
+   An HTTP message can be parsed as a stream for incremental processing
+   or forwarding downstream.  However, recipients cannot rely on
+   incremental delivery of partial messages, since some implementations
+   will buffer or delay message forwarding for the sake of network
+   efficiency, security checks, or payload transformations.
+     */
+    private HttpBody parseBody(BufferedReader br, HttpHeaders headers) throws IOException {
+        if (!headers.contains(HttpHeaders.CONTENT_LENGTH)) {
+            return null;
+        }
+
+        int contentLength = Integer.parseInt(headers.get(HttpHeaders.CONTENT_LENGTH));
+        String contentType = headers.get(HttpHeaders.CONTENT_TYPE);
+
+        if (contentLength == 0 || contentType == null) {
+            return null;
+        }
+
+        MimeType mimeType = MimeType.fromMimeType(contentType);
+
+        char[] bodyChars = new char[contentLength];
+        int read = br.read(bodyChars, 0, contentLength);
+
+        if (read != contentLength) {
+            throw new IOException("Expected " + contentLength + " bytes but read " + read + " bytes.");
+        }
+
+        return new HttpBody(new String(bodyChars).getBytes(StandardCharsets.US_ASCII), mimeType);
     }
 
     private String[] parseStartLine(BufferedReader br) throws IOException {
         String startLine = br.readLine();
-
+        if (startLine == null || startLine.trim().isEmpty()) {
+            throw new IllegalArgumentException("Invalid start line: " + startLine);
+        }
         return startLine.split(" ");
     }
 }

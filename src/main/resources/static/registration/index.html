@@ -71,7 +71,6 @@
         </form>
     </div>
 </div>
-
 <script>
     document.getElementById('registration-btn').addEventListener('click', function () {
         const userId = document.getElementById('userId').value;
@@ -79,26 +78,30 @@
         const name = document.getElementById('name').value;
         const email = document.getElementById('email').value;
 
-        const url = new URL('http://localhost:8080/user/create');
-        url.searchParams.append('userId', userId);
-        url.searchParams.append('password', password);
-        url.searchParams.append('name', name);
-        url.searchParams.append('email', email);
+        const data = new URLSearchParams();
+        data.append('userId', userId);
+        data.append('password', password);
+        data.append('name', name);
+        data.append('email', email);
 
-        fetch(url, {
-            method: 'GET',
+        fetch('http://localhost:8080/user/create', {
+            method: 'POST',
             headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
                 'Accept': '*/*',
                 'Connection': 'keep-alive'
-            }
+            },
+            body: data.toString(),
+            redirect: 'follow' // Ensure redirects are followed
         })
-            .then(response => {
-                if (response.ok) {
-                    window.alert("회원가입 성공")
-                    window.location.href = '/';
+            .then((response) => {
+                if (response.redirected) {
+                    window.location.href = response.url; // Manually handle the redirect if necessary
+                } else if (response.status === 200) {
+                    window.alert("회원가입 성공");
                 } else {
                     return response.text().then(text => {
-                        throw new Error(text)
+                        throw new Error(text);
                     });
                 }
             })
