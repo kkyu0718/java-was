@@ -15,7 +15,6 @@ public class HttpHeaders {
     public static String CONTENT_TYPE = "Content-Type";
     public static String CONTENT_LENGTH = "Content-Length";
     public static String HOST = "Host";
-    public static String SET_COOKIE = "Set-Cookie";
 
     public HttpHeaders() {
         this.headers = new HashMap<>();

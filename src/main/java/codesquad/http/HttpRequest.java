@@ -9,6 +9,7 @@ public class HttpRequest {
     private HttpHeaders headers;
     private HttpBody body;
     private Parameters parameters;
+    private HttpCookies httpCookies;
 
     public HttpRequest(
             HttpMethod method,
@@ -24,6 +25,25 @@ public class HttpRequest {
         this.headers = headers;
         this.body = body;
         this.parameters = parameters;
+        this.httpCookies = new HttpCookies();
+    }
+
+    public HttpRequest(
+            HttpMethod method,
+            String path,
+            HttpVersion httpVersion,
+            HttpHeaders headers,
+            HttpBody body,
+            Parameters parameters,
+            HttpCookies cookies
+    ) {
+        this.method = method;
+        this.path = path;
+        this.httpVersion = httpVersion;
+        this.headers = headers;
+        this.body = body;
+        this.parameters = parameters;
+        this.httpCookies = cookies;
     }
 
     public HttpMethod getMethod() {

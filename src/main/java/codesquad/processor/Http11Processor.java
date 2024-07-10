@@ -33,11 +33,6 @@ public class Http11Processor implements HttpProcessor {
         HttpMethod method = HttpMethod.valueOf(startLineSplits[0]);
         String uri = startLineSplits[1];
 
-        /*
-        In particular, the Host and Connection
-       header fields ought to be implemented by all HTTP/1.x implementations
-       whether or not they advertise conformance with HTTP/1.1.
-         */
         URI url = URI.create(uri);
         HttpVersion httpVersion = HttpVersion.fromRepresentation(startLineSplits[2]);
 
@@ -48,7 +43,19 @@ public class Http11Processor implements HttpProcessor {
         Parameters parameters = query != null ? Parameters.of(query) : null;
 
         HttpBody httpBody = parseBody(br, headers);
-        return new HttpRequest(method, url.getPath(), httpVersion, headers, httpBody, parameters);
+
+        HttpCookies cookies = new HttpCookies();
+        // cookie 처리
+        if (headers.contains("Cookie")) {
+            String s = headers.get("Cookie");
+
+            String[] splits = s.split(";");
+            for (String split : splits) {
+                String[] keyValue = split.split("=");
+                cookies.setCookie(new HttpCookie(keyValue[0].trim(), keyValue[1].trim()));
+            }
+        }
+        return new HttpRequest(method, url.getPath(), httpVersion, headers, httpBody, parameters, cookies);
     }
 
     private void verifyMendatoryHeaders(HttpHeaders headers) {
@@ -87,6 +94,13 @@ public class Http11Processor implements HttpProcessor {
 
         for (String key : response.getHeaders().keySet()) {
             sb.append(key).append(": ").append(response.getHeaders().get(key)).append(LINE_SEPERATOR);
+        }
+
+        // write cookie
+        HttpCookies httpCookies = response.getHttpCookies();
+        for (HttpCookie cookie : httpCookies.getCookies()) {
+            sb.append("Set-Cookie").append(": ").append(cookie.getName()).append("=").append(cookie.getValue()).append("; ")
+                    .append("Path").append("=").append(cookie.getPath()).append(LINE_SEPERATOR);
         }
 
         os.write(sb.toString().getBytes());

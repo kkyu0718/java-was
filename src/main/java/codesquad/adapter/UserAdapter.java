@@ -20,6 +20,7 @@ public class UserAdapter implements Adapter {
         if (request.getPath().equals("/user/create") && request.getMethod() == HttpMethod.POST) {
             HttpBody body = request.getBody();
 
+            //TODO parameter 처리
             Parameters parameters = body.getParameters();
             String userId = parameters.getParameter("userId");
             String password = parameters.getParameter("password");
@@ -35,6 +36,7 @@ public class UserAdapter implements Adapter {
             UserDb.print();
             return HttpResponse.createRedirectResponse(request, "/index.html");
         } else if (request.getPath().equals("/user/login") && request.getMethod() == HttpMethod.POST) {
+            logger.info("login start");
             HttpBody body = request.getBody();
 
             Parameters parameters = body.getParameters();
@@ -51,9 +53,12 @@ public class UserAdapter implements Adapter {
 
                 logger.debug("로그인 성공 " + sessionId);
                 HttpHeaders httpHeaders = new HttpHeaders();
-                httpHeaders.put(HttpHeaders.SET_COOKIE, String.format("sid=%s; Path=/", sessionId));
+//                httpHeaders.put(HttpHeaders.SET_COOKIE, String.format("sid=%s; Path=/", sessionId));
 
-                return HttpResponse.createOkResponse(request, httpHeaders, null, null);
+                HttpCookies cookies = new HttpCookies();
+                HttpCookie cookie = new HttpCookie("sid", sessionId, "/");
+                cookies.setCookie(cookie);
+                return HttpResponse.createOkResponse(request, httpHeaders, null, null, cookies);
             } else {
                 return HttpResponse.createIllegalArgumentResponse(request);
             }

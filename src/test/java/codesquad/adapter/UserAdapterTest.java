@@ -126,8 +126,16 @@ class UserAdapterTest {
         HttpResponse loginResponse = userAdapter.handle(loginRequest);
 
         Assertions.assertEquals(200, loginResponse.getStatus().getStatusCode());
-        Assertions.assertTrue(loginResponse.getHeaders().contains(HttpHeaders.SET_COOKIE));
 
-        //TODO sid, path 검증
+        HttpCookies httpCookies = loginResponse.getHttpCookies();
+        Assertions.assertNotNull(httpCookies);
+
+        Assertions.assertTrue(httpCookies.contains("sid"));
+
+        HttpCookie cookie = httpCookies.getCookie("sid");
+        Assertions.assertEquals("/", cookie.getPath());
+//        // Check that the Set-Cookie header contains 'sid' and 'Path=/'
+//        assertTrue(setCookieHeader.contains("sid="));
+//        assertTrue(setCookieHeader.contains("Path=/"));
     }
 }

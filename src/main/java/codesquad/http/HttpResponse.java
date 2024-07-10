@@ -7,12 +7,22 @@ public class HttpResponse {
     private HttpStatus status;
     private HttpHeaders headers;
     private HttpBody body;
+    private HttpCookies httpCookies;
 
     public HttpResponse(HttpRequest request, HttpStatus status, HttpHeaders headers, HttpBody body) {
         this.request = request;
         this.status = status;
         this.headers = headers;
         this.body = body;
+        this.httpCookies = new HttpCookies();
+    }
+
+    public HttpResponse(HttpRequest request, HttpStatus status, HttpHeaders headers, HttpBody body, HttpCookies cookies) {
+        this.request = request;
+        this.status = status;
+        this.headers = headers;
+        this.body = body;
+        this.httpCookies = cookies;
     }
 
     public HttpRequest getRequest() {
@@ -31,8 +41,20 @@ public class HttpResponse {
         return body;
     }
 
+    public HttpCookies getHttpCookies() {
+        return httpCookies;
+    }
+
+    public void setCookie(HttpCookie cookie) {
+        httpCookies.setCookie(cookie);
+    }
+
     public static HttpResponse createOkResponse(HttpRequest request, HttpHeaders httpHeaders, byte[] bytes, MimeType contentType) {
         return new HttpResponse(request, HttpStatus.OK, httpHeaders, new HttpBody(bytes, contentType));
+    }
+
+    public static HttpResponse createOkResponse(HttpRequest request, HttpHeaders httpHeaders, byte[] bytes, MimeType contentType, HttpCookies cookies) {
+        return new HttpResponse(request, HttpStatus.OK, httpHeaders, new HttpBody(bytes, contentType), cookies);
     }
 
     public static HttpResponse createErrorResponse(HttpRequest request) {
@@ -75,9 +97,9 @@ public class HttpResponse {
         sb.append("*headers*").append(StringUtils.LINE_SEPERATOR);
         sb.append(headers.toString());
 
-        if (body != null) {
+        if (body != null && body.getBytes() != null) {
             sb.append("*body*").append(StringUtils.LINE_SEPERATOR);
-            sb.append(body); //TODO body 구현
+            sb.append(body);
         }
 
         return sb.toString();
