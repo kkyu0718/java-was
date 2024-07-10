@@ -6,6 +6,7 @@ import codesquad.handler.DynamicHandler;
 import codesquad.handler.RedirectStaticFileHandler;
 import codesquad.handler.StaticFileHandler;
 import codesquad.handler.StaticFileReader;
+import codesquad.http.HttpMethod;
 import codesquad.http.HttpRequest;
 import codesquad.http.HttpResponse;
 import codesquad.processor.Http11Processor;
@@ -39,7 +40,11 @@ public class WasServer {
         Adapter userAdapter = new UserAdapter();
         List<String> whitelist = List.of(
                 "/",
-                "/registration"
+                "/registration",
+                "/article",
+                "/comment",
+                "/main",
+                "/login"
         );
 
         serverSocket = new ServerSocket(port);
@@ -77,9 +82,9 @@ public class WasServer {
             HttpResponse httpResponse = null;
 
             // file 로 요청이 오거나 정해진 view 로 요청이 오는 경우
-            if (staticFileHandler.canHandle(httpRequest)) {
+            if (httpRequest.getMethod() == HttpMethod.GET && staticFileHandler.canHandle(httpRequest)) {
                 httpResponse = staticFileHandler.handle(httpRequest);
-            } else if (redirectStaticFileHandler.canHandle(httpRequest)) {
+            } else if (httpRequest.getMethod() == HttpMethod.GET && redirectStaticFileHandler.canHandle(httpRequest)) {
                 httpResponse = redirectStaticFileHandler.handle(httpRequest);
             } else if (dynamicHandler.canHandle(httpRequest)) {
                 httpResponse = dynamicHandler.handle(httpRequest);
