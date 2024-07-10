@@ -69,6 +69,7 @@ public class HttpResponse {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("----response----").append(StringUtils.LINE_SEPERATOR);
+        sb.append("status: " + status).append(StringUtils.LINE_SEPERATOR);
         sb.append("*headers*").append(StringUtils.LINE_SEPERATOR);
         sb.append(headers.toString());
 

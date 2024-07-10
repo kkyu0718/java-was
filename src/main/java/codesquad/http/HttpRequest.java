@@ -66,6 +66,7 @@ public class HttpRequest {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("----request----").append(StringUtils.LINE_SEPERATOR);
+        sb.append(method + " " + path).append(StringUtils.LINE_SEPERATOR);
         sb.append("*headers*").append(StringUtils.LINE_SEPERATOR);
         sb.append(headers.toString());
 
