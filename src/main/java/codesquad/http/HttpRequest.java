@@ -11,39 +11,73 @@ public class HttpRequest {
     private Parameters parameters;
     private HttpCookies httpCookies;
 
-    public HttpRequest(
-            HttpMethod method,
-            String path,
-            HttpVersion httpVersion,
-            HttpHeaders headers,
-            HttpBody body,
-            Parameters parameters
-    ) {
-        this.method = method;
-        this.path = path;
-        this.httpVersion = httpVersion;
-        this.headers = headers;
-        this.body = body;
-        this.parameters = parameters;
-        this.httpCookies = new HttpCookies();
+    private HttpRequest(Builder builder) {
+        this.method = builder.method;
+        this.path = builder.path;
+        this.httpVersion = builder.httpVersion;
+        this.headers = builder.headers;
+        this.body = builder.body;
+        this.parameters = builder.parameters;
+        this.httpCookies = builder.httpCookies;
     }
 
-    public HttpRequest(
-            HttpMethod method,
-            String path,
-            HttpVersion httpVersion,
-            HttpHeaders headers,
-            HttpBody body,
-            Parameters parameters,
-            HttpCookies cookies
-    ) {
-        this.method = method;
-        this.path = path;
-        this.httpVersion = httpVersion;
-        this.headers = headers;
-        this.body = body;
-        this.parameters = parameters;
-        this.httpCookies = cookies;
+    public static class Builder {
+        private HttpMethod method;
+        private String path;
+        private HttpVersion httpVersion;
+        private HttpHeaders headers;
+        private HttpBody body;
+        private Parameters parameters;
+        private HttpCookies httpCookies;
+
+        public Builder(HttpMethod method, String path, HttpVersion httpVersion) {
+            this.method = method;
+            this.path = path;
+            this.httpVersion = httpVersion;
+            this.body = HttpBody.empty();
+            this.headers = new HttpHeaders();
+            this.parameters = new Parameters();
+            this.httpCookies = new HttpCookies();
+        }
+
+        public Builder headers(HttpHeaders headers) {
+            this.headers.extend(headers);
+            return this;
+        }
+
+        public Builder header(String key, String value) {
+            this.headers.put(key, value);
+            return this;
+        }
+
+        public Builder body(HttpBody body) {
+            this.body = body;
+            return this;
+        }
+
+        public Builder parameters(Parameters parameters) {
+            this.parameters.extend(parameters);
+            return this;
+        }
+
+        public Builder parameter(String key, String value) {
+            this.parameters.addParameter(key, value);
+            return this;
+        }
+
+        public Builder cookies(HttpCookies cookies) {
+            this.httpCookies.extend(cookies);
+            return this;
+        }
+
+        public Builder cookie(HttpCookie cookie) {
+            this.httpCookies.setCookie(cookie);
+            return this;
+        }
+
+        public HttpRequest build() {
+            return new HttpRequest(this);
+        }
     }
 
     public HttpMethod getMethod() {
@@ -90,9 +124,9 @@ public class HttpRequest {
         sb.append("*headers*").append(StringUtils.LINE_SEPERATOR);
         sb.append(headers.toString());
 
-        if (body != null) {
+        if (!body.isEmpty()) {
             sb.append("*body*").append(StringUtils.LINE_SEPERATOR);
-            sb.append(body); //TODO body 구현
+            sb.append(body);
         }
 
         return sb.toString();

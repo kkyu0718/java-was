@@ -20,7 +20,6 @@ public class UserAdapter implements Adapter {
         if (request.getPath().equals("/user/create") && request.getMethod() == HttpMethod.POST) {
             HttpBody body = request.getBody();
 
-            //TODO parameter 처리
             Parameters parameters = body.getParameters();
             String userId = parameters.getParameter("userId");
             String password = parameters.getParameter("password");
@@ -28,13 +27,18 @@ public class UserAdapter implements Adapter {
             String email = parameters.getParameter("email");
 
             if (UserDb.exists(userId)) {
-                return HttpResponse.createIllegalArgumentResponse(request);
+                return new HttpResponse.Builder(request, HttpStatus.ILLEGAL_ARGUMENT).build();
             }
 
             UserDb.add(User.of(userId, password, name, email));
 
             UserDb.print();
-            return HttpResponse.createRedirectResponse(request, "/index.html");
+
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.put("Location", "/index.html");
+            return new HttpResponse.Builder(request, HttpStatus.FOUND)
+                    .headers(httpHeaders)
+                    .build();
         } else if (request.getPath().equals("/user/login") && request.getMethod() == HttpMethod.POST) {
             logger.info("login start");
             HttpBody body = request.getBody();
@@ -44,7 +48,7 @@ public class UserAdapter implements Adapter {
             String password = parameters.getParameter("password");
 
             if (!UserDb.exists(userId)) {
-                return HttpResponse.createIllegalArgumentResponse(request);
+                return new HttpResponse.Builder(request, HttpStatus.ILLEGAL_ARGUMENT).build();
             }
 
             User user = UserDb.get(userId);
@@ -52,15 +56,18 @@ public class UserAdapter implements Adapter {
                 String sessionId = UserSession.create(userId);
 
                 logger.debug("로그인 성공 " + sessionId);
-                HttpHeaders httpHeaders = new HttpHeaders();
-//                httpHeaders.put(HttpHeaders.SET_COOKIE, String.format("sid=%s; Path=/", sessionId));
 
-                HttpCookies cookies = new HttpCookies();
-                HttpCookie cookie = new HttpCookie("sid", sessionId, "/");
-                cookies.setCookie(cookie);
-                return HttpResponse.createOkResponse(request, httpHeaders, null, null, cookies);
+                HttpCookie cookie = new HttpCookie.Builder("sid", sessionId)
+                        .path("/")
+                        .build();
+                return new HttpResponse.Builder(request, HttpStatus.FOUND)
+                        .redirect("/index.html")
+                        .cookie(cookie)
+                        .build();
             } else {
-                return HttpResponse.createRedirectResponse(request, "/login/error.html");
+                return new HttpResponse.Builder(request, HttpStatus.FOUND)
+                        .redirect("/login/error.html")
+                        .build();
             }
         }
 

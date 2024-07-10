@@ -27,4 +27,8 @@ public class HttpCookies {
     public boolean contains(String key) {
         return cookies.stream().anyMatch(httpCookie -> httpCookie.getName().equals(key));
     }
+
+    public void extend(HttpCookies other) {
+        this.cookies.addAll(other.getCookies());
+    }
 }

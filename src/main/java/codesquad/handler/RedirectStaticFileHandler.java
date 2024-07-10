@@ -1,16 +1,11 @@
 package codesquad.handler;
 
-import codesquad.http.HttpHeaders;
-import codesquad.http.HttpRequest;
-import codesquad.http.HttpResponse;
-import codesquad.http.MimeType;
+import codesquad.http.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
-
-import static codesquad.http.HttpResponse.*;
 
 public class RedirectStaticFileHandler implements HttpHandler {
     private static final Logger logger = LoggerFactory.getLogger(RedirectStaticFileHandler.class);
@@ -28,7 +23,7 @@ public class RedirectStaticFileHandler implements HttpHandler {
         String indexPath = path + "/index.html";
         try {
             if (!staticFileReader.exists(indexPath)) {
-                return createNotFoundResponse(request);
+                return new HttpResponse.Builder(request, HttpStatus.NOT_FOUND).build();
             }
         } catch (IOException e) {
             throw new RuntimeException("error reading file " + indexPath);
@@ -39,16 +34,22 @@ public class RedirectStaticFileHandler implements HttpHandler {
 
     private HttpResponse readFileAndCreateResponse(String path, HttpRequest request) {
         try {
-            byte[] bytes = staticFileReader.readFile(path);
-            MimeType contentType = MimeType.fromExt("html");
+            if (!staticFileReader.exists(path)) {
+                return new HttpResponse.Builder(request, HttpStatus.NOT_FOUND).build();
+            }
 
-            HttpHeaders httpHeaders = new HttpHeaders();
-            httpHeaders.put(HttpHeaders.CONTENT_TYPE, contentType.getMimeType());
-            httpHeaders.put(HttpHeaders.CONTENT_LENGTH, String.valueOf(bytes != null ? bytes.length : 0));
-            return createOkResponse(request, httpHeaders, bytes, contentType);
+            byte[] bytes = staticFileReader.readFile(path);
+
+            MimeType contentType = MimeType.HTML;
+
+            return new HttpResponse.Builder(request, HttpStatus.OK)
+                    .header(HttpHeaders.CONTENT_TYPE, MimeType.HTML.getMimeType())
+                    .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(bytes.length))
+                    .body(HttpBody.of(bytes, contentType))
+                    .build();
         } catch (IOException ex) {
             logger.error("Error reading file: " + path);
-            return createErrorResponse(request);
+            return new HttpResponse.Builder(request, HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

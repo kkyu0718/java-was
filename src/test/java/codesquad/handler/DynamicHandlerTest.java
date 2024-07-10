@@ -22,15 +22,15 @@ class DynamicHandlerTest {
 
             @Override
             public HttpResponse handle(HttpRequest request) {
-                return HttpResponse.createOkResponse(request, new HttpHeaders(), null, MimeType.NONE);
+                return new HttpResponse.Builder(request, HttpStatus.OK)
+                        .build();
             }
         }));
     }
 
     @Test
     void DynamicHandler가_주어지고_존재하는_어댑터에_대한_요청이_주어졌을때_200상태코드가_주어진다() {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        HttpRequest request = new HttpRequest(HttpMethod.GET, "/exist", HttpVersion.HTTP11, httpHeaders, null, null);
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/exist", HttpVersion.HTTP11).build();
         assertTrue(handler.canHandle(request));
 
         HttpResponse response = handler.handle(request);
@@ -39,8 +39,7 @@ class DynamicHandlerTest {
 
     @Test
     void DynamicHandler가_주어지고_존재하지않는_어댑터에_대한_요청이_주어졌을때_예외가_발생한다() {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        HttpRequest request = new HttpRequest(HttpMethod.GET, "/non-existent", HttpVersion.HTTP11, httpHeaders, null, null);
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/non-existent", HttpVersion.HTTP11).build();
 
         assertThrows(IllegalArgumentException.class, () -> {
             handler.handle(request);
@@ -50,11 +49,11 @@ class DynamicHandlerTest {
     @Test
     void DynamicHandler_canHandle_메서드가_정확하게_작동하는지_검증한다() {
         // 지원하는 경로에 대한 요청
-        HttpRequest supportedRequest = new HttpRequest(HttpMethod.GET, "/exist", HttpVersion.HTTP11, new HttpHeaders(), null, null);
+        HttpRequest supportedRequest = new HttpRequest.Builder(HttpMethod.GET, "/exist", HttpVersion.HTTP11).build();
         assertTrue(handler.canHandle(supportedRequest));
 
         // 지원하지 않는 경로에 대한 요청
-        HttpRequest unsupportedRequest = new HttpRequest(HttpMethod.GET, "/non-existent", HttpVersion.HTTP11, new HttpHeaders(), null, null);
+        HttpRequest unsupportedRequest = new HttpRequest.Builder(HttpMethod.GET, "/non-existent", HttpVersion.HTTP11).build();
         assertFalse(handler.canHandle(unsupportedRequest));
     }
 }

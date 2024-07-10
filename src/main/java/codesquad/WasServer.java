@@ -9,6 +9,7 @@ import codesquad.handler.StaticFileReader;
 import codesquad.http.HttpMethod;
 import codesquad.http.HttpRequest;
 import codesquad.http.HttpResponse;
+import codesquad.http.HttpStatus;
 import codesquad.processor.Http11Processor;
 import codesquad.processor.HttpProcessor;
 import org.slf4j.Logger;
@@ -23,8 +24,6 @@ import java.net.Socket;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import static codesquad.http.HttpResponse.createNotFoundResponse;
 
 public class WasServer {
     private static Logger logger = LoggerFactory.getLogger(WasServer.class);
@@ -89,7 +88,7 @@ public class WasServer {
             } else if (dynamicHandler.canHandle(httpRequest)) {
                 httpResponse = dynamicHandler.handle(httpRequest);
             } else {
-                httpResponse = createNotFoundResponse(httpRequest);
+                httpResponse = new HttpResponse.Builder(httpRequest, HttpStatus.NOT_FOUND).build();
             }
 
             logger.debug(httpResponse.toString());

@@ -40,7 +40,7 @@ public class Http11Processor implements HttpProcessor {
         verifyMendatoryHeaders(headers);
 
         String query = url.getQuery();
-        Parameters parameters = query != null ? Parameters.of(query) : null;
+        Parameters parameters = Parameters.of(query);
 
         HttpBody httpBody = parseBody(br, headers);
 
@@ -52,10 +52,16 @@ public class Http11Processor implements HttpProcessor {
             String[] splits = s.split(";");
             for (String split : splits) {
                 String[] keyValue = split.split("=");
-                cookies.setCookie(new HttpCookie(keyValue[0].trim(), keyValue[1].trim()));
+                cookies.setCookie(new HttpCookie.Builder(keyValue[0].trim(), keyValue[1].trim()).build());
             }
         }
-        return new HttpRequest(method, url.getPath(), httpVersion, headers, httpBody, parameters, cookies);
+
+        return new HttpRequest.Builder(method, url.getPath(), httpVersion)
+                .headers(headers)
+                .body(httpBody)
+                .parameters(parameters)
+                .cookies(cookies)
+                .build();
     }
 
     private void verifyMendatoryHeaders(HttpHeaders headers) {
@@ -144,14 +150,14 @@ public class Http11Processor implements HttpProcessor {
      */
     private HttpBody parseBody(BufferedReader br, HttpHeaders headers) throws IOException {
         if (!headers.contains(HttpHeaders.CONTENT_LENGTH)) {
-            return null;
+            return HttpBody.empty();
         }
 
         int contentLength = Integer.parseInt(headers.get(HttpHeaders.CONTENT_LENGTH));
         String contentType = headers.get(HttpHeaders.CONTENT_TYPE);
 
         if (contentLength == 0 || contentType == null) {
-            return null;
+            return HttpBody.empty();
         }
 
         MimeType mimeType = MimeType.fromMimeType(contentType);
@@ -163,7 +169,7 @@ public class Http11Processor implements HttpProcessor {
             throw new IOException("Expected " + contentLength + " bytes but read " + read + " bytes.");
         }
 
-        return new HttpBody(new String(bodyChars).getBytes(StandardCharsets.US_ASCII), mimeType);
+        return HttpBody.of(new String(bodyChars).getBytes(StandardCharsets.US_ASCII), mimeType);
     }
 
     private String[] parseStartLine(BufferedReader br) throws IOException {

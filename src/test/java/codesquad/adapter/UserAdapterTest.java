@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserAdapterTest {
     private UserAdapter userAdapter;
@@ -35,8 +36,12 @@ class UserAdapterTest {
         byte[] bytes1 = "userId=id1&password=1234&name=kyu1&email=email1".getBytes();
         byte[] bytes2 = "userId=id2&password=1234&name=kyu2&email=email2".getBytes();
 
-        HttpRequest request1 = new HttpRequest(HttpMethod.POST, "/user/create", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(bytes1, MimeType.X_WWW_FORM_URLENCODED), null);
-        HttpRequest request2 = new HttpRequest(HttpMethod.POST, "/user/create", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(bytes2, MimeType.X_WWW_FORM_URLENCODED), null);
+        HttpRequest request1 = new HttpRequest.Builder(HttpMethod.POST, "/user/create", HttpVersion.HTTP11)
+                .body(HttpBody.of(bytes1, MimeType.X_WWW_FORM_URLENCODED))
+                .build();
+        HttpRequest request2 = new HttpRequest.Builder(HttpMethod.POST, "/user/create", HttpVersion.HTTP11)
+                .body(HttpBody.of(bytes2, MimeType.X_WWW_FORM_URLENCODED))
+                .build();
 
         HttpResponse response1 = userAdapter.handle(request1);
         HttpResponse response2 = userAdapter.handle(request2);
@@ -52,12 +57,15 @@ class UserAdapterTest {
         byte[] bytes1 = String.format("userId=%s&password=1234&name=kyu1&email=email1", sameId).getBytes();
         byte[] bytes2 = String.format("userId=%s&password=1234&name=kyu2&email=email2", sameId).getBytes();
 
-        HttpRequest request1 = new HttpRequest(HttpMethod.POST, "/user/create", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(bytes1, MimeType.X_WWW_FORM_URLENCODED), null);
-        HttpRequest request2 = new HttpRequest(HttpMethod.POST, "/user/create", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(bytes2, MimeType.X_WWW_FORM_URLENCODED), null);
+        HttpRequest request1 = new HttpRequest.Builder(HttpMethod.POST, "/user/create", HttpVersion.HTTP11)
+                .body(HttpBody.of(bytes1, MimeType.X_WWW_FORM_URLENCODED))
+                .build();
+        HttpRequest request2 = new HttpRequest.Builder(HttpMethod.POST, "/user/create", HttpVersion.HTTP11)
+                .body(HttpBody.of(bytes2, MimeType.X_WWW_FORM_URLENCODED))
+                .build();
 
         HttpResponse response1 = userAdapter.handle(request1);
         HttpResponse response2 = userAdapter.handle(request2);
-
 
         assertEquals(HttpStatus.FOUND, response1.getStatus());
         assertEquals(HttpStatus.ILLEGAL_ARGUMENT, response2.getStatus());
@@ -67,7 +75,9 @@ class UserAdapterTest {
     @Test
     public void create메소드를_실행하면_메인화면으로_리다이렉트된다() {
         byte[] bytes = "userId=id1&password=1234&name=kyu1&email=email1".getBytes();
-        HttpRequest request = new HttpRequest(HttpMethod.POST, "/user/create", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(bytes, MimeType.X_WWW_FORM_URLENCODED), null);
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.POST, "/user/create", HttpVersion.HTTP11)
+                .body(HttpBody.of(bytes, MimeType.X_WWW_FORM_URLENCODED))
+                .build();
 
         HttpResponse response = userAdapter.handle(request);
 
@@ -79,7 +89,9 @@ class UserAdapterTest {
     public void create메소드는_GET으로_동작하지_않는다() {
         byte[] bytes = "userId=id1&password=1234&name=kyu1&email=email1".getBytes();
 
-        HttpRequest request = new HttpRequest(HttpMethod.GET, "/user/create", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(bytes, MimeType.X_WWW_FORM_URLENCODED), null);
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/user/create", HttpVersion.HTTP11)
+                .body(HttpBody.of(bytes, MimeType.X_WWW_FORM_URLENCODED))
+                .build();
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> userAdapter.handle(request));
     }
@@ -89,23 +101,29 @@ class UserAdapterTest {
         String userId = "id1";
         byte[] signupBytes = String.format("userId=%s&password=1234&name=kyu1&email=email1", userId).getBytes();
 
-        HttpRequest signupRequest = new HttpRequest(HttpMethod.POST, "/user/create", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(signupBytes, MimeType.X_WWW_FORM_URLENCODED), null);
+        HttpRequest signupRequest = new HttpRequest.Builder(HttpMethod.POST, "/user/create", HttpVersion.HTTP11)
+                .body(HttpBody.of(signupBytes, MimeType.X_WWW_FORM_URLENCODED))
+                .build();
         HttpResponse signupResponse = userAdapter.handle(signupRequest);
 
         Assertions.assertEquals(302, signupResponse.getStatus().getStatusCode());
 
         byte[] loginBytes = "userId=id1&password=1234".getBytes();
-        HttpRequest loginRequest = new HttpRequest(HttpMethod.POST, "/user/login", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(loginBytes, MimeType.X_WWW_FORM_URLENCODED), null);
+        HttpRequest loginRequest = new HttpRequest.Builder(HttpMethod.POST, "/user/login", HttpVersion.HTTP11)
+                .body(HttpBody.of(loginBytes, MimeType.X_WWW_FORM_URLENCODED))
+                .build();
         HttpResponse loginResponse = userAdapter.handle(loginRequest);
 
         Assertions.assertEquals(200, loginResponse.getStatus().getStatusCode());
-        Assertions.assertTrue(UserSession.contains(userId));
+        assertTrue(UserSession.contains(userId));
     }
 
     @Test
     public void login메소드는_회원가입안한_유저에_대해서_400에러를_던진다() {
         byte[] loginBytes = "userId=id1&password=1234".getBytes();
-        HttpRequest loginRequest = new HttpRequest(HttpMethod.POST, "/user/login", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(loginBytes, MimeType.X_WWW_FORM_URLENCODED), null);
+        HttpRequest loginRequest = new HttpRequest.Builder(HttpMethod.POST, "/user/login", HttpVersion.HTTP11)
+                .body(HttpBody.of(loginBytes, MimeType.X_WWW_FORM_URLENCODED))
+                .build();
 
         HttpResponse response = userAdapter.handle(loginRequest);
 
@@ -116,13 +134,17 @@ class UserAdapterTest {
     public void login메소드는_회원가입했던_유저에대해서_Set_Cookie헤더를_갖고_sid와_path를_포함한다() {
         byte[] signupBytes = "userId=id1&password=1234&name=kyu1&email=email1".getBytes();
 
-        HttpRequest signupRequest = new HttpRequest(HttpMethod.POST, "/user/create", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(signupBytes, MimeType.X_WWW_FORM_URLENCODED), null);
+        HttpRequest signupRequest = new HttpRequest.Builder(HttpMethod.POST, "/user/create", HttpVersion.HTTP11)
+                .body(HttpBody.of(signupBytes, MimeType.X_WWW_FORM_URLENCODED))
+                .build();
         HttpResponse signupResponse = userAdapter.handle(signupRequest);
 
         Assertions.assertEquals(302, signupResponse.getStatus().getStatusCode());
 
         byte[] loginBytes = "userId=id1&password=1234".getBytes();
-        HttpRequest loginRequest = new HttpRequest(HttpMethod.POST, "/user/login", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(loginBytes, MimeType.X_WWW_FORM_URLENCODED), null);
+        HttpRequest loginRequest = new HttpRequest.Builder(HttpMethod.POST, "/user/login", HttpVersion.HTTP11)
+                .body(HttpBody.of(loginBytes, MimeType.X_WWW_FORM_URLENCODED))
+                .build();
         HttpResponse loginResponse = userAdapter.handle(loginRequest);
 
         Assertions.assertEquals(200, loginResponse.getStatus().getStatusCode());
@@ -130,12 +152,9 @@ class UserAdapterTest {
         HttpCookies httpCookies = loginResponse.getHttpCookies();
         Assertions.assertNotNull(httpCookies);
 
-        Assertions.assertTrue(httpCookies.contains("sid"));
+        assertTrue(httpCookies.contains("sid"));
 
         HttpCookie cookie = httpCookies.getCookie("sid");
-        Assertions.assertEquals("/", cookie.getPath());
-//        // Check that the Set-Cookie header contains 'sid' and 'Path=/'
-//        assertTrue(setCookieHeader.contains("sid="));
-//        assertTrue(setCookieHeader.contains("Path=/"));
+        assertEquals(cookie.getPath(), "/");
     }
 }
