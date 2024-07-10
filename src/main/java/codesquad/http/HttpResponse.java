@@ -65,11 +65,17 @@ public class HttpResponse {
         return new HttpResponse(request, HttpStatus.FOUND, resHeaders, null);  // 302 Found
     }
 
+    public static HttpResponse createIllegalArgumentResponse(HttpRequest request) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+
+        return new HttpResponse(request, HttpStatus.ILLEGAL_ARGUMENT, httpHeaders, null);
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("----response----").append(StringUtils.LINE_SEPERATOR);
-        sb.append("status: " + status).append(StringUtils.LINE_SEPERATOR);
+        sb.append("status: ").append(status).append(StringUtils.LINE_SEPERATOR);
         sb.append("*headers*").append(StringUtils.LINE_SEPERATOR);
         sb.append(headers.toString());
 

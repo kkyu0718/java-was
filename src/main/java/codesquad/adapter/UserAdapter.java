@@ -24,10 +24,17 @@ public class UserAdapter implements Adapter {
             String password = parameters.getParameter("password");
             String name = parameters.getParameter("name");
             String email = parameters.getParameter("email");
+
+            if (UserDb.exists(userId)) {
+                return HttpResponse.createIllegalArgumentResponse(request);
+            }
+
             UserDb.add(User.of(userId, password, name, email));
 
             UserDb.print();
             return HttpResponse.createRedirectResponse(request, "/index.html");
+        } else if (request.getPath().equals("/user/login") && request.getMethod() == HttpMethod.POST) {
+            // user session
         }
 
         throw new IllegalArgumentException("처리 가능한 메소드가 존재하지 않습니다." + request.getPath().toString());

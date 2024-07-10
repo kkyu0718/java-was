@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class UserAdapterTest {
     private UserAdapter userAdapter;
@@ -41,6 +42,22 @@ class UserAdapterTest {
         assertEquals(HttpStatus.FOUND, response1.getStatus());
         assertEquals(HttpStatus.FOUND, response2.getStatus());
         assertEquals(2, UserDb.size());
+    }
+
+    @Test
+    public void UserAdapter가_주어졌을때_create메소드를_통해_유저를_저장할때_이미_존재하는_유저이면_400에러를_던진다() {
+        String sameId = "똑같은 아이디~";
+        byte[] bytes1 = String.format("userId=%s&password=1234&name=kyu1&email=email1", sameId).getBytes();
+        byte[] bytes2 = String.format("userId=%s&password=1234&name=kyu2&email=email2", sameId).getBytes();
+
+        HttpRequest request1 = new HttpRequest(HttpMethod.POST, "/user/create", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(bytes1, MimeType.X_WWW_FORM_URLENCODED), null);
+        HttpRequest request2 = new HttpRequest(HttpMethod.POST, "/user/create", HttpVersion.HTTP11, new HttpHeaders(), new HttpBody(bytes2, MimeType.X_WWW_FORM_URLENCODED), null);
+
+        HttpResponse response1 = userAdapter.handle(request1);
+        assertEquals(HttpStatus.FOUND, response1.getStatus());
+
+        assertThrows(IllegalArgumentException.class, () -> userAdapter.handle(request2));
+        assertEquals(1, UserDb.size());
     }
 
     @Test
