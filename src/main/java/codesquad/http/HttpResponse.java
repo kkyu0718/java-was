@@ -91,46 +91,6 @@ public class HttpResponse {
         httpCookies.setCookie(cookie);
     }
 
-//    public static HttpResponse createOkResponse(HttpRequest request, HttpHeaders httpHeaders, byte[] bytes, MimeType contentType) {
-//        return new HttpResponse(request, HttpStatus.OK, httpHeaders, new HttpBody(bytes, contentType));
-//    }
-//
-//    public static HttpResponse createOkResponse(HttpRequest request, HttpHeaders httpHeaders, byte[] bytes, MimeType contentType, HttpCookies cookies) {
-//        return new HttpResponse(request, HttpStatus.OK, httpHeaders, new HttpBody(bytes, contentType), cookies);
-//    }
-//
-//    public static HttpResponse createErrorResponse(HttpRequest request) {
-//        HttpHeaders resHeaders = new HttpHeaders();
-//
-//        return new HttpResponse(request, HttpStatus.INTERNAL_SERVER_ERROR, resHeaders, new HttpBody(null, MimeType.NONE));
-//    }
-//
-//
-//    public static HttpResponse createNotFoundResponse(HttpRequest request) {
-//        HttpHeaders resHeaders = new HttpHeaders();
-//
-//        return new HttpResponse(request, HttpStatus.NOT_FOUND, resHeaders, new HttpBody(null, MimeType.NONE));
-//    }
-//
-//    public static HttpResponse createNoContentResponse(HttpRequest request) {
-//        HttpHeaders resHeaders = new HttpHeaders();
-//
-//        return new HttpResponse(request, HttpStatus.NO_CONTENT, resHeaders, null);
-//    }
-//
-//    public static HttpResponse createRedirectResponse(HttpRequest request, String location) {
-//        HttpHeaders resHeaders = new HttpHeaders();
-//        resHeaders.put("Location", location);
-//
-//        return new HttpResponse(request, HttpStatus.FOUND, resHeaders, null);  // 302 Found
-//    }
-//
-//    public static HttpResponse createIllegalArgumentResponse(HttpRequest request) {
-//        HttpHeaders httpHeaders = new HttpHeaders();
-//
-//        return new HttpResponse(request, HttpStatus.ILLEGAL_ARGUMENT, httpHeaders, null);
-//    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
