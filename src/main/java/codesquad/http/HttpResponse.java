@@ -31,12 +31,8 @@ public class HttpResponse {
         return body;
     }
 
-    public static HttpResponse createOkResponse(HttpRequest request, byte[] bytes, MimeType contentType) {
-        HttpHeaders resHeaders = new HttpHeaders();
-        resHeaders.put(HttpHeaders.CONTENT_TYPE, contentType.getMimeType());
-        resHeaders.put(HttpHeaders.CONTENT_LENGTH, String.valueOf(bytes != null ? bytes.length : 0));
-
-        return new HttpResponse(request, HttpStatus.OK, resHeaders, new HttpBody(bytes, contentType));
+    public static HttpResponse createOkResponse(HttpRequest request, HttpHeaders httpHeaders, byte[] bytes, MimeType contentType) {
+        return new HttpResponse(request, HttpStatus.OK, httpHeaders, new HttpBody(bytes, contentType));
     }
 
     public static HttpResponse createErrorResponse(HttpRequest request) {

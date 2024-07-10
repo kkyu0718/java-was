@@ -22,7 +22,7 @@ class DynamicHandlerTest {
 
             @Override
             public HttpResponse handle(HttpRequest request) {
-                return HttpResponse.createOkResponse(request, null, MimeType.NONE);
+                return HttpResponse.createOkResponse(request, new HttpHeaders(), null, MimeType.NONE);
             }
         }));
     }

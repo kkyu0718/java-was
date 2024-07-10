@@ -1,5 +1,6 @@
 package codesquad.handler;
 
+import codesquad.http.HttpHeaders;
 import codesquad.http.HttpRequest;
 import codesquad.http.HttpResponse;
 import codesquad.http.MimeType;
@@ -40,7 +41,11 @@ public class RedirectStaticFileHandler implements HttpHandler {
         try {
             byte[] bytes = staticFileReader.readFile(path);
             MimeType contentType = MimeType.fromExt("html");
-            return createOkResponse(request, bytes, contentType);
+
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.put(HttpHeaders.CONTENT_TYPE, contentType.getMimeType());
+            httpHeaders.put(HttpHeaders.CONTENT_LENGTH, String.valueOf(bytes != null ? bytes.length : 0));
+            return createOkResponse(request, httpHeaders, bytes, contentType);
         } catch (IOException ex) {
             logger.error("Error reading file: " + path);
             return createErrorResponse(request);

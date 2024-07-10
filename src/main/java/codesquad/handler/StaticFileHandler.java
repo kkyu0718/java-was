@@ -46,7 +46,11 @@ public class StaticFileHandler implements HttpHandler {
         try {
             byte[] bytes = staticFileReader.readFile(request.getPath());
             MimeType contentType = MimeType.fromExt(request.getExt());
-            return createOkResponse(request, bytes, contentType);
+
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.put(HttpHeaders.CONTENT_TYPE, contentType.getMimeType());
+            httpHeaders.put(HttpHeaders.CONTENT_LENGTH, String.valueOf(bytes != null ? bytes.length : 0));
+            return createOkResponse(request, httpHeaders, bytes, contentType);
         } catch (IOException ex) {
             logger.error("Error reading file: " + request.getPath());
             return createErrorResponse(request);
