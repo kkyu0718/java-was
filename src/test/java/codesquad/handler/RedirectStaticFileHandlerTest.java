@@ -1,6 +1,8 @@
 package codesquad.handler;
 
 import codesquad.http.*;
+import codesquad.reader.StaticFileReader;
+import codesquad.reader.StaticFileReaderSpec;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -5,13 +5,13 @@ import codesquad.adapter.UserAdapter;
 import codesquad.handler.DynamicHandler;
 import codesquad.handler.RedirectStaticFileHandler;
 import codesquad.handler.StaticFileHandler;
-import codesquad.handler.StaticFileReader;
 import codesquad.http.HttpMethod;
 import codesquad.http.HttpRequest;
 import codesquad.http.HttpResponse;
 import codesquad.http.HttpStatus;
 import codesquad.processor.Http11Processor;
 import codesquad.processor.HttpProcessor;
+import codesquad.reader.StaticFileReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

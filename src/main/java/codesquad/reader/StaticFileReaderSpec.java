@@ -1,4 +1,4 @@
-package codesquad.handler;
+package codesquad.reader;
 
 import java.io.IOException;
 
