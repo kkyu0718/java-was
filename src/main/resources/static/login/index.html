@@ -84,7 +84,7 @@
                         }
                     });
                 } else if (response.status === 400) {
-                    window.alert("로그인 실패: 잘못된 아이디 또는 비밀번호입니다.");
+                    window.alert("로그인 실패");
                 } else {
                     return response.text().then(text => {
                         throw new Error(text);
