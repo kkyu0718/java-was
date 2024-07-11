@@ -19,6 +19,7 @@ public class UserAdapter implements Adapter {
 
     @RequestMapping(path = "/user/create", method = "POST")
     public HttpResponse createUser(HttpRequest request) {
+        logger.debug("createUser start");
         HttpBody body = request.getBody();
         Parameters parameters = body.getParameters();
         String userId = parameters.getParameter("userId");
@@ -75,11 +76,11 @@ public class UserAdapter implements Adapter {
     }
 
     @RequestMapping(path = "/user/info", method = "GET")
-    public HttpResponse getUserInfo(HttpRequest request, @Session String userId) {
-        User user = UserDb.get(userId);
-        String userInfo = String.format("User Info - ID: %s, Name: %s, Email: %s", user.getUserId(), user.getName(), user.getEmail());
-        return new HttpResponse.Builder(request, HttpStatus.OK)
-                .body(HttpBody.of(userInfo.getBytes(), MimeType.TEXT_PLAIN))
-                .build();
+    public User getUserInfo(HttpRequest request, @Session String userId) {
+        if (userId == null) {
+            return null;
+        }
+
+        return UserDb.get(userId);
     }
 }
