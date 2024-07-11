@@ -56,7 +56,7 @@ public class DynamicHandler implements HttpHandler {
             if (param.getType() == HttpRequest.class) {
                 args[i] = request;
             } else if (param.isAnnotationPresent(Session.class)) {
-                args[i] = request.getHeader("UserId");
+                args[i] = request.getHeader("userId");
             } else {
                 // 다른 파라미터 처리 로직
             }

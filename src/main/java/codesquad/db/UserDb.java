@@ -29,10 +29,12 @@ public class UserDb {
         return users.size();
     }
 
-    public static void print() {
+    public static String print() {
+        StringBuilder sb = new StringBuilder();
         for (User user : users.values()) {
-            logger.debug(user.toString() + "\n");
+            sb.append(user.toString() + "\n");
         }
+        return sb.toString();
     }
 
     public static boolean exists(String userId) {

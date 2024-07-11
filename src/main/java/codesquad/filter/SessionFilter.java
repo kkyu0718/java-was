@@ -11,12 +11,14 @@ import java.util.UUID;
 public class SessionFilter implements Filter {
     private static final Logger log = LoggerFactory.getLogger(SessionFilter.class);
     private static final List<String> sessionNotNeededPaths = List.of(
-            "/index.html",
             "/",
+            "/index.html",
             "/registration",
             "/registration/index.html",
             "/login",
-            "/login/index.html");
+            "/login/index.html",
+            "/user/login",
+            "/user/create");
 
     private static final List<String> staticFileExtensions = List.of(
             ".css",

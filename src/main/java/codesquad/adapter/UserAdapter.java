@@ -41,12 +41,16 @@ public class UserAdapter implements Adapter {
     @RequestMapping(path = "/user/login", method = "POST")
     public HttpResponse login(HttpRequest request) {
         logger.info("login start");
+        logger.info("userDb", UserDb.print());
+
         HttpBody body = request.getBody();
         Parameters parameters = body.getParameters();
         String userId = parameters.getParameter("userId");
         String password = parameters.getParameter("password");
 
+        // 유저가 존재하지 않는 경우
         if (!UserDb.exists(userId)) {
+            logger.debug("존재하지 않는 유저" + userId);
             return new HttpResponse.Builder(request, HttpStatus.ILLEGAL_ARGUMENT).build();
         }
 
@@ -63,6 +67,7 @@ public class UserAdapter implements Adapter {
                     .cookie(cookie)
                     .build();
         } else {
+            logger.debug("로그인 실패" + userId + " " + password);
             return new HttpResponse.Builder(request, HttpStatus.FOUND)
                     .redirect("/login/error.html")
                     .build();
