@@ -54,7 +54,7 @@ public class UserAdapter implements Adapter {
     @RequestMapping(path = "/user/login", method = "POST")
     public HttpResponse login(HttpRequest request) {
         logger.info("login start");
-        logger.info("userDb", UserDb.print());
+        logger.info("UserDb : ", UserDb.print());
 
         HttpBody body = request.getBody();
         Parameters parameters = body.getParameters();
@@ -63,6 +63,7 @@ public class UserAdapter implements Adapter {
 
         // 유저가 존재하지 않는 경우
         if (!userDbService.exists(userId)) {
+            logger.error("유저가 존재하지 않습니다. " + userId);
             return new HttpResponse.Builder(request, HttpStatus.FOUND)
                     .redirect(LOGIN_FAIL_PAGE)
                     .build();
@@ -82,7 +83,10 @@ public class UserAdapter implements Adapter {
                     .cookie(cookie)
                     .build();
         } else {
-            throw new RuntimeException("로그인 실패 비밀번호가 일치하지 않습니다." + userId + " " + user.getPassword() + "input password " + password);
+            logger.error("로그인 실패 비밀번호가 일치하지 않습니다." + userId + " " + user.getPassword() + "input password " + password);
+            return new HttpResponse.Builder(request, HttpStatus.FOUND)
+                    .redirect(LOGIN_FAIL_PAGE)
+                    .build();
         }
     }
 
