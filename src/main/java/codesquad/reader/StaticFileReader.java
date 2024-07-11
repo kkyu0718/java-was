@@ -16,20 +16,6 @@ public class StaticFileReader implements StaticFileReaderSpec {
     public StaticFileReader() {
     }
 
-    @Override
-    public byte[] readFile(String path) throws IOException {
-        try (InputStream resource = getResourceAsStream(path)) {
-            return resource.readAllBytes();
-        }
-    }
-
-    @Override
-    public boolean exists(String path) throws IOException {
-        try (InputStream resourceAsStream = getResourceAsStream(path)) {
-            return resourceAsStream != null;
-        }
-    }
-
     private InputStream getResourceAsStream(String path) {
         return this.getClass().getClassLoader().getResourceAsStream(staticPath + "/" + path);
     }
