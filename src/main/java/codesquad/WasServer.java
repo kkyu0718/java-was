@@ -40,7 +40,6 @@ public class WasServer {
 
     public WasServer(int port) throws IOException {
         UserDbService userDbService = new UserDbService();
-        UserAdapter userAdapter = new UserAdapter(userDbService, userSessionService);
         List<String> whitelist = List.of(
                 "/",
                 "/registration",
@@ -52,6 +51,7 @@ public class WasServer {
         );
 
         userSessionService = new UserSessionService();
+        UserAdapter userAdapter = new UserAdapter(userDbService, userSessionService);
         serverSocket = new ServerSocket(port);
         dynamicHandler = new DynamicHandler(List.of(userAdapter));
         staticFileHandler = new StaticFileHandler(new StaticFileReader(), userSessionService, userDbService);
