@@ -25,8 +25,7 @@ class RedirectStaticFileHandlerTest {
 
     @Test
     void RedirectStaticFileHandler가_주어지고_존재하지않는_Path가_주어졌으나_디렉토리의_index_html가_존재할때_200상태코드가_주어진다() {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        HttpRequest request = new HttpRequest(HttpMethod.GET, redirectNeededPath, HttpVersion.HTTP11, httpHeaders, null, null);
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, redirectNeededPath, HttpVersion.HTTP11).build();
 
         HttpResponse response = handler.handle(request);
 
@@ -41,8 +40,7 @@ class RedirectStaticFileHandlerTest {
                 List.of(nonExistentPath)
         );
 
-        HttpHeaders httpHeaders = new HttpHeaders();
-        HttpRequest request = new HttpRequest(HttpMethod.GET, nonExistentPath, HttpVersion.HTTP11, httpHeaders, null, null);
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, nonExistentPath, HttpVersion.HTTP11).build();
 
         HttpResponse response = handler.handle(request);
 
@@ -67,8 +65,7 @@ class RedirectStaticFileHandlerTest {
                 List.of(redirectNeededPath)
         );
 
-        HttpHeaders httpHeaders = new HttpHeaders();
-        HttpRequest request = new HttpRequest(HttpMethod.GET, redirectNeededPath, HttpVersion.HTTP11, httpHeaders, null, null);
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, redirectNeededPath, HttpVersion.HTTP11).build();
 
         HttpResponse response = faultyHandler.handle(request);
 
@@ -78,11 +75,11 @@ class RedirectStaticFileHandlerTest {
     @Test
     void RedirectStaticFileHandler_canHandle_메서드가_정확하게_작동하는지_검증한다() {
         // whitelist에 존재하는 경로에 대한 요청
-        HttpRequest validRequest = new HttpRequest(HttpMethod.GET, redirectNeededPath, HttpVersion.HTTP11, new HttpHeaders(), null, null);
+        HttpRequest validRequest = new HttpRequest.Builder(HttpMethod.GET, redirectNeededPath, HttpVersion.HTTP11).build();
         Assertions.assertTrue(handler.canHandle(validRequest));
 
         // whitelist에 존재하지 않는 경로에 대한 요청
-        HttpRequest invalidRequest = new HttpRequest(HttpMethod.GET, nonExistentPath, HttpVersion.HTTP11, new HttpHeaders(), null, null);
+        HttpRequest invalidRequest = new HttpRequest.Builder(HttpMethod.GET, nonExistentPath, HttpVersion.HTTP11).build();
         Assertions.assertFalse(handler.canHandle(invalidRequest));
     }
 }

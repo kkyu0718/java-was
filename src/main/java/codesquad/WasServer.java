@@ -6,8 +6,10 @@ import codesquad.handler.DynamicHandler;
 import codesquad.handler.RedirectStaticFileHandler;
 import codesquad.handler.StaticFileHandler;
 import codesquad.handler.StaticFileReader;
+import codesquad.http.HttpMethod;
 import codesquad.http.HttpRequest;
 import codesquad.http.HttpResponse;
+import codesquad.http.HttpStatus;
 import codesquad.processor.Http11Processor;
 import codesquad.processor.HttpProcessor;
 import org.slf4j.Logger;
@@ -23,8 +25,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static codesquad.http.HttpResponse.createNotFoundResponse;
-
 public class WasServer {
     private static Logger logger = LoggerFactory.getLogger(WasServer.class);
     private static int MAX_THREAD_POOL_SIZE = 100;
@@ -39,7 +39,11 @@ public class WasServer {
         Adapter userAdapter = new UserAdapter();
         List<String> whitelist = List.of(
                 "/",
-                "/registration"
+                "/registration",
+                "/article",
+                "/comment",
+                "/main",
+                "/login"
         );
 
         serverSocket = new ServerSocket(port);
@@ -77,14 +81,14 @@ public class WasServer {
             HttpResponse httpResponse = null;
 
             // file 로 요청이 오거나 정해진 view 로 요청이 오는 경우
-            if (staticFileHandler.canHandle(httpRequest)) {
+            if (httpRequest.getMethod() == HttpMethod.GET && staticFileHandler.canHandle(httpRequest)) {
                 httpResponse = staticFileHandler.handle(httpRequest);
-            } else if (redirectStaticFileHandler.canHandle(httpRequest)) {
+            } else if (httpRequest.getMethod() == HttpMethod.GET && redirectStaticFileHandler.canHandle(httpRequest)) {
                 httpResponse = redirectStaticFileHandler.handle(httpRequest);
             } else if (dynamicHandler.canHandle(httpRequest)) {
                 httpResponse = dynamicHandler.handle(httpRequest);
             } else {
-                httpResponse = createNotFoundResponse(httpRequest);
+                httpResponse = new HttpResponse.Builder(httpRequest, HttpStatus.NOT_FOUND).build();
             }
 
             logger.debug(httpResponse.toString());

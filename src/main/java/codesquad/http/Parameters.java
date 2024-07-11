@@ -9,19 +9,23 @@ import static codesquad.utils.StringUtils.LINE_SEPERATOR;
 public class Parameters {
     private Map<String, String> parameter;
 
-    private Parameters(Map<String, String> parameter) {
-        this.parameter = parameter;
+    public Parameters() {
+        this.parameter = new HashMap<>();
     }
 
     public static Parameters of(String paramString) {
-        HashMap<String, String> map = new HashMap<>();
+        if (paramString == null) {
+            return new Parameters();
+        }
+
+        Parameters parameters = new Parameters();
         String[] split = paramString.split("&");
         for (String entry : split) {
             String[] keyValue = entry.split("=");
-            map.put(keyValue[0], keyValue[1]);
+            parameters.addParameter(keyValue[0], keyValue[1]);
         }
 
-        return new Parameters(map);
+        return parameters;
     }
 
     public Map<String, String> getParameters() {
@@ -50,5 +54,9 @@ public class Parameters {
             sb.append("(" + key + ", " + parameter.get(key) + ")").append(LINE_SEPERATOR);
         }
         return sb.toString();
+    }
+
+    public void extend(Parameters other) {
+        parameter.putAll(other.getParameters());
     }
 }

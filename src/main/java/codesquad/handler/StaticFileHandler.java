@@ -6,9 +6,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-import static codesquad.http.HttpResponse.createErrorResponse;
-import static codesquad.http.HttpResponse.createOkResponse;
-
 public class StaticFileHandler implements HttpHandler {
     private static final Logger logger = LoggerFactory.getLogger(StaticFileHandler.class);
     private StaticFileReaderSpec staticFileReader;
@@ -22,7 +19,7 @@ public class StaticFileHandler implements HttpHandler {
         String path = request.getPath();
         try {
             if (!isValid(path)) {
-                return createNotFoundResponse(request);
+                return new HttpResponse.Builder(request, HttpStatus.NOT_FOUND).build();
             }
         } catch (IOException e) {
             throw new RuntimeException("error reading file " + path);
@@ -35,21 +32,23 @@ public class StaticFileHandler implements HttpHandler {
         return staticFileReader.exists(path);
     }
 
-    private HttpResponse createNotFoundResponse(HttpRequest request) {
-        HttpHeaders resHeaders = new HttpHeaders();
-        resHeaders.put(HttpHeaders.HTTP_VERSION, request.getHttpVersion().getRepresentation());
-
-        return new HttpResponse(request, HttpStatus.NOT_FOUND, resHeaders, new HttpBody(null, MimeType.NONE));
-    }
-
     private HttpResponse readFileAndCreateResponse(HttpRequest request) {
         try {
             byte[] bytes = staticFileReader.readFile(request.getPath());
             MimeType contentType = MimeType.fromExt(request.getExt());
-            return createOkResponse(request, bytes, contentType);
+
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.put(HttpHeaders.CONTENT_TYPE, contentType.getMimeType());
+            httpHeaders.put(HttpHeaders.CONTENT_LENGTH, String.valueOf(bytes != null ? bytes.length : 0));
+
+            return new HttpResponse.Builder(request, HttpStatus.OK)
+                    .headers(httpHeaders)
+                    .body(HttpBody.of(bytes, contentType))
+                    .build();
         } catch (IOException ex) {
             logger.error("Error reading file: " + request.getPath());
-            return createErrorResponse(request);
+            return new HttpResponse.Builder(request, HttpStatus.INTERNAL_SERVER_ERROR)
+                    .build();
         }
     }
 

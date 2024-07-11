@@ -215,7 +215,7 @@ class Http11ProcessorTest {
         assertEquals("keep-alive", request.getHeaders().get("Connection"));
         assertEquals("localhost:8080", request.getHeaders().get("Host"));
 
-        assertNull(request.getBody());
+        assertTrue(request.getBody().isEmpty());
     }
 
     @Test
@@ -243,7 +243,7 @@ class Http11ProcessorTest {
         assertEquals("body body body".getBytes().length, Integer.parseInt(request.getHeaders().get(HttpHeaders.CONTENT_LENGTH)));
         assertEquals(MimeType.HTML.getMimeType(), request.getHeaders().get(HttpHeaders.CONTENT_TYPE));
 
-        assertNotNull(request.getBody());
+        assertFalse(request.getBody().isEmpty());
     }
 
     @BeforeEach
