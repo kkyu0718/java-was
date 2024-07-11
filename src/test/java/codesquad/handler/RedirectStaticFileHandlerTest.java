@@ -63,6 +63,11 @@ class RedirectStaticFileHandlerTest {
                     public boolean exists(String path) {
                         return true;
                     }
+
+                    @Override
+                    public String readFileLines(String path) throws IOException {
+                        throw new IOException("IO 에러 발생");
+                    }
                 },
                 List.of(redirectNeededPath)
         );

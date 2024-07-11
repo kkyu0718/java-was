@@ -61,6 +61,11 @@ class StaticFileHandlerTest {
             public boolean exists(String path) {
                 return true;
             }
+
+            @Override
+            public String readFileLines(String path) throws IOException {
+                return null;
+            }
         });
 
         HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/index.html", HttpVersion.HTTP11).build();
@@ -84,4 +89,5 @@ class StaticFileHandlerTest {
         HttpRequest emptyRequest = new HttpRequest.Builder(HttpMethod.GET, "", HttpVersion.HTTP11).build();
         Assertions.assertFalse(handler.canHandle(emptyRequest));
     }
+
 }

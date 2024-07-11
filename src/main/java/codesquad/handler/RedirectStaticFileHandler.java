@@ -33,7 +33,7 @@ public class RedirectStaticFileHandler implements HttpHandler {
         return readFileAndCreateResponse(indexPath, request);
     }
 
-    private HttpResponse readFileAndCreateResponse(String path, HttpRequest request) {
+    public HttpResponse readFileAndCreateResponse(String path, HttpRequest request) {
         try {
             if (!staticFileReader.exists(path)) {
                 return new HttpResponse.Builder(request, HttpStatus.NOT_FOUND).build();
