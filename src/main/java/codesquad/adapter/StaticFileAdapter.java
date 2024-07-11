@@ -1,4 +1,4 @@
-package codesquad.reader;
+package codesquad.adapter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,11 +9,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
-public class StaticFileReader implements StaticFileReaderSpec {
-    private static Logger logger = LoggerFactory.getLogger(StaticFileReader.class);
+public class StaticFileAdapter implements StaticFileAdapterSpec {
+    private static Logger logger = LoggerFactory.getLogger(StaticFileAdapter.class);
     private static String staticPath = "static";
 
-    public StaticFileReader() {
+    public StaticFileAdapter() {
     }
 
     private InputStream getResourceAsStream(String path) {

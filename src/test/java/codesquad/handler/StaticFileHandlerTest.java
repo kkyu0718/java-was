@@ -1,8 +1,8 @@
 package codesquad.handler;
 
+import codesquad.adapter.StaticFileAdapterSpec;
 import codesquad.http.*;
 import codesquad.model.User;
-import codesquad.reader.StaticFileReaderSpec;
 import codesquad.service.UserDbService;
 import codesquad.service.UserSessionService;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,13 +13,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class StaticFileHandlerTest {
     private StaticFileHandler staticFileHandler;
-    private StaticFileReaderSpec staticFileReader;
+    private StaticFileAdapterSpec staticFileReader;
     private UserSessionService userSessionService;
     private UserDbService userDbService;
 
     @BeforeEach
     public void setUp() {
-        staticFileReader = new StaticFileReaderSpec() {
+        staticFileReader = new StaticFileAdapterSpec() {
             @Override
             public String readFileLines(String path) {
                 if (path.equals("/index.html")) {
