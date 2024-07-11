@@ -1,13 +1,17 @@
 package codesquad.adapter;
 
 import codesquad.annotation.RequestMapping;
-import codesquad.annotation.Session;
 import codesquad.db.UserDb;
 import codesquad.db.UserSession;
-import codesquad.http.*;
+import codesquad.http.HttpBody;
+import codesquad.http.HttpCookie;
+import codesquad.http.HttpRequest;
+import codesquad.http.Parameters;
 import codesquad.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 public class UserAdapter implements Adapter {
     private static final Logger logger = LoggerFactory.getLogger(UserAdapter.class);
@@ -18,7 +22,7 @@ public class UserAdapter implements Adapter {
     }
 
     @RequestMapping(path = "/user/create", method = "POST")
-    public HttpResponse createUser(HttpRequest request) {
+    public void createUser(HttpRequest request) {
         logger.debug("createUser start");
         HttpBody body = request.getBody();
         Parameters parameters = body.getParameters();
@@ -28,19 +32,20 @@ public class UserAdapter implements Adapter {
         String email = parameters.getParameter("email");
 
         if (UserDb.exists(userId)) {
-            return new HttpResponse.Builder(request, HttpStatus.ILLEGAL_ARGUMENT).build();
+            throw new RuntimeException("아이디가 중복되는 유저입니다." + userId);
+//            return new HttpResponse.Builder(request, HttpStatus.ILLEGAL_ARGUMENT).build();
         }
 
         UserDb.add(User.of(userId, password, name, email));
         UserDb.print();
 
-        return new HttpResponse.Builder(request, HttpStatus.FOUND)
-                .redirect("/index.html")
-                .build();
+//        return new HttpResponse.Builder(request, HttpStatus.FOUND)
+//                .redirect("/index.html")
+//                .build();
     }
 
     @RequestMapping(path = "/user/login", method = "POST")
-    public HttpResponse login(HttpRequest request) {
+    public User login(HttpRequest request) {
         logger.info("login start");
         logger.info("userDb", UserDb.print());
 
@@ -51,8 +56,8 @@ public class UserAdapter implements Adapter {
 
         // 유저가 존재하지 않는 경우
         if (!UserDb.exists(userId)) {
-            logger.debug("존재하지 않는 유저" + userId);
-            return new HttpResponse.Builder(request, HttpStatus.ILLEGAL_ARGUMENT).build();
+            throw new RuntimeException("id가 존재하지 않는 유저입니다." + userId);
+//            return new HttpResponse.Builder(request, HttpStatus.ILLEGAL_ARGUMENT).build();
         }
 
         User user = UserDb.get(userId);
@@ -63,24 +68,30 @@ public class UserAdapter implements Adapter {
             HttpCookie cookie = new HttpCookie.Builder("sid", sessionId)
                     .path("/")
                     .build();
-            return new HttpResponse.Builder(request, HttpStatus.FOUND)
-                    .redirect("/index.html")
-                    .cookie(cookie)
-                    .build();
+
+            return user;
+//            return new HttpResponse.Builder(request, HttpStatus.FOUND)
+//                    .redirect("/index.html")
+//                    .cookie(cookie)
+//                    .build();
         } else {
-            logger.debug("로그인 실패" + userId + " " + user.getPassword() + "input password " + password);
-            return new HttpResponse.Builder(request, HttpStatus.FOUND)
-                    .redirect("/login/error.html")
-                    .build();
+//            logger.debug("로그인 실패" + userId + " " + user.getPassword() + "input password " + password);
+//            return new HttpResponse.Builder(request, HttpStatus.FOUND)
+//                    .redirect("/login/error.html")
+//                    .build();
+            throw new RuntimeException("로그인 실패 비밀번호가 일치하지 않습니다." + userId + " " + user.getPassword() + "input password " + password);
         }
     }
 
-    @RequestMapping(path = "/user/info", method = "GET")
-    public User getUserInfo(HttpRequest request, @Session String userId) {
-        if (userId == null) {
-            return null;
-        }
-
+    public User getUser(String userId) {
         return UserDb.get(userId);
+    }
+
+    public List<User> getUsers() {
+        return UserDb.getUsers();
+    }
+
+    public boolean isLoggedIn(String userId) {
+        return UserSession.isActive(userId);
     }
 }

@@ -20,7 +20,8 @@ class RedirectStaticFileHandlerTest {
         redirectNeededPath = "/registration";
         handler = new RedirectStaticFileHandler(
                 new StaticFileReader(),
-                List.of(redirectNeededPath)
+                List.of(redirectNeededPath),
+                null
         );
         nonExistentPath = "/non-existent";
     }
@@ -39,7 +40,8 @@ class RedirectStaticFileHandlerTest {
     void RedirectStaticFileHandler가_주어지고_존재하지않는_Path와_디렉토리의_index_html이_없을때_404상태코드가_주어진다() {
         handler = new RedirectStaticFileHandler(
                 new StaticFileReader(),
-                List.of(nonExistentPath)
+                List.of(nonExistentPath),
+                null
         );
 
         HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, nonExistentPath, HttpVersion.HTTP11).build();
@@ -69,7 +71,8 @@ class RedirectStaticFileHandlerTest {
                         throw new IOException("IO 에러 발생");
                     }
                 },
-                List.of(redirectNeededPath)
+                List.of(redirectNeededPath),
+                null
         );
 
         HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, redirectNeededPath, HttpVersion.HTTP11).build();

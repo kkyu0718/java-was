@@ -3,6 +3,7 @@ package codesquad.http;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public class HttpCookies {
     private List<HttpCookie> cookies;
@@ -15,9 +16,8 @@ public class HttpCookies {
         cookies.add(cookie);
     }
 
-    public HttpCookie getCookie(String key) {
-        return cookies.stream().filter(httpCookie -> httpCookie.getName().equals(key)).findAny()
-                .orElse(null);
+    public Optional<HttpCookie> getCookie(String key) {
+        return cookies.stream().filter(httpCookie -> httpCookie.getName().equals(key)).findAny();
     }
 
     public List<HttpCookie> getCookies() {

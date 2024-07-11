@@ -1,6 +1,5 @@
 package codesquad;
 
-import codesquad.adapter.Adapter;
 import codesquad.adapter.UserAdapter;
 import codesquad.filter.FilterChain;
 import codesquad.filter.SessionFilter;
@@ -38,7 +37,7 @@ public class WasServer {
     private ExecutorService executorService;
 
     public WasServer(int port) throws IOException {
-        Adapter userAdapter = new UserAdapter();
+        UserAdapter userAdapter = new UserAdapter();
         List<String> whitelist = List.of(
                 "/",
                 "/registration",
@@ -49,10 +48,9 @@ public class WasServer {
                 "/user/list"
         );
 
-        List<Adapter> adapters = List.of(userAdapter);
         serverSocket = new ServerSocket(port);
-        dynamicHandler = new DynamicHandler(adapters);
-        staticFileHandler = new StaticFileHandler(new StaticFileReader(), adapters);
+        dynamicHandler = new DynamicHandler(List.of(userAdapter));
+        staticFileHandler = new StaticFileHandler(new StaticFileReader(), userAdapter);
         redirectStaticFileHandler = new RedirectStaticFileHandler(new StaticFileReader(), whitelist, adapters);
         executorService = Executors.newFixedThreadPool(MAX_THREAD_POOL_SIZE);
 
