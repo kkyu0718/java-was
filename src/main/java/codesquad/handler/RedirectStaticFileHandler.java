@@ -21,7 +21,7 @@ public class RedirectStaticFileHandler implements HttpHandler {
 
     @Override
     public HttpResponse handle(HttpRequest request) {
-        String indexPath = request.getPath() + "/index.html";
+        String indexPath = request.getPath().equals("/") ? request.getPath() + "index.html" : request.getPath() + "/index.html";
         logger.debug("send redirect response to " + indexPath);
 
         return new HttpResponse.Builder(request, HttpStatus.FOUND)
