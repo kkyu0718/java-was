@@ -14,6 +14,9 @@
         <ul class="header__menu">
             {GREETING}
         </ul>
+        <button id="user-list-btn" class="btn btn_ghost btn_size_m">
+            사용자 목록 보기
+        </button>
     </header>
     <div class="wrapper">
         <div class="post">
@@ -138,5 +141,32 @@
         </nav>
     </div>
 </div>
+<script>
+    document.getElementById('user-list-btn').addEventListener('click', function () {
+
+        fetch('http://localhost:8080/user/list', {
+            method: 'GET',
+            headers: {
+                'Accept': '*/*',
+                'Connection': 'keep-alive'
+            },
+            redirect: 'follow' // Ensure redirects are followed
+        })
+            .then((response) => {
+                if (response.redirected) {
+                    window.location.href = response.url; // Manually handle the redirect if necessary
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(text);
+                    });
+                }
+
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('유저 목록 조회 중 에러 발생');
+            });
+    });
+</script>
 </body>
 </html>

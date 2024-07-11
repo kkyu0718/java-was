@@ -52,7 +52,7 @@ public class WasServer {
         serverSocket = new ServerSocket(port);
         dynamicHandler = new DynamicHandler(adapters);
         staticFileHandler = new StaticFileHandler(new StaticFileReader(), adapters);
-        redirectStaticFileHandler = new RedirectStaticFileHandler(new StaticFileReader(), whitelist);
+        redirectStaticFileHandler = new RedirectStaticFileHandler(new StaticFileReader(), whitelist, adapters);
         executorService = Executors.newFixedThreadPool(MAX_THREAD_POOL_SIZE);
 
 
