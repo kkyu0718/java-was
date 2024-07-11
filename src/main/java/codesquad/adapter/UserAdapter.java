@@ -1,5 +1,7 @@
 package codesquad.adapter;
 
+import codesquad.annotation.RequestMapping;
+import codesquad.annotation.Session;
 import codesquad.db.UserDb;
 import codesquad.db.UserSession;
 import codesquad.http.*;
@@ -15,62 +17,64 @@ public class UserAdapter implements Adapter {
         return path.startsWith("/user");
     }
 
-    @Override
-    public HttpResponse handle(HttpRequest request) {
-        if (request.getPath().equals("/user/create") && request.getMethod() == HttpMethod.POST) {
-            HttpBody body = request.getBody();
+    @RequestMapping(path = "/user/create", method = "POST")
+    public HttpResponse createUser(HttpRequest request) {
+        HttpBody body = request.getBody();
+        Parameters parameters = body.getParameters();
+        String userId = parameters.getParameter("userId");
+        String password = parameters.getParameter("password");
+        String name = parameters.getParameter("name");
+        String email = parameters.getParameter("email");
 
-            Parameters parameters = body.getParameters();
-            String userId = parameters.getParameter("userId");
-            String password = parameters.getParameter("password");
-            String name = parameters.getParameter("name");
-            String email = parameters.getParameter("email");
-
-            if (UserDb.exists(userId)) {
-                return new HttpResponse.Builder(request, HttpStatus.ILLEGAL_ARGUMENT).build();
-            }
-
-            UserDb.add(User.of(userId, password, name, email));
-
-            UserDb.print();
-
-            HttpHeaders httpHeaders = new HttpHeaders();
-            httpHeaders.put("Location", "/index.html");
-            return new HttpResponse.Builder(request, HttpStatus.FOUND)
-                    .headers(httpHeaders)
-                    .build();
-        } else if (request.getPath().equals("/user/login") && request.getMethod() == HttpMethod.POST) {
-            logger.info("login start");
-            HttpBody body = request.getBody();
-
-            Parameters parameters = body.getParameters();
-            String userId = parameters.getParameter("userId");
-            String password = parameters.getParameter("password");
-
-            if (!UserDb.exists(userId)) {
-                return new HttpResponse.Builder(request, HttpStatus.ILLEGAL_ARGUMENT).build();
-            }
-
-            User user = UserDb.get(userId);
-            if (user.getPassword().equals(password)) {
-                String sessionId = UserSession.create(userId);
-
-                logger.debug("로그인 성공 " + sessionId);
-
-                HttpCookie cookie = new HttpCookie.Builder("sid", sessionId)
-                        .path("/")
-                        .build();
-                return new HttpResponse.Builder(request, HttpStatus.FOUND)
-                        .redirect("/index.html")
-                        .cookie(cookie)
-                        .build();
-            } else {
-                return new HttpResponse.Builder(request, HttpStatus.FOUND)
-                        .redirect("/login/error.html")
-                        .build();
-            }
+        if (UserDb.exists(userId)) {
+            return new HttpResponse.Builder(request, HttpStatus.ILLEGAL_ARGUMENT).build();
         }
 
-        throw new IllegalArgumentException("처리 가능한 메소드가 존재하지 않습니다." + request.getPath().toString());
+        UserDb.add(User.of(userId, password, name, email));
+        UserDb.print();
+
+        return new HttpResponse.Builder(request, HttpStatus.FOUND)
+                .redirect("/index.html")
+                .build();
+    }
+
+    @RequestMapping(path = "/user/login", method = "POST")
+    public HttpResponse login(HttpRequest request) {
+        logger.info("login start");
+        HttpBody body = request.getBody();
+        Parameters parameters = body.getParameters();
+        String userId = parameters.getParameter("userId");
+        String password = parameters.getParameter("password");
+
+        if (!UserDb.exists(userId)) {
+            return new HttpResponse.Builder(request, HttpStatus.ILLEGAL_ARGUMENT).build();
+        }
+
+        User user = UserDb.get(userId);
+        if (user.getPassword().equals(password)) {
+            String sessionId = UserSession.create(userId);
+            logger.debug("로그인 성공 " + sessionId);
+
+            HttpCookie cookie = new HttpCookie.Builder("sid", sessionId)
+                    .path("/")
+                    .build();
+            return new HttpResponse.Builder(request, HttpStatus.FOUND)
+                    .redirect("/index.html")
+                    .cookie(cookie)
+                    .build();
+        } else {
+            return new HttpResponse.Builder(request, HttpStatus.FOUND)
+                    .redirect("/login/error.html")
+                    .build();
+        }
+    }
+
+    @RequestMapping(path = "/user/info", method = "GET")
+    public HttpResponse getUserInfo(HttpRequest request, @Session String userId) {
+        User user = UserDb.get(userId);
+        String userInfo = String.format("User Info - ID: %s, Name: %s, Email: %s", user.getUserId(), user.getName(), user.getEmail());
+        return new HttpResponse.Builder(request, HttpStatus.OK)
+                .body(HttpBody.of(userInfo.getBytes(), MimeType.TEXT_PLAIN))
+                .build();
     }
 }

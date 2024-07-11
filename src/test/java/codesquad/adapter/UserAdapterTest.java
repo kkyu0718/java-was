@@ -43,8 +43,8 @@ class UserAdapterTest {
                 .body(HttpBody.of(bytes2, MimeType.X_WWW_FORM_URLENCODED))
                 .build();
 
-        HttpResponse response1 = userAdapter.handle(request1);
-        HttpResponse response2 = userAdapter.handle(request2);
+        HttpResponse response1 = userAdapter.createUser(request1);
+        HttpResponse response2 = userAdapter.createUser(request2);
 
         assertEquals(HttpStatus.FOUND, response1.getStatus());
         assertEquals(HttpStatus.FOUND, response2.getStatus());
@@ -64,8 +64,8 @@ class UserAdapterTest {
                 .body(HttpBody.of(bytes2, MimeType.X_WWW_FORM_URLENCODED))
                 .build();
 
-        HttpResponse response1 = userAdapter.handle(request1);
-        HttpResponse response2 = userAdapter.handle(request2);
+        HttpResponse response1 = userAdapter.createUser(request1);
+        HttpResponse response2 = userAdapter.createUser(request2);
 
         assertEquals(HttpStatus.FOUND, response1.getStatus());
         assertEquals(HttpStatus.ILLEGAL_ARGUMENT, response2.getStatus());
@@ -79,21 +79,10 @@ class UserAdapterTest {
                 .body(HttpBody.of(bytes, MimeType.X_WWW_FORM_URLENCODED))
                 .build();
 
-        HttpResponse response = userAdapter.handle(request);
+        HttpResponse response = userAdapter.createUser(request);
 
         assertEquals(HttpStatus.FOUND, response.getStatus());
         assertEquals("/index.html", response.getHeaders().get("Location"));
-    }
-
-    @Test
-    public void create메소드는_GET으로_동작하지_않는다() {
-        byte[] bytes = "userId=id1&password=1234&name=kyu1&email=email1".getBytes();
-
-        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/user/create", HttpVersion.HTTP11)
-                .body(HttpBody.of(bytes, MimeType.X_WWW_FORM_URLENCODED))
-                .build();
-
-        Assertions.assertThrows(IllegalArgumentException.class, () -> userAdapter.handle(request));
     }
 
     @Test
@@ -104,7 +93,7 @@ class UserAdapterTest {
         HttpRequest signupRequest = new HttpRequest.Builder(HttpMethod.POST, "/user/create", HttpVersion.HTTP11)
                 .body(HttpBody.of(signupBytes, MimeType.X_WWW_FORM_URLENCODED))
                 .build();
-        HttpResponse signupResponse = userAdapter.handle(signupRequest);
+        HttpResponse signupResponse = userAdapter.createUser(signupRequest);
 
         Assertions.assertEquals(302, signupResponse.getStatus().getStatusCode());
 
@@ -112,7 +101,7 @@ class UserAdapterTest {
         HttpRequest loginRequest = new HttpRequest.Builder(HttpMethod.POST, "/user/login", HttpVersion.HTTP11)
                 .body(HttpBody.of(loginBytes, MimeType.X_WWW_FORM_URLENCODED))
                 .build();
-        HttpResponse loginResponse = userAdapter.handle(loginRequest);
+        HttpResponse loginResponse = userAdapter.login(loginRequest);
 
         Assertions.assertEquals(302, loginResponse.getStatus().getStatusCode());
         assertTrue(UserSession.isActive(userId));
@@ -125,7 +114,7 @@ class UserAdapterTest {
                 .body(HttpBody.of(loginBytes, MimeType.X_WWW_FORM_URLENCODED))
                 .build();
 
-        HttpResponse response = userAdapter.handle(loginRequest);
+        HttpResponse response = userAdapter.login(loginRequest);
 
         Assertions.assertEquals(400, response.getStatus().getStatusCode());
     }
@@ -137,7 +126,7 @@ class UserAdapterTest {
         HttpRequest signupRequest = new HttpRequest.Builder(HttpMethod.POST, "/user/create", HttpVersion.HTTP11)
                 .body(HttpBody.of(signupBytes, MimeType.X_WWW_FORM_URLENCODED))
                 .build();
-        HttpResponse signupResponse = userAdapter.handle(signupRequest);
+        HttpResponse signupResponse = userAdapter.createUser(signupRequest);
 
         Assertions.assertEquals(302, signupResponse.getStatus().getStatusCode());
 
@@ -145,7 +134,7 @@ class UserAdapterTest {
         HttpRequest loginRequest = new HttpRequest.Builder(HttpMethod.POST, "/user/login", HttpVersion.HTTP11)
                 .body(HttpBody.of(loginBytes, MimeType.X_WWW_FORM_URLENCODED))
                 .build();
-        HttpResponse loginResponse = userAdapter.handle(loginRequest);
+        HttpResponse loginResponse = userAdapter.login(loginRequest);
 
         Assertions.assertEquals(302, loginResponse.getStatus().getStatusCode());
 

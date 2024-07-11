@@ -14,7 +14,7 @@ class StaticFileHandlerTest {
 
     @BeforeEach
     void setup() {
-        handler = new StaticFileHandler(new StaticFileReader());
+        handler = new StaticFileHandler(new StaticFileReader(), null);
     }
 
     @Test
@@ -66,7 +66,7 @@ class StaticFileHandlerTest {
             public String readFileLines(String path) throws IOException {
                 return null;
             }
-        });
+        }, null);
 
         HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/index.html", HttpVersion.HTTP11).build();
 

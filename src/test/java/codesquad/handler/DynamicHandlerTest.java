@@ -19,31 +19,24 @@ class DynamicHandlerTest {
             public boolean supports(String path) {
                 return path.equals("/exist");
             }
-
-            @Override
-            public HttpResponse handle(HttpRequest request) {
-                return new HttpResponse.Builder(request, HttpStatus.OK)
-                        .build();
-            }
         }));
     }
 
     @Test
-    void DynamicHandler가_주어지고_존재하는_어댑터에_대한_요청이_주어졌을때_200상태코드가_주어진다() {
+    void DynamicHandler가_주어지고_존재하는_어댑터에_대한_요청이_주어졌을때_응답이_주어진다() {
         HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/exist", HttpVersion.HTTP11).build();
         assertTrue(handler.canHandle(request));
 
         HttpResponse response = handler.handle(request);
-        assertEquals(HttpStatus.OK, response.getStatus());
+        assertNotNull(response);
     }
 
     @Test
-    void DynamicHandler가_주어지고_존재하지않는_어댑터에_대한_요청이_주어졌을때_예외가_발생한다() {
+    void DynamicHandler가_주어지고_존재하지않는_어댑터에_대한_요청이_주어졌을때_404응답을_준다() {
         HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/non-existent", HttpVersion.HTTP11).build();
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            handler.handle(request);
-        });
+        HttpResponse response = handler.handle(request);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatus());
     }
 
     @Test

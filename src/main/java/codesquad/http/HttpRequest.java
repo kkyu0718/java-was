@@ -21,7 +21,6 @@ public class HttpRequest {
         this.httpCookies = builder.httpCookies;
     }
 
-
     public static class Builder {
         private HttpMethod method;
         private String path;
@@ -119,6 +118,10 @@ public class HttpRequest {
         }
 
         throw new IllegalArgumentException("확장자가 존재하지 않습니다. " + path);
+    }
+
+    public String getHeader(String key) {
+        return this.getHeaders().get(key);
     }
 
     @Override

@@ -1,9 +1,14 @@
 package codesquad.handler;
 
 import codesquad.adapter.Adapter;
+import codesquad.annotation.RequestMapping;
+import codesquad.annotation.Session;
 import codesquad.http.HttpRequest;
 import codesquad.http.HttpResponse;
+import codesquad.http.HttpStatus;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.List;
 
 public class DynamicHandler implements HttpHandler {
@@ -13,30 +18,50 @@ public class DynamicHandler implements HttpHandler {
         this.adapters = adapters;
     }
 
-    @Override
-    public HttpResponse handle(HttpRequest request) {
-        String path = request.getPath();
-        Adapter adapter = getAdapter(path);
-        return adapter.handle(request);
-    }
-
-    private Adapter getAdapter(String path) {
-        for (Adapter adapter : adapters) {
-            if (adapter.supports(path)) {
-                return adapter;
-            }
-        }
-        throw new IllegalArgumentException("요청을 처리할 수 있는 어댑터가 존재하지 않습니다. " + path);
-    }
-
-    @Override
     public boolean canHandle(HttpRequest request) {
-        String path = request.getPath();
+        return adapters.stream().anyMatch(adapter -> adapter.supports(request.getPath()));
+    }
+
+    public HttpResponse handle(HttpRequest request) {
         for (Adapter adapter : adapters) {
-            if (adapter.supports(path)) {
-                return true;
+            if (adapter.supports(request.getPath())) {
+                Method[] methods = adapter.getClass().getMethods();
+                for (Method method : methods) {
+                    RequestMapping mapping = method.getAnnotation(RequestMapping.class);
+                    if (mapping != null &&
+                            mapping.path().equals(request.getPath()) &&
+                            mapping.method().equalsIgnoreCase(request.getMethod().toString())) {
+
+                        Object[] args = buildMethodArguments(method, request);
+                        try {
+                            return (HttpResponse) method.invoke(adapter, args);
+                        } catch (Exception e) {
+                            // 예외 처리
+                            return new HttpResponse.Builder(request, HttpStatus.INTERNAL_SERVER_ERROR).build();
+                        }
+                    }
+                }
             }
         }
-        return false;
+        // 처리할 수 없는 요청에 대한 응답
+        return new HttpResponse.Builder(request, HttpStatus.NOT_FOUND).build();
+    }
+
+    private Object[] buildMethodArguments(Method method, HttpRequest request) {
+        Parameter[] parameters = method.getParameters();
+        Object[] args = new Object[parameters.length];
+
+        for (int i = 0; i < parameters.length; i++) {
+            Parameter param = parameters[i];
+            if (param.getType() == HttpRequest.class) {
+                args[i] = request;
+            } else if (param.isAnnotationPresent(Session.class)) {
+                args[i] = request.getHeader("UserId");
+            } else {
+                // 다른 파라미터 처리 로직
+            }
+        }
+
+        return args;
     }
 }
