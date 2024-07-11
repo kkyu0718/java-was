@@ -2,7 +2,6 @@ package codesquad.adapter;
 
 import codesquad.annotation.RequestMapping;
 import codesquad.db.UserDb;
-import codesquad.db.UserSession;
 import codesquad.http.*;
 import codesquad.model.User;
 import codesquad.service.UserDbService;
@@ -39,7 +38,9 @@ public class UserAdapter implements Adapter {
         String email = parameters.getParameter("email");
 
         if (userDbService.exists(userId)) {
-            throw new RuntimeException("아이디가 중복되는 유저입니다." + userId);
+            logger.error("아이디가 중복되는 유저입니다." + userId);
+            return new HttpResponse.Builder(request, HttpStatus.ILLEGAL_ARGUMENT)
+                    .build();
         }
 
         userDbService.add(User.of(userId, password, name, email));
@@ -69,7 +70,7 @@ public class UserAdapter implements Adapter {
 
         User user = UserDb.get(userId);
         if (user.getPassword().equals(password)) {
-            String sessionId = UserSession.create(userId);
+            String sessionId = userSessionService.createSession(userId);
             logger.debug("로그인 성공 " + sessionId);
 
             HttpCookie cookie = new HttpCookie.Builder("sid", sessionId)
