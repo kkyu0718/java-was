@@ -1,12 +1,11 @@
 package codesquad.handler;
 
-import codesquad.adapter.UserAdapter;
-import codesquad.db.UserDb;
-import codesquad.db.UserSession;
 import codesquad.http.*;
 import codesquad.model.User;
 import codesquad.reader.StaticFileReaderSpec;
 import codesquad.render.TemplateEngine;
+import codesquad.service.UserDbService;
+import codesquad.service.UserSessionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,11 +18,16 @@ import static codesquad.resource.StaticResourceFactory.getUserGreeting;
 public class StaticFileHandler implements HttpHandler {
     private static final Logger logger = LoggerFactory.getLogger(StaticFileHandler.class);
     private final StaticFileReaderSpec staticFileReader;
-    private final UserAdapter userAdapter;
+    private final UserSessionService userSessionService;
+    private final UserDbService userDbService;
 
-    public StaticFileHandler(StaticFileReaderSpec staticFileReader, UserAdapter userAdapter) {
+    public StaticFileHandler(
+            StaticFileReaderSpec staticFileReader,
+            UserSessionService userSessionService,
+            UserDbService userDbService) {
         this.staticFileReader = staticFileReader;
-        this.userAdapter = userAdapter;
+        this.userSessionService = userSessionService;
+        this.userDbService = userDbService;
     }
 
     @Override
@@ -44,17 +48,17 @@ public class StaticFileHandler implements HttpHandler {
             Optional<HttpCookie> cookie = request.getHttpCookies().getCookie("sid");
 
             // 클라이언트에게 쿠키가 없거나 서버 세션에 존재하지 않는다면 GUEST
-            if (cookie.isEmpty() || !UserSession.contains(UUID.fromString(cookie.get().getValue()))) {
+            if (cookie.isEmpty() || !userSessionService.isActiveSession(UUID.fromString(cookie.get().getValue()))) {
                 paramMap.put("GREETING", GUEST_GREETING);
             } else {
                 // 아니라면 인증된 유저
-                String userId = UserSession.getUserId(UUID.fromString(cookie.get().getValue()));
-                User userInfo = userAdapter.getUser(userId);
+                String userId = userSessionService.getUserId(UUID.fromString(cookie.get().getValue()));
+                User userInfo = userDbService.getUser(userId);
                 paramMap.put("GREETING", getUserGreeting(userInfo.getName()));
             }
         } else if (path.equals("/user/list/index.html")) {
             StringBuilder html = new StringBuilder();
-            List<User> users = UserDb.getUsers();
+            List<User> users = userDbService.getUsers();
             for (User user : users) {
                 html.append("<tr>");
                 html.append("<td>").append(user.getUserId()).append("</td>");
@@ -80,9 +84,11 @@ public class StaticFileHandler implements HttpHandler {
 
     private HttpResponse createDynamicResponse(HttpRequest request, String template, Map<String, String> paramMap) {
         String render = TemplateEngine.render(template, paramMap);
-
+        byte[] bytes = render.getBytes();
         return new HttpResponse.Builder(request, HttpStatus.OK)
-                .body(HttpBody.of(render.getBytes(), MimeType.HTML))
+                .body(HttpBody.of(bytes, MimeType.HTML))
+                .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(bytes.length))
+                .header(HttpHeaders.CONTENT_TYPE, MimeType.fromExt(request.getExt()).getMimeType())
                 .build();
     }
 
