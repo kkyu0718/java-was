@@ -36,7 +36,6 @@ public class WasServer {
     private StaticFileHandler staticFileHandler;
     private RedirectStaticFileHandler redirectStaticFileHandler;
     private ExecutorService executorService;
-    private FilterChain filterChain;
 
     public WasServer(int port) throws IOException {
         Adapter userAdapter = new UserAdapter();
@@ -56,8 +55,7 @@ public class WasServer {
         redirectStaticFileHandler = new RedirectStaticFileHandler(new StaticFileReader(), whitelist);
         executorService = Executors.newFixedThreadPool(MAX_THREAD_POOL_SIZE);
 
-        filterChain = new FilterChain();
-        filterChain.addFilter(new SessionFilter());
+
         logger.debug("Listening for connection on port 8080 ....");
     }
 
@@ -84,6 +82,8 @@ public class WasServer {
             HttpRequest httpRequest = processor.parseRequest(br);
             logger.debug(httpRequest.toString());
 
+            FilterChain filterChain = new FilterChain();
+            filterChain.addFilter(new SessionFilter());
             HttpResponse httpResponse = filterChain.doFilter(httpRequest);
 
             if (httpResponse == null) {
