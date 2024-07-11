@@ -78,9 +78,8 @@ public class WasServer {
             HttpRequest httpRequest = processor.parseRequest(br);
             logger.debug(httpRequest.toString());
 
-            HttpResponse httpResponse = null;
+            HttpResponse httpResponse;
 
-            // file 로 요청이 오거나 정해진 view 로 요청이 오는 경우
             if (httpRequest.getMethod() == HttpMethod.GET && staticFileHandler.canHandle(httpRequest)) {
                 httpResponse = staticFileHandler.handle(httpRequest);
             } else if (httpRequest.getMethod() == HttpMethod.GET && redirectStaticFileHandler.canHandle(httpRequest)) {
