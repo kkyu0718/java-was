@@ -21,6 +21,7 @@ public class HttpRequest {
         this.httpCookies = builder.httpCookies;
     }
 
+
     public static class Builder {
         private HttpMethod method;
         private String path;
@@ -102,6 +103,10 @@ public class HttpRequest {
 
     public Parameters getParameters() {
         return parameters;
+    }
+
+    public HttpCookies getHttpCookies() {
+        return httpCookies;
     }
 
     public boolean isFilePath() {

@@ -38,4 +38,8 @@ public class UserSession {
             logger.debug(uuid + ": " + sessions.get(uuid));
         }
     }
+
+    public static String getUserId(UUID sessionId) {
+        return sessions.get(sessionId);
+    }
 }

@@ -31,4 +31,8 @@ public class HttpCookies {
     public void extend(HttpCookies other) {
         this.cookies.addAll(other.getCookies());
     }
+
+    public boolean isEmpty() {
+        return cookies.isEmpty();
+    }
 }

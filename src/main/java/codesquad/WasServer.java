@@ -2,6 +2,8 @@ package codesquad;
 
 import codesquad.adapter.Adapter;
 import codesquad.adapter.UserAdapter;
+import codesquad.filter.FilterChain;
+import codesquad.filter.SessionFilter;
 import codesquad.handler.DynamicHandler;
 import codesquad.handler.RedirectStaticFileHandler;
 import codesquad.handler.StaticFileHandler;
@@ -34,6 +36,7 @@ public class WasServer {
     private StaticFileHandler staticFileHandler;
     private RedirectStaticFileHandler redirectStaticFileHandler;
     private ExecutorService executorService;
+    private FilterChain filterChain;
 
     public WasServer(int port) throws IOException {
         Adapter userAdapter = new UserAdapter();
@@ -46,12 +49,15 @@ public class WasServer {
                 "/login"
         );
 
+        List<Adapter> adapters = List.of(userAdapter);
         serverSocket = new ServerSocket(port);
-        dynamicHandler = new DynamicHandler(List.of(userAdapter));
-        staticFileHandler = new StaticFileHandler(new StaticFileReader());
+        dynamicHandler = new DynamicHandler(adapters);
+        staticFileHandler = new StaticFileHandler(new StaticFileReader(), adapters);
         redirectStaticFileHandler = new RedirectStaticFileHandler(new StaticFileReader(), whitelist);
         executorService = Executors.newFixedThreadPool(MAX_THREAD_POOL_SIZE);
 
+        filterChain = new FilterChain();
+        filterChain.addFilter(new SessionFilter());
         logger.debug("Listening for connection on port 8080 ....");
     }
 
@@ -78,16 +84,19 @@ public class WasServer {
             HttpRequest httpRequest = processor.parseRequest(br);
             logger.debug(httpRequest.toString());
 
-            HttpResponse httpResponse;
+            HttpResponse httpResponse = filterChain.doFilter(httpRequest);
 
-            if (httpRequest.getMethod() == HttpMethod.GET && staticFileHandler.canHandle(httpRequest)) {
-                httpResponse = staticFileHandler.handle(httpRequest);
-            } else if (httpRequest.getMethod() == HttpMethod.GET && redirectStaticFileHandler.canHandle(httpRequest)) {
-                httpResponse = redirectStaticFileHandler.handle(httpRequest);
-            } else if (dynamicHandler.canHandle(httpRequest)) {
-                httpResponse = dynamicHandler.handle(httpRequest);
-            } else {
-                httpResponse = new HttpResponse.Builder(httpRequest, HttpStatus.NOT_FOUND).build();
+            if (httpResponse == null) {
+                // 모든 필터를 통과했으므로 핸들러로 처리
+                if (httpRequest.getMethod() == HttpMethod.GET && staticFileHandler.canHandle(httpRequest)) {
+                    httpResponse = staticFileHandler.handle(httpRequest);
+                } else if (httpRequest.getMethod() == HttpMethod.GET && redirectStaticFileHandler.canHandle(httpRequest)) {
+                    httpResponse = redirectStaticFileHandler.handle(httpRequest);
+                } else if (dynamicHandler.canHandle(httpRequest)) {
+                    httpResponse = dynamicHandler.handle(httpRequest);
+                } else {
+                    httpResponse = new HttpResponse.Builder(httpRequest, HttpStatus.NOT_FOUND).build();
+                }
             }
 
             logger.debug(httpResponse.toString());
