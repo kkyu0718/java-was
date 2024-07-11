@@ -1,8 +1,8 @@
 package codesquad.handler;
 
-import codesquad.adapter.StaticFileAdapterSpec;
 import codesquad.http.*;
 import codesquad.model.User;
+import codesquad.reader.StaticFileReaderSpec;
 import codesquad.render.TemplateEngine;
 import codesquad.service.UserDbService;
 import codesquad.service.UserSessionService;
@@ -17,12 +17,12 @@ import static codesquad.resource.StaticResourceFactory.getUserGreeting;
 
 public class StaticFileHandler implements HttpHandler {
     private static final Logger logger = LoggerFactory.getLogger(StaticFileHandler.class);
-    private final StaticFileAdapterSpec staticFileReader;
+    private final StaticFileReaderSpec staticFileReader;
     private final UserSessionService userSessionService;
     private final UserDbService userDbService;
 
     public StaticFileHandler(
-            StaticFileAdapterSpec staticFileReader,
+            StaticFileReaderSpec staticFileReader,
             UserSessionService userSessionService,
             UserDbService userDbService) {
         this.staticFileReader = staticFileReader;

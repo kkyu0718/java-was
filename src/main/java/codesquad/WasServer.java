@@ -1,6 +1,5 @@
 package codesquad;
 
-import codesquad.adapter.StaticFileAdapter;
 import codesquad.adapter.UserAdapter;
 import codesquad.filter.FilterChain;
 import codesquad.filter.SessionFilter;
@@ -12,6 +11,7 @@ import codesquad.http.HttpRequest;
 import codesquad.http.HttpResponse;
 import codesquad.processor.Http11Processor;
 import codesquad.processor.HttpProcessor;
+import codesquad.reader.StaticFileReader;
 import codesquad.service.UserDbService;
 import codesquad.service.UserSessionService;
 import org.slf4j.Logger;
@@ -54,7 +54,7 @@ public class WasServer {
         userSessionService = new UserSessionService();
         serverSocket = new ServerSocket(port);
         dynamicHandler = new DynamicHandler(List.of(userAdapter));
-        staticFileHandler = new StaticFileHandler(new StaticFileAdapter(), userSessionService, userDbService);
+        staticFileHandler = new StaticFileHandler(new StaticFileReader(), userSessionService, userDbService);
         redirectStaticFileHandler = new RedirectStaticFileHandler(whitelist);
         executorService = Executors.newFixedThreadPool(MAX_THREAD_POOL_SIZE);
 

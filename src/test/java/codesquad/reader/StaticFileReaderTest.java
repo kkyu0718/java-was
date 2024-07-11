@@ -1,18 +1,17 @@
 package codesquad.reader;
 
-import codesquad.adapter.StaticFileAdapter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-class StaticFileAdapterTest {
-    StaticFileAdapter reader;
+class StaticFileReaderTest {
+    StaticFileReader reader;
 
     @BeforeEach
     void setup() {
-        reader = new StaticFileAdapter();
+        reader = new StaticFileReader();
     }
 
     @Test

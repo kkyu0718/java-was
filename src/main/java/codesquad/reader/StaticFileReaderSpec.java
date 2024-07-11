@@ -1,8 +1,8 @@
-package codesquad.adapter;
+package codesquad.reader;
 
 import java.io.IOException;
 
-public interface StaticFileAdapterSpec {
+public interface StaticFileReaderSpec {
     public String readFileLines(String path) throws IOException;
 
 }
