@@ -12,7 +12,7 @@ public class SessionFilter implements Filter {
 
         if (isActive(cookies)) {
             // header 에 userId 를 넣어줌
-            request.getHeaders().put("userId", UserSession.getUserId(UUID.fromString(cookies.getCookie("sid").getValue()));
+            request.getHeaders().put("userId", UserSession.getUserId(UUID.fromString(cookies.getCookie("sid").getValue())));
             return chain.doFilter(request);
         } else {
             return new HttpResponse.Builder(request, HttpStatus.FOUND)
