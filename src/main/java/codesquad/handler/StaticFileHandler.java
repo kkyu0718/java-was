@@ -2,6 +2,7 @@ package codesquad.handler;
 
 import codesquad.adapter.Adapter;
 import codesquad.adapter.UserAdapter;
+import codesquad.db.UserDb;
 import codesquad.db.UserSession;
 import codesquad.http.*;
 import codesquad.model.User;
@@ -32,9 +33,31 @@ public class StaticFileHandler implements HttpHandler {
 
         if (path.equals("/index.html")) {
             return handleIndexHtml(request);
+        } else if (path.equals("/user/list/index.html")) {
+            return handleUserListIndexHtml(request);
         }
 
         return readFileAndCreateResponse(request);
+    }
+
+    private HttpResponse handleUserListIndexHtml(HttpRequest request) {
+        Map<String, String> userInfosMap = new HashMap<>();
+
+        StringBuilder html = new StringBuilder();
+        List<User> users = UserDb.getUsers();
+        for (User user : users) {
+            html.append("<tr>");
+            html.append("<td>").append(user.getUserId()).append("</td>");
+            html.append("<td>").append(user.getPassword()).append("</td>");
+            html.append("<td>").append(user.getName()).append("</td>");
+            html.append("<td>").append(user.getEmail()).append("</td>");
+            html.append("</tr>");
+        }
+
+        logger.debug("users : " + users.toString());
+        userInfosMap.put("USERS", html.toString());
+
+        return createDynamicResponse(request, "/user/list/index.html", userInfosMap);
     }
 
     private HttpResponse handleIndexHtml(HttpRequest request) {

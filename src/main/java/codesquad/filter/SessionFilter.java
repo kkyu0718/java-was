@@ -17,6 +17,7 @@ public class SessionFilter implements Filter {
             "/registration/index.html",
             "/login",
             "/login/index.html",
+            "/login/error.html",
             "/user/login",
             "/user/create");
 

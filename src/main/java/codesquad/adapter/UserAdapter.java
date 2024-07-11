@@ -68,7 +68,7 @@ public class UserAdapter implements Adapter {
                     .cookie(cookie)
                     .build();
         } else {
-            logger.debug("로그인 실패" + userId + " " + password);
+            logger.debug("로그인 실패" + userId + " " + user.getPassword() + "input password " + password);
             return new HttpResponse.Builder(request, HttpStatus.FOUND)
                     .redirect("/login/error.html")
                     .build();

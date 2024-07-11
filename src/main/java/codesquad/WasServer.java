@@ -45,7 +45,8 @@ public class WasServer {
                 "/article",
                 "/comment",
                 "/main",
-                "/login"
+                "/login",
+                "/user/list"
         );
 
         List<Adapter> adapters = List.of(userAdapter);
