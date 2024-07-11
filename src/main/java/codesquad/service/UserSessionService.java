@@ -12,4 +12,8 @@ public class UserSessionService {
     public String getUserId(UUID uuid) {
         return UserSession.getUserId(uuid);
     }
+
+    public String createSession(String userId) {
+        return UserSession.create(userId);
+    }
 }

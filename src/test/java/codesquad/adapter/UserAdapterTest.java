@@ -3,6 +3,8 @@ package codesquad.adapter;
 import codesquad.db.UserDb;
 import codesquad.db.UserSession;
 import codesquad.http.*;
+import codesquad.service.UserDbService;
+import codesquad.service.UserSessionService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +17,7 @@ class UserAdapterTest {
 
     @BeforeEach
     public void setUp() {
-        userAdapter = new UserAdapter();
+        userAdapter = new UserAdapter(new UserDbService(), new UserSessionService());
         UserSession.refresh();
         UserDb.refresh();
     }
@@ -65,9 +67,9 @@ class UserAdapterTest {
                 .build();
 
         HttpResponse response1 = userAdapter.createUser(request1);
-        HttpResponse response2 = userAdapter.createUser(request2);
-
         assertEquals(HttpStatus.FOUND, response1.getStatus());
+
+        HttpResponse response2 = userAdapter.createUser(request2);
         assertEquals(HttpStatus.ILLEGAL_ARGUMENT, response2.getStatus());
         assertEquals(1, UserDb.size());
     }
@@ -108,7 +110,7 @@ class UserAdapterTest {
     }
 
     @Test
-    public void login메소드는_회원가입안한_유저에_대해서_400에러를_던진다() {
+    public void login메소드는_회원가입안한_유저에_대해서_리다이렉트한다() {
         byte[] loginBytes = "userId=id1&password=1234".getBytes();
         HttpRequest loginRequest = new HttpRequest.Builder(HttpMethod.POST, "/user/login", HttpVersion.HTTP11)
                 .body(HttpBody.of(loginBytes, MimeType.X_WWW_FORM_URLENCODED))
@@ -116,7 +118,7 @@ class UserAdapterTest {
 
         HttpResponse response = userAdapter.login(loginRequest);
 
-        Assertions.assertEquals(400, response.getStatus().getStatusCode());
+        Assertions.assertEquals(302, response.getStatus().getStatusCode());
     }
 
     @Test
@@ -143,7 +145,7 @@ class UserAdapterTest {
 
         assertTrue(httpCookies.contains("sid"));
 
-        HttpCookie cookie = httpCookies.getCookie("sid");
+        HttpCookie cookie = httpCookies.getCookie("sid").get();
         assertEquals(cookie.getPath(), "/");
     }
 }

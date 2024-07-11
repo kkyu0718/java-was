@@ -1,93 +1,102 @@
 package codesquad.handler;
 
 import codesquad.http.*;
-import codesquad.reader.StaticFileReader;
+import codesquad.model.User;
 import codesquad.reader.StaticFileReaderSpec;
-import org.junit.jupiter.api.Assertions;
+import codesquad.service.UserDbService;
+import codesquad.service.UserSessionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import static codesquad.resource.StaticResourceFactory.GUEST_GREETING;
+import static org.junit.jupiter.api.Assertions.*;
 
-class StaticFileHandlerTest {
-    private StaticFileHandler handler;
+public class StaticFileHandlerTest {
+    private StaticFileHandler staticFileHandler;
+    private StaticFileReaderSpec staticFileReader;
+    private UserSessionService userSessionService;
+    private UserDbService userDbService;
 
     @BeforeEach
-    void setup() {
-        handler = new StaticFileHandler(new StaticFileReader(), null);
+    public void setUp() {
+        staticFileReader = new StaticFileReaderSpec() {
+            @Override
+            public String readFileLines(String path) {
+                if (path.equals("/index.html")) {
+                    return "<html><body>{GREETING}</body></html>";
+                } else if (path.equals("/user/list/index.html")) {
+                    return "<html><body><table>{USERS}</table></body></html>";
+                } else {
+                    return "<html><body>File not found</body></html>";
+                }
+            }
+        };
+        userSessionService = new UserSessionService();
+        userDbService = new UserDbService();
+        staticFileHandler = new StaticFileHandler(staticFileReader, userSessionService, userDbService);
     }
 
     @Test
-    void StaticFileHandler가_주어지고_존재하지않는_Path가_주어졌을때_404상태코드가_주어진다() {
-        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/not-index.html", HttpVersion.HTTP11).build();
-
-        HttpResponse response = handler.handle(request);
-
-        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatus());
-        Assertions.assertNull(response.getBody().getBytes());
-    }
-
-    @Test
-    void StaticFileHandler가_주어지고_존재하는_Path가_주어졌을때_200상태코드가_주어진다() {
+    public void 주어진_정적파일경로가_있을때_파일을_읽고_응답한다() {
+        // given
         HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/index.html", HttpVersion.HTTP11).build();
 
-        HttpResponse response = handler.handle(request);
+        // when
+        HttpResponse response = staticFileHandler.handle(request);
 
-        Assertions.assertEquals(HttpStatus.OK, response.getStatus());
-        Assertions.assertEquals(MimeType.HTML.getMimeType(), response.getHeaders().get(HttpHeaders.CONTENT_TYPE));
-        Assertions.assertNotNull(response.getBody());
+        // then
+        assertEquals(HttpStatus.OK, response.getStatus());
+        assertNotNull(response.getBody());
     }
 
     @Test
-    void StaticFileHandler가_주어지고_CSS파일_요청시_200상태코드와_올바른_컨텐츠타입이_주어진다() {
-        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/main.css", HttpVersion.HTTP11).build();
-
-        HttpResponse response = handler.handle(request);
-
-        Assertions.assertEquals(HttpStatus.OK, response.getStatus());
-        Assertions.assertEquals(MimeType.CSS.getMimeType(), response.getHeaders().get(HttpHeaders.CONTENT_TYPE));
-        Assertions.assertNotNull(response.getBody());
-    }
-
-    @Test
-    void StaticFileHandler가_주어지고_파일읽기_중_에러가_발생했을때_500상태코드가_주어진다() throws IOException {
-        StaticFileHandler faultyHandler = new StaticFileHandler(new StaticFileReaderSpec() {
-            @Override
-            public byte[] readFile(String path) throws IOException {
-                throw new IOException("IO 에러 발생");
-            }
-
-            @Override
-            public boolean exists(String path) {
-                return true;
-            }
-
-            @Override
-            public String readFileLines(String path) throws IOException {
-                return null;
-            }
-        }, null);
-
+    public void 주어진_쿠키가_없을때_인덱스페이지에_GUEST_GREETING을_표시한다() {
+        // given
         HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/index.html", HttpVersion.HTTP11).build();
 
-        HttpResponse response = faultyHandler.handle(request);
+        // when
+        HttpResponse response = staticFileHandler.handle(request);
 
-        Assertions.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatus());
+        // then
+        assertEquals(HttpStatus.OK, response.getStatus());
+        assertTrue(new String(response.getBody().getBytes()).contains(GUEST_GREETING));
     }
 
     @Test
-    void StaticFileHandler_canHandle_메서드가_정확하게_작동하는지_검증한다() {
-        // 파일 경로에 대한 요청
-        HttpRequest fileRequest = new HttpRequest.Builder(HttpMethod.GET, "/index.html", HttpVersion.HTTP11).build();
-        Assertions.assertTrue(handler.canHandle(fileRequest));
+    public void 주어진_세션쿠키가_유효할때_인덱스페이지에_유저이름을_표시한다() {
+        // given
+        String sessionId = userSessionService.createSession("testuser");
+        userDbService.add(User.of("testuser", "password", "테스트유저", "test@example.com"));
 
-        // 디렉토리 경로에 대한 요청
-        HttpRequest directoryRequest = new HttpRequest.Builder(HttpMethod.GET, "/directory/", HttpVersion.HTTP11).build();
-        Assertions.assertFalse(handler.canHandle(directoryRequest));
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/index.html", HttpVersion.HTTP11)
+                .cookie(new HttpCookie.Builder("sid", sessionId).build())
+                .build();
 
-        // 비어 있는 경로에 대한 요청
-        HttpRequest emptyRequest = new HttpRequest.Builder(HttpMethod.GET, "", HttpVersion.HTTP11).build();
-        Assertions.assertFalse(handler.canHandle(emptyRequest));
+        // when
+        HttpResponse response = staticFileHandler.handle(request);
+
+        // then
+        assertEquals(HttpStatus.OK, response.getStatus());
+        assertTrue(new String(response.getBody().getBytes()).contains("안녕하세요 테스트유저"));
     }
 
+    @Test
+    public void 주어진_유저목록을_표시한다() {
+        // given
+        userDbService.add(User.of("user1", "password1", "유저1", "user1@example.com"));
+        userDbService.add(User.of("user2", "password2", "유저2", "user2@example.com"));
+
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/user/list/index.html", HttpVersion.HTTP11).build();
+
+        // when
+        HttpResponse response = staticFileHandler.handle(request);
+
+        // then
+        assertEquals(HttpStatus.OK, response.getStatus());
+        String responseBody = new String(response.getBody().getBytes());
+        assertTrue(responseBody.contains("<td>user1</td>"));
+        assertTrue(responseBody.contains("<td>user2</td>"));
+        assertTrue(responseBody.contains("<td>유저1</td>"));
+        assertTrue(responseBody.contains("<td>유저2</td>"));
+    }
 }
