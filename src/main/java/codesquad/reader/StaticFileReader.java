@@ -17,7 +17,7 @@ public class StaticFileReader implements StaticFileReaderSpec {
     }
 
     private InputStream getResourceAsStream(String path) {
-        return this.getClass().getClassLoader().getResourceAsStream(staticPath + "/" + path);
+        return this.getClass().getClassLoader().getResourceAsStream(staticPath + path);
     }
 
     @Override
