@@ -9,7 +9,8 @@ public enum MimeType {
     JPG("jpg", "image/jpeg"),
     SVG("svg", "image/svg+xml"),
     X_WWW_FORM_URLENCODED(null, "application/x-www-form-urlencoded"),
-    NONE(null, null);
+    NONE(null, null),
+    TEXT_PLAIN("text", "text/plain");
 
     private String ext;
     private String mimeType;
