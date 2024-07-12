@@ -82,7 +82,7 @@ public class Http11Processor implements HttpProcessor {
     }
 
     private void writeBody(OutputStream os, HttpResponse response) throws IOException {
-        os.write(response.getBody() != null ? response.getBody().getBytes() : "0".getBytes());
+        os.write(!response.getBody().isEmpty() ? response.getBody().getBytes() : "0".getBytes());
     }
 
     private void writeStatusLine(OutputStream os, HttpResponse response) throws IOException {

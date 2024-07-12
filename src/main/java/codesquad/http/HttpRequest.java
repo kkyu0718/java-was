@@ -104,6 +104,10 @@ public class HttpRequest {
         return parameters;
     }
 
+    public HttpCookies getHttpCookies() {
+        return httpCookies;
+    }
+
     public boolean isFilePath() {
         return path.split("\\.").length == 2;
     }
@@ -114,6 +118,10 @@ public class HttpRequest {
         }
 
         throw new IllegalArgumentException("확장자가 존재하지 않습니다. " + path);
+    }
+
+    public String getHeader(String key) {
+        return this.getHeaders().get(key);
     }
 
     @Override
