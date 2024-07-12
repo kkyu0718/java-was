@@ -91,6 +91,8 @@ public class WasServer {
             // 모든 필터를 통과했으므로 핸들러로 처리
             if (httpResponse == null) {
                 httpResponse = getHttpResponse(httpRequest);
+                logger.debug(httpResponse.getStatus().toString());
+                logger.debug(httpResponse.getHeaders().toString());
                 logger.debug(httpResponse.toString());
             }
 

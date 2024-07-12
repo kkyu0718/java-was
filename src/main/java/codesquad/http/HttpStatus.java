@@ -23,4 +23,12 @@ public enum HttpStatus {
     public String getMessage() {
         return message;
     }
+
+    @Override
+    public String toString() {
+        return "HttpStatus{" +
+                "statusCode=" + statusCode +
+                ", message='" + message + '\'' +
+                '}';
+    }
 }
