@@ -5,6 +5,7 @@ public enum HttpStatus {
     OK(200, "OK"),
     NO_CONTENT(204, "NO CONTENT"),
     FOUND(302, "FOUND"),
+    ILLEGAL_ARGUMENT(400, "ILLEGAL ARGUMENT"),
     INTERNAL_SERVER_ERROR(500, "INTERNAL SERVER ERROR");
 
     private int statusCode;

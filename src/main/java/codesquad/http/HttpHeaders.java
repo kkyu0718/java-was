@@ -2,6 +2,7 @@ package codesquad.http;
 
 import codesquad.utils.StringUtils;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -28,6 +29,10 @@ public class HttpHeaders {
         return headers.get(key);
     }
 
+    public Map<String, String> getHeaders() {
+        return Collections.unmodifiableMap(headers);
+    }
+
     public int size() {
         return headers.size();
     }
@@ -38,6 +43,10 @@ public class HttpHeaders {
 
     public Set<String> keySet() {
         return headers.keySet();
+    }
+
+    public void extend(HttpHeaders others) {
+        this.headers.putAll(others.getHeaders());
     }
 
     @Override

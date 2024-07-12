@@ -7,8 +7,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 
 import static codesquad.utils.StringUtils.LINE_SEPERATOR;
 import static org.junit.jupiter.api.Assertions.*;
@@ -215,7 +217,7 @@ class Http11ProcessorTest {
         assertEquals("keep-alive", request.getHeaders().get("Connection"));
         assertEquals("localhost:8080", request.getHeaders().get("Host"));
 
-        assertNull(request.getBody());
+        assertTrue(request.getBody().isEmpty());
     }
 
     @Test
@@ -243,7 +245,57 @@ class Http11ProcessorTest {
         assertEquals("body body body".getBytes().length, Integer.parseInt(request.getHeaders().get(HttpHeaders.CONTENT_LENGTH)));
         assertEquals(MimeType.HTML.getMimeType(), request.getHeaders().get(HttpHeaders.CONTENT_TYPE));
 
-        assertNotNull(request.getBody());
+        assertFalse(request.getBody().isEmpty());
+    }
+
+    @Test
+    public void 응답을_작성하면_올바르게_작성된다() throws IOException {
+        // given
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/index.html", HttpVersion.HTTP11).build();
+        HttpResponse response = new HttpResponse.Builder(request, HttpStatus.OK)
+                .header("Content-Type", "text/html")
+                .header("Content-Length", "20")
+                .body(HttpBody.of("Hello, world!".getBytes(), MimeType.HTML))
+                .build();
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        // when
+        processor.writeResponse(outputStream, response);
+
+        // then
+        String expectedResponse = "HTTP/1.1 200 OK" + LINE_SEPERATOR +
+                "Content-Length: 20" + LINE_SEPERATOR +
+                "Content-Type: text/html" + LINE_SEPERATOR +
+                LINE_SEPERATOR +
+                "Hello, world!";
+        assertEquals(expectedResponse, outputStream.toString(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    public void 응답에_쿠키를_포함하면_올바르게_작성된다() throws IOException {
+        // given
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/index.html", HttpVersion.HTTP11).build();
+        HttpResponse response = new HttpResponse.Builder(request, HttpStatus.OK)
+                .header("Content-Type", "text/html")
+                .header("Content-Length", "20")
+                .cookie(new HttpCookie.Builder("sessionId", "1234567890").path("/").build())
+                .body(HttpBody.of("Hello, world!".getBytes(StandardCharsets.UTF_8), MimeType.HTML))
+                .build();
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        // when
+        processor.writeResponse(outputStream, response);
+
+        // then
+        String expectedResponse = "HTTP/1.1 200 OK" + LINE_SEPERATOR +
+                "Content-Length: 20" + LINE_SEPERATOR +
+                "Content-Type: text/html" + LINE_SEPERATOR +
+                "Set-Cookie: sessionId=1234567890; Path=/" + LINE_SEPERATOR +
+                LINE_SEPERATOR +
+                "Hello, world!";
+        assertEquals(expectedResponse, outputStream.toString(StandardCharsets.UTF_8));
     }
 
     @BeforeEach

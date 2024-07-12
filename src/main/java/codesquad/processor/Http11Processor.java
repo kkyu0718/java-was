@@ -33,11 +33,6 @@ public class Http11Processor implements HttpProcessor {
         HttpMethod method = HttpMethod.valueOf(startLineSplits[0]);
         String uri = startLineSplits[1];
 
-        /*
-        In particular, the Host and Connection
-       header fields ought to be implemented by all HTTP/1.x implementations
-       whether or not they advertise conformance with HTTP/1.1.
-         */
         URI url = URI.create(uri);
         HttpVersion httpVersion = HttpVersion.fromRepresentation(startLineSplits[2]);
 
@@ -45,10 +40,28 @@ public class Http11Processor implements HttpProcessor {
         verifyMendatoryHeaders(headers);
 
         String query = url.getQuery();
-        Parameters parameters = query != null ? Parameters.of(query) : null;
+        Parameters parameters = Parameters.of(query);
 
         HttpBody httpBody = parseBody(br, headers);
-        return new HttpRequest(method, url.getPath(), httpVersion, headers, httpBody, parameters);
+
+        HttpCookies cookies = new HttpCookies();
+        // cookie 처리
+        if (headers.contains("Cookie")) {
+            String s = headers.get("Cookie");
+
+            String[] splits = s.split(";");
+            for (String split : splits) {
+                String[] keyValue = split.split("=");
+                cookies.setCookie(new HttpCookie.Builder(keyValue[0].trim(), keyValue[1].trim()).build());
+            }
+        }
+
+        return new HttpRequest.Builder(method, url.getPath(), httpVersion)
+                .headers(headers)
+                .body(httpBody)
+                .parameters(parameters)
+                .cookies(cookies)
+                .build();
     }
 
     private void verifyMendatoryHeaders(HttpHeaders headers) {
@@ -69,7 +82,7 @@ public class Http11Processor implements HttpProcessor {
     }
 
     private void writeBody(OutputStream os, HttpResponse response) throws IOException {
-        os.write(response.getBody() != null ? response.getBody().getBytes() : "0".getBytes());
+        os.write(!response.getBody().isEmpty() ? response.getBody().getBytes() : "0".getBytes());
     }
 
     private void writeStatusLine(OutputStream os, HttpResponse response) throws IOException {
@@ -87,6 +100,13 @@ public class Http11Processor implements HttpProcessor {
 
         for (String key : response.getHeaders().keySet()) {
             sb.append(key).append(": ").append(response.getHeaders().get(key)).append(LINE_SEPERATOR);
+        }
+
+        // write cookie
+        HttpCookies httpCookies = response.getHttpCookies();
+        for (HttpCookie cookie : httpCookies.getCookies()) {
+            sb.append("Set-Cookie").append(": ").append(cookie.getName()).append("=").append(cookie.getValue()).append("; ")
+                    .append("Path").append("=").append(cookie.getPath()).append(LINE_SEPERATOR);
         }
 
         os.write(sb.toString().getBytes());
@@ -130,14 +150,14 @@ public class Http11Processor implements HttpProcessor {
      */
     private HttpBody parseBody(BufferedReader br, HttpHeaders headers) throws IOException {
         if (!headers.contains(HttpHeaders.CONTENT_LENGTH)) {
-            return null;
+            return HttpBody.empty();
         }
 
         int contentLength = Integer.parseInt(headers.get(HttpHeaders.CONTENT_LENGTH));
         String contentType = headers.get(HttpHeaders.CONTENT_TYPE);
 
         if (contentLength == 0 || contentType == null) {
-            return null;
+            return HttpBody.empty();
         }
 
         MimeType mimeType = MimeType.fromMimeType(contentType);
@@ -149,7 +169,7 @@ public class Http11Processor implements HttpProcessor {
             throw new IOException("Expected " + contentLength + " bytes but read " + read + " bytes.");
         }
 
-        return new HttpBody(new String(bodyChars).getBytes(StandardCharsets.US_ASCII), mimeType);
+        return HttpBody.of(new String(bodyChars).getBytes(StandardCharsets.US_ASCII), mimeType);
     }
 
     private String[] parseStartLine(BufferedReader br) throws IOException {

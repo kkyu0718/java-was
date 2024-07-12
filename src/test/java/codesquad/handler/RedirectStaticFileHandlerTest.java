@@ -1,88 +1,77 @@
 package codesquad.handler;
 
 import codesquad.http.*;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.List;
 
-class RedirectStaticFileHandlerTest {
-    private RedirectStaticFileHandler handler;
-    private String redirectNeededPath;
-    private String nonExistentPath;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class RedirectStaticFileHandlerTest {
+    private RedirectStaticFileHandler redirectStaticFileHandler;
 
     @BeforeEach
-    void setup() {
-        redirectNeededPath = "/registration";
-        handler = new RedirectStaticFileHandler(
-                new StaticFileReader(),
-                List.of(redirectNeededPath)
+    public void setUp() {
+        List<String> whitelist = List.of(
+                "/",
+                "/registration",
+                "/article",
+                "/comment",
+                "/main",
+                "/login",
+                "/user/list"
         );
-        nonExistentPath = "/non-existent";
+        redirectStaticFileHandler = new RedirectStaticFileHandler(whitelist);
     }
 
     @Test
-    void RedirectStaticFileHandler가_주어지고_존재하지않는_Path가_주어졌으나_디렉토리의_index_html가_존재할때_200상태코드가_주어진다() {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        HttpRequest request = new HttpRequest(HttpMethod.GET, redirectNeededPath, HttpVersion.HTTP11, httpHeaders, null, null);
+    public void 주어진_리스트에_있는경로를_처리한다() {
+        // given
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/login", HttpVersion.HTTP11).build();
 
-        HttpResponse response = handler.handle(request);
+        // when
+        boolean canHandle = redirectStaticFileHandler.canHandle(request);
 
-        Assertions.assertEquals(HttpStatus.OK, response.getStatus());
-        Assertions.assertNotNull(response.getBody().getBytes());
+        // then
+        assertTrue(canHandle);
     }
 
     @Test
-    void RedirectStaticFileHandler가_주어지고_존재하지않는_Path와_디렉토리의_index_html이_없을때_404상태코드가_주어진다() {
-        handler = new RedirectStaticFileHandler(
-                new StaticFileReader(),
-                List.of(nonExistentPath)
-        );
+    public void 주어진_리스트에_없는경로를_처리하지_않는다() {
+        // given
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/nonexistent", HttpVersion.HTTP11).build();
 
-        HttpHeaders httpHeaders = new HttpHeaders();
-        HttpRequest request = new HttpRequest(HttpMethod.GET, nonExistentPath, HttpVersion.HTTP11, httpHeaders, null, null);
+        // when
+        boolean canHandle = redirectStaticFileHandler.canHandle(request);
 
-        HttpResponse response = handler.handle(request);
-
-        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatus());
-        Assertions.assertNull(response.getBody().getBytes());
+        // then
+        assertFalse(canHandle);
     }
 
     @Test
-    void RedirectStaticFileHandler가_주어지고_파일읽기_중_에러가_발생했을때_500상태코드가_주어진다() throws IOException {
-        RedirectStaticFileHandler faultyHandler = new RedirectStaticFileHandler(
-                new StaticFileReaderSpec() {
-                    @Override
-                    public byte[] readFile(String path) throws IOException {
-                        throw new IOException("IO 에러 발생");
-                    }
+    public void 주어진_경로를_루트일때_리다이렉트한다() {
+        // given
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/", HttpVersion.HTTP11).build();
 
-                    @Override
-                    public boolean exists(String path) {
-                        return true;
-                    }
-                },
-                List.of(redirectNeededPath)
-        );
+        // when
+        HttpResponse response = redirectStaticFileHandler.handle(request);
 
-        HttpHeaders httpHeaders = new HttpHeaders();
-        HttpRequest request = new HttpRequest(HttpMethod.GET, redirectNeededPath, HttpVersion.HTTP11, httpHeaders, null, null);
-
-        HttpResponse response = faultyHandler.handle(request);
-
-        Assertions.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatus());
+        // then
+        assertEquals(HttpStatus.FOUND, response.getStatus());
+        assertEquals("/index.html", response.getHeaders().get("Location"));
     }
 
     @Test
-    void RedirectStaticFileHandler_canHandle_메서드가_정확하게_작동하는지_검증한다() {
-        // whitelist에 존재하는 경로에 대한 요청
-        HttpRequest validRequest = new HttpRequest(HttpMethod.GET, redirectNeededPath, HttpVersion.HTTP11, new HttpHeaders(), null, null);
-        Assertions.assertTrue(handler.canHandle(validRequest));
+    public void 주어진_경로를_리다이렉트한다() {
+        // given
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/login", HttpVersion.HTTP11).build();
 
-        // whitelist에 존재하지 않는 경로에 대한 요청
-        HttpRequest invalidRequest = new HttpRequest(HttpMethod.GET, nonExistentPath, HttpVersion.HTTP11, new HttpHeaders(), null, null);
-        Assertions.assertFalse(handler.canHandle(invalidRequest));
+        // when
+        HttpResponse response = redirectStaticFileHandler.handle(request);
+
+        // then
+        assertEquals(HttpStatus.FOUND, response.getStatus());
+        assertTrue(response.getHeaders().get("Location").endsWith("/login/index.html"));
     }
 }

@@ -6,9 +6,17 @@ public class HttpBody {
     private byte[] bytes;
     private MimeType contentType;
 
-    public HttpBody(byte[] bytes, MimeType contentType) {
+    private HttpBody(byte[] bytes, MimeType contentType) {
         this.bytes = bytes;
         this.contentType = contentType;
+    }
+
+    public static HttpBody of(byte[] bytes, MimeType contentType) {
+        return new HttpBody(bytes, contentType);
+    }
+
+    public static HttpBody empty() {
+        return new HttpBody(null, null);
     }
 
     public byte[] getBytes() {
@@ -28,5 +36,9 @@ public class HttpBody {
     @Override
     public String toString() {
         return new String(bytes);
+    }
+
+    public boolean isEmpty() {
+        return bytes == null;
     }
 }

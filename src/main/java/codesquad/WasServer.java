@@ -1,15 +1,19 @@
 package codesquad;
 
-import codesquad.adapter.Adapter;
 import codesquad.adapter.UserAdapter;
+import codesquad.filter.FilterChain;
+import codesquad.filter.SessionFilter;
 import codesquad.handler.DynamicHandler;
 import codesquad.handler.RedirectStaticFileHandler;
 import codesquad.handler.StaticFileHandler;
-import codesquad.handler.StaticFileReader;
+import codesquad.http.HttpMethod;
 import codesquad.http.HttpRequest;
 import codesquad.http.HttpResponse;
 import codesquad.processor.Http11Processor;
 import codesquad.processor.HttpProcessor;
+import codesquad.reader.StaticFileReader;
+import codesquad.service.UserDbService;
+import codesquad.service.UserSessionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,8 +27,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static codesquad.http.HttpResponse.createNotFoundResponse;
-
 public class WasServer {
     private static Logger logger = LoggerFactory.getLogger(WasServer.class);
     private static int MAX_THREAD_POOL_SIZE = 100;
@@ -34,18 +36,26 @@ public class WasServer {
     private StaticFileHandler staticFileHandler;
     private RedirectStaticFileHandler redirectStaticFileHandler;
     private ExecutorService executorService;
+    private UserSessionService userSessionService;
 
     public WasServer(int port) throws IOException {
-        Adapter userAdapter = new UserAdapter();
+        UserDbService userDbService = new UserDbService();
         List<String> whitelist = List.of(
                 "/",
-                "/registration"
+                "/registration",
+                "/article",
+                "/comment",
+                "/main",
+                "/login",
+                "/user/list"
         );
 
+        userSessionService = new UserSessionService();
+        UserAdapter userAdapter = new UserAdapter(userDbService, userSessionService);
         serverSocket = new ServerSocket(port);
         dynamicHandler = new DynamicHandler(List.of(userAdapter));
-        staticFileHandler = new StaticFileHandler(new StaticFileReader());
-        redirectStaticFileHandler = new RedirectStaticFileHandler(new StaticFileReader(), whitelist);
+        staticFileHandler = new StaticFileHandler(new StaticFileReader(), userSessionService, userDbService);
+        redirectStaticFileHandler = new RedirectStaticFileHandler(whitelist);
         executorService = Executors.newFixedThreadPool(MAX_THREAD_POOL_SIZE);
 
         logger.debug("Listening for connection on port 8080 ....");
@@ -69,29 +79,47 @@ public class WasServer {
         try {
             logger.debug("Client connected");
 
-            //TODO http 버젼 별 분기처리 필요
+            // 요청 파싱
             HttpProcessor processor = new Http11Processor();
             HttpRequest httpRequest = processor.parseRequest(br);
             logger.debug(httpRequest.toString());
 
-            HttpResponse httpResponse = null;
+            // 필터 체인 생성
+            FilterChain filterChain = getFilterChain();
+            HttpResponse httpResponse = filterChain.doFilter(httpRequest);
 
-            // file 로 요청이 오거나 정해진 view 로 요청이 오는 경우
-            if (staticFileHandler.canHandle(httpRequest)) {
-                httpResponse = staticFileHandler.handle(httpRequest);
-            } else if (redirectStaticFileHandler.canHandle(httpRequest)) {
-                httpResponse = redirectStaticFileHandler.handle(httpRequest);
-            } else if (dynamicHandler.canHandle(httpRequest)) {
-                httpResponse = dynamicHandler.handle(httpRequest);
-            } else {
-                httpResponse = createNotFoundResponse(httpRequest);
+            // 모든 필터를 통과했으므로 핸들러로 처리
+            if (httpResponse == null) {
+                httpResponse = getHttpResponse(httpRequest);
+                logger.debug(httpResponse.toString());
             }
 
-            logger.debug(httpResponse.toString());
+            // 응답 쓰기
             OutputStream clientOutput = clientSocket.getOutputStream();
             processor.writeResponse(clientOutput, httpResponse);
         } catch (Exception ex) {
             logger.error("Error handling client socket", ex);
         }
+    }
+
+    private HttpResponse getHttpResponse(HttpRequest httpRequest) {
+        if (httpRequest.getMethod() == HttpMethod.GET && staticFileHandler.canHandle(httpRequest)) {
+            logger.info("forward to staticFileHandler" + httpRequest.getPath());
+            return staticFileHandler.handle(httpRequest);
+        } else if (httpRequest.getMethod() == HttpMethod.GET && redirectStaticFileHandler.canHandle(httpRequest)) {
+            logger.info("forward to redirect" + httpRequest.getPath());
+            return redirectStaticFileHandler.handle(httpRequest);
+        } else if (dynamicHandler.canHandle(httpRequest)) {
+            logger.info("forward to dynamicHandler" + httpRequest.getPath());
+
+            return dynamicHandler.handle(httpRequest);
+        }
+        throw new RuntimeException("no handler found for " + httpRequest.getPath());
+    }
+
+    private FilterChain getFilterChain() {
+        FilterChain filterChain = new FilterChain();
+        filterChain.addFilter(new SessionFilter(userSessionService));
+        return filterChain;
     }
 }
