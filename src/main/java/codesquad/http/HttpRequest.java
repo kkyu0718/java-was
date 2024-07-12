@@ -132,10 +132,10 @@ public class HttpRequest {
         sb.append("*headers*").append(StringUtils.LINE_SEPERATOR);
         sb.append(headers.toString());
 
-        if (!body.isEmpty()) {
-            sb.append("*body*").append(StringUtils.LINE_SEPERATOR);
-            sb.append(body);
-        }
+//        if (!body.isEmpty()) {
+//            sb.append("*body*").append(StringUtils.LINE_SEPERATOR);
+//            sb.append(body);
+//        }
 
         return sb.toString();
     }
