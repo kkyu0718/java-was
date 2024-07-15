@@ -1,5 +1,6 @@
 package codesquad.reader;
 
+import codesquad.exception.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,8 +25,9 @@ public class StaticFileReader implements StaticFileReaderSpec {
     public String readFileLines(String path) throws IOException {
         try (InputStream resourceAsStream = getResourceAsStream(path)) {
             if (resourceAsStream == null) {
-                throw new IOException("File not found: " + path);
+                throw new NotFoundException("File not found: " + path);
             }
+
             StringBuilder content = new StringBuilder();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAsStream, StandardCharsets.UTF_8))) {
                 String line;
