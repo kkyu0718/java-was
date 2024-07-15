@@ -16,7 +16,7 @@ public class HttpBody {
     }
 
     public static HttpBody empty() {
-        return new HttpBody(null, null);
+        return new HttpBody(new byte[0], null);
     }
 
     public byte[] getBytes() {
@@ -39,6 +39,6 @@ public class HttpBody {
     }
 
     public boolean isEmpty() {
-        return bytes == null;
+        return bytes.length == 0;
     }
 }
