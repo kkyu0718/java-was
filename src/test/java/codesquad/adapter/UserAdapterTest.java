@@ -119,6 +119,7 @@ class UserAdapterTest {
         HttpResponse response = userAdapter.login(loginRequest);
 
         Assertions.assertEquals(302, response.getStatus().getStatusCode());
+        assertEquals("/login/error.html", response.getHeaders().get("Location"));
     }
 
     @Test

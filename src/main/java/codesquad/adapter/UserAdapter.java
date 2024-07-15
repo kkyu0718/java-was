@@ -13,7 +13,7 @@ public class UserAdapter implements Adapter {
     private static final Logger logger = LoggerFactory.getLogger(UserAdapter.class);
     private static String LOGIN_SUCESS_PAGE = "/index.html";
     private static String SIGNUP_SUCESS_PAGE = "/index.html";
-    private static String LOGIN_FAIL_PAGE = "login/error.html";
+    private static String LOGIN_FAIL_PAGE = "/login/error.html";
     private UserDbService userDbService;
     private UserSessionService userSessionService;
 
@@ -27,7 +27,7 @@ public class UserAdapter implements Adapter {
         return path.startsWith("/user");
     }
 
-    @RequestMapping(path = "/user/create", method = "POST")
+    @RequestMapping(path = "/user/create", method = HttpMethod.POST)
     public HttpResponse createUser(HttpRequest request) {
         logger.debug("createUser start");
         HttpBody body = request.getBody();
@@ -51,7 +51,7 @@ public class UserAdapter implements Adapter {
                 .build();
     }
 
-    @RequestMapping(path = "/user/login", method = "POST")
+    @RequestMapping(path = "/user/login", method = HttpMethod.POST)
     public HttpResponse login(HttpRequest request) {
         logger.info("login start");
         logger.info("UserDb : ", UserDb.print());
