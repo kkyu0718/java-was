@@ -6,6 +6,7 @@ import java.util.Map;
 
 import static codesquad.utils.StringUtils.LINE_SEPERATOR;
 
+@Deprecated
 public class Parameters {
     private Map<String, String> parameter;
 

@@ -4,6 +4,8 @@ import codesquad.annotation.RequestMapping;
 import codesquad.db.UserDb;
 import codesquad.http.*;
 import codesquad.model.User;
+import codesquad.model.dao.UserCreateDao;
+import codesquad.model.dao.UserLoginDao;
 import codesquad.service.UserDbServiceSpec;
 import codesquad.service.UserSessionService;
 import org.slf4j.Logger;
@@ -31,11 +33,11 @@ public class UserAdapter implements Adapter {
     public HttpResponse createUser(HttpRequest request) {
         logger.debug("createUser start");
         HttpBody body = request.getBody();
-        Parameters parameters = body.getParameters();
-        String userId = parameters.getParameter("userId");
-        String password = parameters.getParameter("password");
-        String name = parameters.getParameter("name");
-        String email = parameters.getParameter("email");
+        UserCreateDao dao = body.parse(UserCreateDao.class);
+        String userId = dao.getUserId();
+        String password = dao.getPassword();
+        String name = dao.getName();
+        String email = dao.getEmail();
 
         if (userDbService.exists(userId)) {
             logger.error("아이디가 중복되는 유저입니다." + userId);
@@ -61,9 +63,9 @@ public class UserAdapter implements Adapter {
         logger.info("UserDb : ", UserDb.print());
 
         HttpBody body = request.getBody();
-        Parameters parameters = body.getParameters();
-        String userId = parameters.getParameter("userId");
-        String password = parameters.getParameter("password");
+        UserLoginDao dao = body.parse(UserLoginDao.class);
+        String userId = dao.getUserId();
+        String password = dao.getPassword();
 
         // 유저가 존재하지 않는 경우
         if (!userDbService.exists(userId)) {

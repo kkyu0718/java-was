@@ -2,9 +2,9 @@ package codesquad.http;
 
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
-import static codesquad.utils.ParserUtils.*;
+import static codesquad.utils.ParserUtils.parseJson;
+import static codesquad.utils.ParserUtils.parseXWWWFormUrlEncoded;
 
 public class HttpBody {
     private byte[] bytes;
@@ -51,9 +51,7 @@ public class HttpBody {
         }
 
         if (contentType == MimeType.APPLICATION_JSON) {
-            Map<String, Object> stringObjectMap = parseJson(data);
-            populateObject(instance, stringObjectMap);
-            return instance;
+            return parseJson(data, clazz);
         } else if (contentType == MimeType.X_WWW_FORM_URLENCODED) {
             return parseXWWWFormUrlEncoded(data, clazz);
         } else {

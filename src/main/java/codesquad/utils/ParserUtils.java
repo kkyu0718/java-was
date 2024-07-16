@@ -11,7 +11,15 @@ import java.util.Map;
 
 public class ParserUtils {
 
-    public static Map<String, Object> parseJson(String json) {
+    public static <T> T parseJson(String json, Class<T> clazz) {
+        T instance = getNewInstance(clazz);
+        Map<String, Object> result = parseJsonRecursive(json);
+
+        populateObject(instance, result);
+        return instance;
+    }
+
+    private static Map<String, Object> parseJsonRecursive(String json) {
         Map<String, Object> result = new HashMap<>();
         json = json.trim().substring(1, json.length() - 1); // Remove curly braces
         String[] pairs = splitKeyValuePairs(json);
@@ -21,7 +29,6 @@ public class ParserUtils {
             Object value = parseValue(keyValue[1].trim());
             result.put(key, value);
         }
-
         return result;
     }
 
@@ -108,7 +115,7 @@ public class ParserUtils {
     private static Object parseValue(String json) {
         json = json.trim();
         if (json.startsWith("{")) {
-            return parseJson(json);
+            return parseJsonRecursive(json);
         } else if (json.startsWith("[")) {
             return parseArray(json);
         } else if (json.startsWith("\"")) {
