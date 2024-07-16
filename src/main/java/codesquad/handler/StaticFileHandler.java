@@ -4,7 +4,7 @@ import codesquad.http.*;
 import codesquad.model.User;
 import codesquad.reader.StaticFileReaderSpec;
 import codesquad.render.TemplateEngine;
-import codesquad.service.UserDbService;
+import codesquad.service.UserDbServiceSpec;
 import codesquad.service.UserSessionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,12 +19,12 @@ public class StaticFileHandler implements HttpHandler {
     private static final Logger logger = LoggerFactory.getLogger(StaticFileHandler.class);
     private final StaticFileReaderSpec staticFileReader;
     private final UserSessionService userSessionService;
-    private final UserDbService userDbService;
+    private final UserDbServiceSpec userDbService;
 
     public StaticFileHandler(
             StaticFileReaderSpec staticFileReader,
             UserSessionService userSessionService,
-            UserDbService userDbService) {
+            UserDbServiceSpec userDbService) {
         this.staticFileReader = staticFileReader;
         this.userSessionService = userSessionService;
         this.userDbService = userDbService;

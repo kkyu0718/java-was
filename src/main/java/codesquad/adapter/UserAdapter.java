@@ -4,7 +4,7 @@ import codesquad.annotation.RequestMapping;
 import codesquad.db.UserDb;
 import codesquad.http.*;
 import codesquad.model.User;
-import codesquad.service.UserDbService;
+import codesquad.service.UserDbServiceSpec;
 import codesquad.service.UserSessionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,10 +14,10 @@ public class UserAdapter implements Adapter {
     private static String LOGIN_SUCESS_PAGE = "/index.html";
     private static String SIGNUP_SUCESS_PAGE = "/index.html";
     private static String LOGIN_FAIL_PAGE = "/login/error.html";
-    private UserDbService userDbService;
+    private UserDbServiceSpec userDbService;
     private UserSessionService userSessionService;
 
-    public UserAdapter(UserDbService userDbService, UserSessionService userSessionService) {
+    public UserAdapter(UserDbServiceSpec userDbService, UserSessionService userSessionService) {
         this.userDbService = userDbService;
         this.userSessionService = userSessionService;
     }

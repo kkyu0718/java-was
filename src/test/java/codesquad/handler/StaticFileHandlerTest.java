@@ -3,7 +3,7 @@ package codesquad.handler;
 import codesquad.http.*;
 import codesquad.model.User;
 import codesquad.reader.StaticFileReaderSpec;
-import codesquad.service.UserDbService;
+import codesquad.service.UserDbServiceMemory;
 import codesquad.service.UserSessionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +15,7 @@ public class StaticFileHandlerTest {
     private StaticFileHandler staticFileHandler;
     private StaticFileReaderSpec staticFileReader;
     private UserSessionService userSessionService;
-    private UserDbService userDbService;
+    private UserDbServiceMemory userDbServiceMemory;
 
     @BeforeEach
     public void setUp() {
@@ -32,8 +32,8 @@ public class StaticFileHandlerTest {
             }
         };
         userSessionService = new UserSessionService();
-        userDbService = new UserDbService();
-        staticFileHandler = new StaticFileHandler(staticFileReader, userSessionService, userDbService);
+        userDbServiceMemory = new UserDbServiceMemory();
+        staticFileHandler = new StaticFileHandler(staticFileReader, userSessionService, userDbServiceMemory);
     }
 
     @Test
@@ -66,7 +66,7 @@ public class StaticFileHandlerTest {
     public void 주어진_세션쿠키가_유효할때_인덱스페이지에_유저이름을_표시한다() {
         // given
         String sessionId = userSessionService.createSession("testuser");
-        userDbService.add(User.of("testuser", "password", "테스트유저", "test@example.com"));
+        userDbServiceMemory.add(User.of("testuser", "password", "테스트유저", "test@example.com"));
 
         HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/index.html", HttpVersion.HTTP11)
                 .cookie(new HttpCookie.Builder("sid", sessionId).build())
@@ -83,8 +83,8 @@ public class StaticFileHandlerTest {
     @Test
     public void 주어진_유저목록을_표시한다() {
         // given
-        userDbService.add(User.of("user1", "password1", "유저1", "user1@example.com"));
-        userDbService.add(User.of("user2", "password2", "유저2", "user2@example.com"));
+        userDbServiceMemory.add(User.of("user1", "password1", "유저1", "user1@example.com"));
+        userDbServiceMemory.add(User.of("user2", "password2", "유저2", "user2@example.com"));
 
         HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/user/list/index.html", HttpVersion.HTTP11).build();
 
