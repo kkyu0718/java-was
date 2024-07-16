@@ -8,12 +8,15 @@ import codesquad.exception.MethodNotAllowedException;
 import codesquad.exception.NotFoundException;
 import codesquad.http.HttpRequest;
 import codesquad.http.HttpResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.List;
 
 public class DynamicHandler implements HttpHandler {
+    private static final Logger logger = LoggerFactory.getLogger(DynamicHandler.class);
     private List<Adapter> adapters;
 
     public DynamicHandler(List<Adapter> adapters) {
@@ -41,6 +44,7 @@ public class DynamicHandler implements HttpHandler {
                             return (HttpResponse) method.invoke(adapter, args);
                         } catch (Exception e) {
                             // 예외 처리
+                            e.printStackTrace();
                             throw new InternalServerError("Internal Server Error");
                         }
                     }
