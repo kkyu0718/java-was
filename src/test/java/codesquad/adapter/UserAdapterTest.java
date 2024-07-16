@@ -17,7 +17,12 @@ class UserAdapterTest {
 
     @BeforeEach
     public void setUp() {
-        userAdapter = new UserAdapter(new UserDbService(), new UserSessionService());
+        DbConfig dbConfig = new DbConfig(
+                "jdbc:h2:~/h2db/test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE",
+                "sa",
+                ""
+        );
+        userAdapter = new UserAdapter(new UserDbServiceJdbc(dbConfig), new UserSessionService());
         UserSession.refresh();
         UserDb.refresh();
     }

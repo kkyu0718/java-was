@@ -1,6 +1,7 @@
 package codesquad;
 
 import codesquad.adapter.UserAdapter;
+import codesquad.db.DbConfig;
 import codesquad.exception.MethodNotAllowedException;
 import codesquad.exception.NotFoundException;
 import codesquad.filter.FilterChain;
@@ -40,6 +41,7 @@ public class WasServer {
     private final List<HttpHandler> handlers;
     private final ExecutorService executorService;
     private final UserSessionService userSessionService;
+
 
     public WasServer(int port) throws IOException {
         this.serverSocket = new ServerSocket(port);
@@ -123,7 +125,13 @@ public class WasServer {
     }
 
     private List<HttpHandler> initializeHandlers() {
-        UserDbService userDbService = new UserDbService();
+        DbConfig dbConfig = new DbConfig(
+                "jdbc:h2:~/h2db/test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE",
+                "sa",
+                ""
+        );
+
+        UserDbServiceSpec userDbService = new UserDbServiceJdbc(dbConfig);
         List<String> whitelist = List.of(
                 "/",
                 "/registration",
