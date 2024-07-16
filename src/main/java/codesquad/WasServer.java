@@ -1,5 +1,6 @@
 package codesquad;
 
+import codesquad.adapter.PostAdapter;
 import codesquad.adapter.UserAdapter;
 import codesquad.db.DbConfig;
 import codesquad.exception.MethodNotAllowedException;
@@ -16,9 +17,7 @@ import codesquad.http.HttpStatus;
 import codesquad.processor.Http11Processor;
 import codesquad.processor.HttpProcessor;
 import codesquad.reader.StaticFileReader;
-import codesquad.service.UserDbServiceJdbc;
-import codesquad.service.UserDbServiceSpec;
-import codesquad.service.UserSessionService;
+import codesquad.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,12 +142,15 @@ public class WasServer {
                 "/user/list"
         );
 
+        PostServiceSpec postService = new PostServiceJdbc(dbConfig);
+
         UserAdapter userAdapter = new UserAdapter(userDbService, userSessionService);
+        PostAdapter postAdapter = new PostAdapter(postService);
 
         return List.of(
                 new StaticFileHandler(new StaticFileReader(), userSessionService, userDbService),
                 new RedirectStaticFileHandler(whitelist),
-                new DynamicHandler(List.of(userAdapter))
+                new DynamicHandler(List.of(userAdapter, postAdapter))
         );
     }
 }

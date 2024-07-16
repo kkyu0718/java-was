@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PostServiceJdbc {
+public class PostServiceJdbc implements PostServiceSpec {
     private DbConfig dbConfig;
 
     public PostServiceJdbc(DbConfig dbConfig) {
