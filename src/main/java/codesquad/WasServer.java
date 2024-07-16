@@ -148,7 +148,7 @@ public class WasServer {
         PostAdapter postAdapter = new PostAdapter(postService);
 
         return List.of(
-                new StaticFileHandler(new StaticFileReader(), userSessionService, userDbService),
+                new StaticFileHandler(new StaticFileReader(), userSessionService, userDbService, postService),
                 new RedirectStaticFileHandler(whitelist),
                 new DynamicHandler(List.of(userAdapter, postAdapter))
         );
