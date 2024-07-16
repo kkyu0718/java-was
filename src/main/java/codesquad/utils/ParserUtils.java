@@ -1,6 +1,9 @@
 package codesquad.utils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +24,43 @@ public class ParserUtils {
 
         return result;
     }
+
+    public static <T> T parseXWWWFormUrlEncoded(String data, Class<T> clazz) {
+        T instance = getNewInstance(clazz);
+
+        String decoded = URLDecoder.decode(data, StandardCharsets.UTF_8);
+        String[] pairs = decoded.split("&");
+        for (String pair : pairs) {
+            String[] keyValue = pair.split("=");
+            if (keyValue.length == 2) {
+                String key = keyValue[0];
+                String value = keyValue[1];
+                try {
+                    Field field = clazz.getDeclaredField(key);
+                    field.setAccessible(true);
+                    field.set(instance, convertStringToFieldType(field, value));
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    // 필드를 찾을 수 없거나 접근할 수 없는 경우 예외 처리
+                    System.err.println("Error setting field: " + key);
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return instance;
+    }
+
+    private static <T> T getNewInstance(Class<T> clazz) {
+        T instance;
+        try {
+            instance = clazz.getDeclaredConstructor().newInstance();
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                 NoSuchMethodException e) {
+            throw new RuntimeException("Error creating new instance", e);
+        }
+        return instance;
+    }
+
 
     public static void populateObject(Object instance, Map<String, Object> jsonMap) {
         for (Map.Entry<String, Object> entry : jsonMap.entrySet()) {
@@ -130,5 +170,24 @@ public class ParserUtils {
         tokens.add(json.substring(start));
 
         return tokens.toArray(new String[0]);
+    }
+
+    private static Object convertStringToFieldType(Field field, String value) {
+        Class<?> type = field.getType();
+        if (type == String.class) {
+            return value;
+        } else if (type == int.class || type == Integer.class) {
+            return Integer.parseInt(value);
+        } else if (type == long.class || type == Long.class) {
+            return Long.parseLong(value);
+        } else if (type == boolean.class || type == Boolean.class) {
+            return Boolean.parseBoolean(value);
+        } else if (type == float.class || type == Float.class) {
+            return Float.parseFloat(value);
+        } else if (type == double.class || type == Double.class) {
+            return Double.parseDouble(value);
+        }
+        // 다른 타입에 대한 변환 로직 추가 가능
+        return value; // 기본적으로 문자열 반환
     }
 }

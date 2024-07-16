@@ -1,12 +1,10 @@
 package codesquad.http;
 
 import java.lang.reflect.InvocationTargetException;
-import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-import static codesquad.utils.ParserUtils.parseJson;
-import static codesquad.utils.ParserUtils.populateObject;
+import static codesquad.utils.ParserUtils.*;
 
 public class HttpBody {
     private byte[] bytes;
@@ -27,16 +25,6 @@ public class HttpBody {
 
     public byte[] getBytes() {
         return bytes;
-    }
-
-    public Parameters getParameters() {
-        if (contentType == MimeType.X_WWW_FORM_URLENCODED) {
-            String decode = URLDecoder.decode(new String(bytes));
-            return Parameters.of(decode);
-        }
-
-        // TODO contentType 처리
-        return null;
     }
 
     @Override
@@ -66,9 +54,12 @@ public class HttpBody {
             Map<String, Object> stringObjectMap = parseJson(data);
             populateObject(instance, stringObjectMap);
             return instance;
+        } else if (contentType == MimeType.X_WWW_FORM_URLENCODED) {
+            return parseXWWWFormUrlEncoded(data, clazz);
+        } else {
+            throw new UnsupportedOperationException("Content type not supported: " + contentType);
         }
 
-        throw new UnsupportedOperationException("Content type not supported: " + contentType);
     }
 
 
