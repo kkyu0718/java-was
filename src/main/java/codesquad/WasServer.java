@@ -130,6 +130,7 @@ public class WasServer {
                 "sa",
                 ""
         );
+        dbConfig.initializeDatabase();
 
         UserDbServiceSpec userDbService = new UserDbServiceJdbc(dbConfig);
         List<String> whitelist = List.of(

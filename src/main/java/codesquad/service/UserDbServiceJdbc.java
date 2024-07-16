@@ -13,7 +13,6 @@ public class UserDbServiceJdbc implements UserDbServiceSpec {
 
     public UserDbServiceJdbc(DbConfig dbConfig) {
         this.dbConfig = dbConfig;
-        dbConfig.initializeDatabase();
     }
 
     @Override
