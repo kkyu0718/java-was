@@ -44,7 +44,11 @@ public class UserAdapter implements Adapter {
         }
 
         userDbService.add(User.of(userId, password, name, email));
-        logger.debug(UserDb.print());
+
+        logger.debug("user list");
+        for (User user : userDbService.getUsers()) {
+            logger.debug(user.toString());
+        }
 
         return new HttpResponse.Builder(request, HttpStatus.FOUND)
                 .header("Location", SIGNUP_SUCESS_PAGE)
@@ -69,7 +73,7 @@ public class UserAdapter implements Adapter {
                     .build();
         }
 
-        User user = UserDb.get(userId);
+        User user = userDbService.getUser(userId);
         if (user.getPassword().equals(password)) {
             String sessionId = userSessionService.createSession(userId);
             logger.debug("로그인 성공 " + sessionId);
@@ -89,6 +93,4 @@ public class UserAdapter implements Adapter {
                     .build();
         }
     }
-
-
 }
