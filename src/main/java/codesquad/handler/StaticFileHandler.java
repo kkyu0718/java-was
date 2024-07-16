@@ -1,9 +1,11 @@
 package codesquad.handler;
 
 import codesquad.http.*;
+import codesquad.model.Post;
 import codesquad.model.User;
 import codesquad.reader.StaticFileReaderSpec;
 import codesquad.render.TemplateEngine;
+import codesquad.service.PostServiceSpec;
 import codesquad.service.UserDbServiceSpec;
 import codesquad.service.UserSessionService;
 import org.slf4j.Logger;
@@ -12,22 +14,23 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.*;
 
-import static codesquad.resource.StaticResourceFactory.GUEST_GREETING;
-import static codesquad.resource.StaticResourceFactory.getUserGreeting;
+import static codesquad.resource.StaticResourceFactory.*;
 
 public class StaticFileHandler implements HttpHandler {
     private static final Logger logger = LoggerFactory.getLogger(StaticFileHandler.class);
     private final StaticFileReaderSpec staticFileReader;
     private final UserSessionService userSessionService;
     private final UserDbServiceSpec userDbService;
+    private final PostServiceSpec postService;
 
     public StaticFileHandler(
             StaticFileReaderSpec staticFileReader,
             UserSessionService userSessionService,
-            UserDbServiceSpec userDbService) {
+            UserDbServiceSpec userDbService, PostServiceSpec postService) {
         this.staticFileReader = staticFileReader;
         this.userSessionService = userSessionService;
         this.userDbService = userDbService;
+        this.postService = postService;
     }
 
     @Override
@@ -50,11 +53,17 @@ public class StaticFileHandler implements HttpHandler {
             // 클라이언트에게 쿠키가 없거나 서버 세션에 존재하지 않는다면 GUEST
             if (cookie.isEmpty() || !userSessionService.isActiveSession(UUID.fromString(cookie.get().getValue()))) {
                 paramMap.put("GREETING", GUEST_GREETING);
+                paramMap.put("POSTS", NO_POSTS);
             } else {
                 // 아니라면 인증된 유저
                 String userId = userSessionService.getUserId(UUID.fromString(cookie.get().getValue()));
                 User userInfo = userDbService.getUser(userId);
+                List<Post> posts = postService.getPosts();
+
+                StringBuilder html = new StringBuilder();
+
                 paramMap.put("GREETING", getUserGreeting(userInfo.getName()));
+                paramMap.put("POSTS", generatePostsHtml(posts));
             }
         } else if (path.equals("/user/list/index.html")) {
             StringBuilder html = new StringBuilder();
@@ -72,6 +81,29 @@ public class StaticFileHandler implements HttpHandler {
         }
 
         return paramMap;
+    }
+
+    private String generatePostsHtml(List<Post> posts) {
+        StringBuilder html = new StringBuilder();
+        for (Post post : posts) {
+            User writer = userDbService.getUser(post.getUserId());
+            html.append("<div class=\"post\">")
+                    .append("<div class=\"post__account\">")
+                    .append("<img class=\"post__account__img\" src=\"./img/default_profile.png\"/>")
+                    .append("<p class=\"post__account__nickname\">").append(writer.getName()).append("</p>")
+                    .append("</div>")
+                    .append("<img class=\"post__img\" src=\"./img/default_post.png\"/>")
+                    .append("<div class=\"post__menu\">")
+                    .append("<ul class=\"post__menu__personal\">")
+                    .append("<li><button class=\"post__menu__btn\"><img src=\"./img/like.svg\"/></button></li>")
+                    .append("<li><button class=\"post__menu__btn\"><img src=\"./img/sendLink.svg\"/></button></li>")
+                    .append("</ul>")
+                    .append("<button class=\"post__menu__btn\"><img src=\"./img/bookMark.svg\"/></button>")
+                    .append("</div>")
+                    .append("<p class=\"post__article\" id=\"post-article\">").append(post.getContent()).append("</p>")
+                    .append("</div>");
+        }
+        return html.toString();
     }
 
     private String loadFile(String templatePath) {

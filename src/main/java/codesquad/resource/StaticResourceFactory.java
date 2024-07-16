@@ -14,6 +14,14 @@ public class StaticResourceFactory {
     public static String getUserGreeting(String userName) {
         return String.format("<li class=\"header__menu__item\">\n" +
                 "    <div>안녕하세요 %s</div>\n" +
+                "</li>" +
+                "<li class=\"header__menu__item\">\n" +
+                "    <a class=\"btn btn_ghost btn_size_s\" href=\"/article\">글쓰기</a>\n" +
                 "</li>", userName);
     }
+
+    public static String NO_POSTS = "<div class=\"post__no-posts\">\n" +
+            "<h1>텅~~!</h1>" +
+            "    <div>작성된 게시글이 없습니다.</div>\n" +
+            "</div>";
 }
