@@ -1,5 +1,6 @@
 package codesquad.handler;
 
+import codesquad.exception.NotFoundException;
 import codesquad.http.*;
 import codesquad.model.User;
 import codesquad.reader.StaticFileReaderSpec;
@@ -7,6 +8,8 @@ import codesquad.service.UserDbServiceMemory;
 import codesquad.service.UserSessionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
 
 import static codesquad.resource.StaticResourceFactory.GUEST_GREETING;
 import static org.junit.jupiter.api.Assertions.*;
@@ -47,6 +50,21 @@ public class StaticFileHandlerTest {
         // then
         assertEquals(HttpStatus.OK, response.getStatus());
         assertNotNull(response.getBody());
+    }
+
+    @Test
+    public void 주어진_정적파일이_존재하지_않을때_404에러를_던진다() {
+        // given
+        staticFileHandler = new StaticFileHandler(new StaticFileReaderSpec() {
+            @Override
+            public String readFileLines(String path) throws IOException {
+                throw new NotFoundException("Not found!");
+            }
+        }, userSessionService, userDbServiceMemory);
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/index.html", HttpVersion.HTTP11).build();
+
+        // when
+        assertThrows(NotFoundException.class, () -> staticFileHandler.handle(request));
     }
 
     @Test
