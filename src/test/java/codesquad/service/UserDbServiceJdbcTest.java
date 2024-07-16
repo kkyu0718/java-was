@@ -3,6 +3,7 @@ package codesquad.service;
 import codesquad.db.DbConfig;
 import codesquad.exception.NotFoundException;
 import codesquad.model.User;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,19 +16,27 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class UserDbServiceJdbcTest {
     private UserDbServiceJdbc userDbService;
+    private DbConfig dbConfig;
 
     @BeforeEach
     void setUp() throws SQLException {
-        DbConfig dbConfig = new DbConfig("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1", "sa", "");
+        dbConfig = new DbConfig("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1", "sa", "");
         userDbService = new UserDbServiceJdbc(dbConfig);
 
         // 테스트 데이터베이스 설정
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute("CREATE TABLE IF NOT EXISTS User (user_id VARCHAR(50) PRIMARY KEY, password VARCHAR(50), name VARCHAR(50), email VARCHAR(100))");
-            stmt.execute("DELETE FROM USER");
             stmt.execute("INSERT INTO USER VALUES ('user1', 'pass1', 'User One', 'user1@example.com')");
             stmt.execute("INSERT INTO USER VALUES ('user2', 'pass2', 'User Two', 'user2@example.com')");
+        }
+    }
+
+    @AfterEach
+    void tearDown() throws SQLException {
+        try (Connection conn = dbConfig.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("DROP TABLE IF EXISTS User");
         }
     }
 

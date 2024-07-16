@@ -9,6 +9,10 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -16,12 +20,20 @@ class UserAdapterTest {
     private UserAdapter userAdapter;
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws SQLException {
         DbConfig dbConfig = new DbConfig(
                 "jdbc:h2:~/h2db/test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE",
                 "sa",
                 ""
         );
+
+        // 테스트 데이터베이스 설정
+        try (Connection conn = dbConfig.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("CREATE TABLE IF NOT EXISTS User (user_id VARCHAR(50) PRIMARY KEY, password VARCHAR(50), name VARCHAR(50), email VARCHAR(100))");
+            stmt.execute("DELETE FROM USER");
+        }
+
         userAdapter = new UserAdapter(new UserDbServiceJdbc(dbConfig), new UserSessionService());
     }
 
