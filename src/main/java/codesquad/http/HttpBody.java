@@ -1,6 +1,12 @@
 package codesquad.http;
 
+import java.lang.reflect.InvocationTargetException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+
+import static codesquad.utils.ParserUtils.parseJson;
+import static codesquad.utils.ParserUtils.populateObject;
 
 public class HttpBody {
     private byte[] bytes;
@@ -29,16 +35,41 @@ public class HttpBody {
             return Parameters.of(decode);
         }
 
-        //TODO contentType 처리
+        // TODO contentType 처리
         return null;
     }
 
     @Override
     public String toString() {
-        return new String(bytes);
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     public boolean isEmpty() {
         return bytes.length == 0;
     }
+
+    public <T> T parse(Class<T> clazz) {
+        String jsonString = new String(bytes, StandardCharsets.UTF_8);
+        return parseByContentType(jsonString, contentType, clazz);
+    }
+
+    private <T> T parseByContentType(String data, MimeType contentType, Class<T> clazz) {
+        T instance;
+        try {
+            instance = clazz.getDeclaredConstructor().newInstance();
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                 NoSuchMethodException e) {
+            throw new RuntimeException("Error creating new instance", e);
+        }
+
+        if (contentType == MimeType.APPLICATION_JSON) {
+            Map<String, Object> stringObjectMap = parseJson(data);
+            populateObject(instance, stringObjectMap);
+            return instance;
+        }
+
+        throw new UnsupportedOperationException("Content type not supported: " + contentType);
+    }
+
+
 }
