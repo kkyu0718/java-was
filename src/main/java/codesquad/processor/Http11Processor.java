@@ -114,6 +114,9 @@ public class Http11Processor implements HttpProcessor {
     }
 
     private HttpHeaders parseHeaders(InputStream is) throws IOException {
+        String headerPattern = "^[\\w-]+:\\s*.*\\s*$"; // 정규 표현식 패턴
+
+
         HttpHeaders headers = new HttpHeaders();
         StringBuilder buffer = new StringBuilder();
         int ch;
@@ -127,6 +130,10 @@ public class Http11Processor implements HttpProcessor {
                         isEndOfHeaders = true;
                     } else {
                         String headerLine = buffer.toString().trim();
+                        //header-field   = field-name ":" OWS field-value OWS
+                        if (!headerLine.matches(headerPattern)) {
+                            throw new IllegalArgumentException("Invalid header field format: " + headerLine);
+                        }
                         int colonIndex = headerLine.indexOf(':');
                         if (colonIndex > 0) {
                             String key = headerLine.substring(0, colonIndex).trim();
