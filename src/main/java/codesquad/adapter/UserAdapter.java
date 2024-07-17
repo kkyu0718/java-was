@@ -44,7 +44,8 @@ public class UserAdapter implements Adapter {
             return new HttpResponse.Builder(request, HttpStatus.ILLEGAL_ARGUMENT)
                     .build();
         }
-
+        
+        logger.debug("user create : " + userId + " " + password + " " + name + " " + email);
         userDbService.add(User.of(userId, password, name, email));
 
         logger.debug("user list");

@@ -19,4 +19,16 @@ public class PostCreateDao {
     public String getContent() {
         return content;
     }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    @Override
+    public String toString() {
+        return "PostCreateDao{" +
+                "userId='" + userId + '\'' +
+                ", content='" + content + '\'' +
+                '}';
+    }
 }

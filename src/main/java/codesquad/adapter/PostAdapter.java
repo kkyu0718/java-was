@@ -26,7 +26,9 @@ public class PostAdapter implements Adapter {
         logger.debug("createPost start");
         HttpBody body = request.getBody();
         PostCreateDao dao = body.parse(PostCreateDao.class);
+        dao.setUserId(request.getHeader("userId"));
 
+        logger.debug("PostCreateDao : {}", dao);
         postService.createPost(dao);
         logger.debug("Post created successfully");
 
