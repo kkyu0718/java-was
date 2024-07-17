@@ -56,6 +56,6 @@ class PostAdapterTest {
         // Then
         assertEquals(HttpStatus.OK, response.getStatus());
         assertEquals(1, postService.getPosts().size());
-        assertEquals("Test content", postService.getPosts().get(0).getContent());
+        assertEquals("Test content", postService.getPosts().get(0).getPostContent());
     }
 }

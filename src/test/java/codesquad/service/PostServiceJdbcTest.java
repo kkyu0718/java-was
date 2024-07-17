@@ -60,7 +60,7 @@ class PostServiceJdbcTest {
         // then
         List<Post> posts = postServiceJdbc.getPosts();
         assertEquals(1, posts.size());
-        assertEquals("content1", posts.get(0).getContent());
+        assertEquals("content1", posts.get(0).getPostContent());
     }
 
     @Test
@@ -74,7 +74,7 @@ class PostServiceJdbcTest {
         // then
         Post post = postServiceJdbc.getPost(1L);
         assertNotNull(post);
-        assertEquals("content1", post.getContent());
+        assertEquals("content1", post.getPostContent());
     }
 
     @Test
@@ -95,8 +95,8 @@ class PostServiceJdbcTest {
         }
 
         assertEquals(2, posts.size());
-        assertEquals("First post", posts.get(0).getContent());
-        assertEquals("Second post", posts.get(1).getContent());
+        assertEquals("First post", posts.get(0).getPostContent());
+        assertEquals("Second post", posts.get(1).getPostContent());
     }
 
     @Test

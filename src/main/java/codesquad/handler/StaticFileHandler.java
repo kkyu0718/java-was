@@ -105,7 +105,7 @@ public class StaticFileHandler implements HttpHandler {
                     .append("</ul>")
                     .append("<button class=\"post__menu__btn\"><img src=\"./img/bookMark.svg\"/></button>")
                     .append("</div>")
-                    .append("<p class=\"post__article\" id=\"post-article\">").append(post.getContent()).append("</p>")
+                    .append("<p class=\"post__article\" id=\"post-article\">").append(post.getPostContent()).append("</p>")
                     .append("</div>");
         }
         return html.toString();
