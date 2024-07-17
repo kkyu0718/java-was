@@ -3,12 +3,14 @@ package codesquad.model;
 public class Post {
     private Long id;
     private String userId;
-    private String content;
+    private String postContent;
+    private String imageUrl;
 
-    public Post(Long id, String userId, String content) {
+    public Post(Long id, String userId, String postContent, String imageUrl) {
         this.id = id;
         this.userId = userId;
-        this.content = content;
+        this.postContent = postContent;
+        this.imageUrl = imageUrl;
     }
 
     public Long getId() {
@@ -19,8 +21,12 @@ public class Post {
         return userId;
     }
 
-    public String getContent() {
-        return content;
+    public String getPostContent() {
+        return postContent;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
     }
 
     @Override
@@ -28,7 +34,8 @@ public class Post {
         return "Post{" +
                 "id=" + id +
                 ", userId='" + userId + '\'' +
-                ", content='" + content + '\'' +
+                ", content='" + postContent + '\'' +
+                ", imageUrl='" + imageUrl + '\'' +
                 '}';
     }
 }

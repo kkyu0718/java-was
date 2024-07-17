@@ -51,11 +51,11 @@
             alert('사진을 업로드해주세요.');
             return;
         }
-        
+
         const formData = new FormData();
-        formData.append('content', content);
+        formData.append('postContent', content);
         if (imageFile) {
-            formData.append('image', imageFile);
+            formData.append('file', imageFile);
         }
 
         console.log('Sending POST request with data:', formData);

@@ -2,9 +2,9 @@ package codesquad.http;
 
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
-import static codesquad.utils.ParserUtils.parseJson;
-import static codesquad.utils.ParserUtils.parseXWWWFormUrlEncoded;
+import static codesquad.utils.ParserUtils.*;
 
 public class HttpBody {
     private byte[] bytes;
@@ -37,11 +37,10 @@ public class HttpBody {
     }
 
     public <T> T parse(Class<T> clazz) {
-        String jsonString = new String(bytes, StandardCharsets.UTF_8);
-        return parseByContentType(jsonString, contentType, clazz);
+        return parseByContentType(clazz);
     }
 
-    private <T> T parseByContentType(String data, MimeType contentType, Class<T> clazz) {
+    private <T> T parseByContentType(Class<T> clazz) {
         T instance;
         try {
             instance = clazz.getDeclaredConstructor().newInstance();
@@ -49,16 +48,17 @@ public class HttpBody {
                  NoSuchMethodException e) {
             throw new RuntimeException("Error creating new instance", e);
         }
-
         if (contentType == MimeType.APPLICATION_JSON) {
-            return parseJson(data, clazz);
+            return parseJson(new String(bytes, StandardCharsets.UTF_8), clazz);
         } else if (contentType == MimeType.X_WWW_FORM_URLENCODED) {
-            return parseXWWWFormUrlEncoded(data, clazz);
+            return parseXWWWFormUrlEncoded(new String(bytes, StandardCharsets.UTF_8), clazz);
+        } else if (contentType == MimeType.MULTIPART_FORM_DATA) {
+            Map<String, Object> stringObjectMap = parseMultiPartFormData(bytes, contentType.getBoundary());
+            populateObject(instance, stringObjectMap);
+            return instance;
         } else {
             throw new UnsupportedOperationException("Content type not supported: " + contentType);
         }
 
     }
-
-
 }

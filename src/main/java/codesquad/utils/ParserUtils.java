@@ -1,13 +1,14 @@
 package codesquad.utils;
 
+import codesquad.model.MultipartFile;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ParserUtils {
 
@@ -211,4 +212,88 @@ public class ParserUtils {
         // 다른 타입에 대한 변환 로직 추가 가능
         return value; // 기본적으로 문자열 반환
     }
+
+    public static Map<String, Object> parseMultiPartFormData(byte[] bytes, String boundary) {
+        Map<String, Object> resultMap = new HashMap<>();
+        List<byte[]> parts = splitBytesByBoundary(bytes, boundary);
+
+        for (byte[] part : parts) {
+            if (part.length == 0) continue;
+
+            int headerEndIndex = findHeaderEnd(part);
+            if (headerEndIndex == -1) continue;
+
+            byte[] headerBytes = Arrays.copyOfRange(part, 0, headerEndIndex);
+            byte[] bodyBytes = Arrays.copyOfRange(part, headerEndIndex + 4, part.length);
+
+            String headers = new String(headerBytes, StandardCharsets.UTF_8).trim();
+
+            // Content-Disposition 헤더를 추출하여 이름과 파일명을 파싱
+            Pattern contentDispositionPattern = Pattern.compile("Content-Disposition: form-data; name=\"(.*?)\"(; filename=\"(.*?)\")?");
+            Matcher matcher = contentDispositionPattern.matcher(headers);
+            if (matcher.find()) {
+                String name = matcher.group(1);
+                String fileName = matcher.group(3);
+
+                // Content-Type 헤더를 추출
+                Pattern contentTypePattern = Pattern.compile("Content-Type: (.*)");
+                Matcher contentTypeMatcher = contentTypePattern.matcher(headers);
+                String contentType = null;
+                if (contentTypeMatcher.find()) {
+                    contentType = contentTypeMatcher.group(1).trim();
+                }
+
+                if (fileName != null) {
+                    resultMap.put(name, new MultipartFile(fileName, contentType, bodyBytes));
+                } else {
+                    // 텍스트 데이터인 경우에만 String으로 변환
+                    resultMap.put(name, new String(bodyBytes, StandardCharsets.UTF_8).trim());
+                }
+            }
+        }
+
+        return resultMap;
+    }
+
+    private static List<byte[]> splitBytesByBoundary(byte[] bytes, String boundary) {
+        List<byte[]> parts = new ArrayList<>();
+        byte[] boundaryBytes = ("--" + boundary).getBytes(StandardCharsets.UTF_8);
+        int start = 0;
+        int end;
+
+        while ((end = findSequence(bytes, boundaryBytes, start)) != -1) {
+            if (start != end) {
+                parts.add(Arrays.copyOfRange(bytes, start, end));
+            }
+            start = end + boundaryBytes.length;
+        }
+
+        if (start < bytes.length) {
+            parts.add(Arrays.copyOfRange(bytes, start, bytes.length));
+        }
+
+        return parts;
+    }
+
+    private static int findSequence(byte[] source, byte[] sequence, int start) {
+        for (int i = start; i <= source.length - sequence.length; i++) {
+            boolean found = true;
+            for (int j = 0; j < sequence.length; j++) {
+                if (source[i + j] != sequence[j]) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static int findHeaderEnd(byte[] part) {
+        byte[] headerEnd = "\r\n\r\n".getBytes(StandardCharsets.UTF_8);
+        return findSequence(part, headerEnd, 0);
+    }
+
 }

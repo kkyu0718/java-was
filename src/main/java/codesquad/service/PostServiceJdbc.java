@@ -20,12 +20,13 @@ public class PostServiceJdbc implements PostServiceSpec {
     }
 
     public void createPost(PostCreateDao dao) {
-        String sql = "INSERT INTO Post (user_id, content) VALUES (?, ?)";
+        String sql = "INSERT INTO Post (user_id, content, image_url) VALUES (?, ?, ?)";
 
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, dao.getUserId());
             pstmt.setString(2, dao.getContent());
+            pstmt.setString(3, dao.getFile() != null ? dao.getFile().getFileName() : null);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new InternalServerError("Failed to create post" + e);
@@ -42,7 +43,8 @@ public class PostServiceJdbc implements PostServiceSpec {
                     return new Post(
                             rs.getLong("id"),
                             rs.getString("user_id"),
-                            rs.getString("content")
+                            rs.getString("content"),
+                            rs.getString("image_url")
                     );
                 }
             }
@@ -62,7 +64,8 @@ public class PostServiceJdbc implements PostServiceSpec {
                 posts.add(new Post(
                         rs.getLong("id"),
                         rs.getString("user_id"),
-                        rs.getString("content")
+                        rs.getString("content"),
+                        rs.getString("image_url")
                 ));
             }
         } catch (SQLException e) {

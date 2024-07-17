@@ -1,15 +1,21 @@
 package codesquad.model.dao;
 
+import codesquad.model.MultipartFile;
+
 public class PostCreateDao {
+    private String postContent;
+    private MultipartFile file;
     private String userId;
-    private String content;
+    private String imageUrl;
 
     public PostCreateDao() {
     }
 
-    public PostCreateDao(String userId, String content) {
+    public PostCreateDao(String userId, String content, MultipartFile file, String imageUrl) {
         this.userId = userId;
-        this.content = content;
+        this.postContent = content;
+        this.file = file;
+        this.imageUrl = imageUrl;
     }
 
     public String getUserId() {
@@ -17,18 +23,27 @@ public class PostCreateDao {
     }
 
     public String getContent() {
-        return content;
+        return postContent;
+    }
+
+    public MultipartFile getFile() {
+        return file;
     }
 
     public void setUserId(String userId) {
         this.userId = userId;
     }
 
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
     @Override
     public String toString() {
         return "PostCreateDao{" +
                 "userId='" + userId + '\'' +
-                ", content='" + content + '\'' +
+                ", content='" + postContent + '\'' +
+                ", file='" + (file != null ? file.getFileName() : "null") + '\'' +
                 '}';
     }
 }
