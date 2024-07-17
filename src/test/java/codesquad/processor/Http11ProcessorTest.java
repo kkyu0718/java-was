@@ -249,6 +249,34 @@ class Http11ProcessorTest {
     }
 
     @Test
+    void 시작라인O_헤더O_바디가_json으로_존재하는_경우_파싱하면_올바르게_파싱된다() throws IOException {
+        String body = "{\"content\":\"규원안녕\"}";
+        String requestString = "GET /path/to/resource HTTP/1.1" + LINE_SEPERATOR
+                + "Host: localhost:8080" + LINE_SEPERATOR
+                + "Connection: keep-alive" + LINE_SEPERATOR
+                + "Content-Length: " + body.getBytes().length + LINE_SEPERATOR
+                + "Content-Type: " + "application/json" + LINE_SEPERATOR
+                + LINE_SEPERATOR
+                + body + LINE_SEPERATOR;
+
+        BufferedReader reader = new BufferedReader(new StringReader(requestString));
+
+        HttpRequest request = processor.parseRequest(reader);
+        assertEquals(HttpMethod.GET, request.getMethod());
+        assertEquals("/path/to/resource", request.getPath());
+        assertEquals(HttpVersion.HTTP11, request.getHttpVersion());
+
+        assertNotNull(request);
+        assertEquals(4, request.getHeaders().size());
+        assertEquals("keep-alive", request.getHeaders().get("Connection"));
+        assertEquals("localhost:8080", request.getHeaders().get("Host"));
+        assertEquals(body.getBytes().length, Integer.parseInt(request.getHeaders().get(HttpHeaders.CONTENT_LENGTH)));
+        assertEquals(MimeType.APPLICATION_JSON.getMimeType(), request.getHeaders().get(HttpHeaders.CONTENT_TYPE));
+
+        assertFalse(request.getBody().isEmpty());
+    }
+
+    @Test
     public void 응답을_작성하면_올바르게_작성된다() throws IOException {
         // given
         HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/index.html", HttpVersion.HTTP11).build();

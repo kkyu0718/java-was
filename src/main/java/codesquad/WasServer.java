@@ -21,9 +21,8 @@ import codesquad.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -56,14 +55,14 @@ public class WasServer {
         executorService.execute(() -> {
             while (true) {
                 try (Socket clientSocket = serverSocket.accept();
-                     BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+                     InputStream is = clientSocket.getInputStream()) {
 
                     logger.debug("Client connected");
                     OutputStream clientOutput = clientSocket.getOutputStream();
                     HttpProcessor processor = new Http11Processor();
 
                     // 요청 파싱
-                    HttpRequest httpRequest = processor.parseRequest(br);
+                    HttpRequest httpRequest = processor.parseRequest(is);
                     logger.debug(httpRequest.toString());
 
                     // 요청 처리

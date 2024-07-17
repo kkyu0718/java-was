@@ -12,8 +12,10 @@ import java.util.Map;
 public class ParserUtils {
 
     public static <T> T parseJson(String json, Class<T> clazz) {
+        // UTF-8로 인코딩 변환
+        String utf8Json = new String(json.getBytes(), StandardCharsets.UTF_8);
         T instance = getNewInstance(clazz);
-        Map<String, Object> result = parseJsonRecursive(json);
+        Map<String, Object> result = parseJsonRecursive(utf8Json);
 
         populateObject(instance, result);
         return instance;
@@ -21,13 +23,21 @@ public class ParserUtils {
 
     private static Map<String, Object> parseJsonRecursive(String json) {
         Map<String, Object> result = new HashMap<>();
-        json = json.trim().substring(1, json.length() - 1); // Remove curly braces
+        json = json.trim();
+        if (json.startsWith("{") && json.endsWith("}")) {
+            json = json.substring(1, json.length() - 1); // Remove curly braces
+        }
+        if (json.isEmpty()) {
+            return result;
+        }
         String[] pairs = splitKeyValuePairs(json);
         for (String pair : pairs) {
             String[] keyValue = pair.split(":", 2);
-            String key = keyValue[0].trim().replaceAll("^\"|\"$", "");
-            Object value = parseValue(keyValue[1].trim());
-            result.put(key, value);
+            if (keyValue.length == 2) {
+                String key = keyValue[0].trim().replaceAll("^\"|\"$", "");
+                Object value = parseValue(keyValue[1].trim());
+                result.put(key, value);
+            }
         }
         return result;
     }
@@ -114,11 +124,14 @@ public class ParserUtils {
 
     private static Object parseValue(String json) {
         json = json.trim();
+        if (json.isEmpty()) {
+            return null;
+        }
         if (json.startsWith("{")) {
             return parseJsonRecursive(json);
         } else if (json.startsWith("[")) {
             return parseArray(json);
-        } else if (json.startsWith("\"")) {
+        } else if (json.startsWith("\"") && json.endsWith("\"")) {
             return json.substring(1, json.length() - 1); // Remove quotes
         } else if (json.equals("null")) {
             return null;
@@ -131,7 +144,8 @@ public class ParserUtils {
                 try {
                     return Double.parseDouble(json);
                 } catch (NumberFormatException ex) {
-                    throw new IllegalArgumentException("Unknown value: " + json);
+                    // If it's not a recognized format, return as is
+                    return json;
                 }
             }
         }

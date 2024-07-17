@@ -1,9 +1,12 @@
 package codesquad.handler;
 
+import codesquad.db.DbConfig;
 import codesquad.exception.NotFoundException;
 import codesquad.http.*;
 import codesquad.model.User;
 import codesquad.reader.StaticFileReaderSpec;
+import codesquad.service.PostServiceJdbc;
+import codesquad.service.PostServiceSpec;
 import codesquad.service.UserDbServiceMemory;
 import codesquad.service.UserSessionService;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +22,7 @@ public class StaticFileHandlerTest {
     private StaticFileReaderSpec staticFileReader;
     private UserSessionService userSessionService;
     private UserDbServiceMemory userDbServiceMemory;
+    private PostServiceSpec postService;
 
     @BeforeEach
     public void setUp() {
@@ -36,7 +40,8 @@ public class StaticFileHandlerTest {
         };
         userSessionService = new UserSessionService();
         userDbServiceMemory = new UserDbServiceMemory();
-        staticFileHandler = new StaticFileHandler(staticFileReader, userSessionService, userDbServiceMemory);
+        postService = new PostServiceJdbc(new DbConfig(null, null, null));
+        staticFileHandler = new StaticFileHandler(staticFileReader, userSessionService, userDbServiceMemory, postService);
     }
 
     @Test
@@ -60,7 +65,7 @@ public class StaticFileHandlerTest {
             public String readFileLines(String path) throws IOException {
                 throw new NotFoundException("Not found!");
             }
-        }, userSessionService, userDbServiceMemory);
+        }, userSessionService, userDbServiceMemory, postService);
         HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/index.html", HttpVersion.HTTP11).build();
 
         // when

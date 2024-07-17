@@ -51,6 +51,8 @@
             content: content
         };
 
+        console.log('Sending POST request with data:', postData);
+
         fetch('/posts/create', {
             method: 'POST',
             headers: {
@@ -59,8 +61,14 @@
             body: JSON.stringify(postData)
         })
             .then(response => {
-                window.location.href = '/'; // 성공 시 리다이렉트할 페이지
-                window.alert("글 작성 성공 ^^")
+                if (response.ok) {
+                    window.location.href = '/'; // 성공 시 리다이렉트할 페이지
+                    window.alert("글 작성 성공 ^^");
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(text);
+                    });
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
