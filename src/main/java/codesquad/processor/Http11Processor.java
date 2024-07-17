@@ -162,22 +162,14 @@ public class Http11Processor implements HttpProcessor {
 
         MimeType mimeType = MimeType.fromMimeType(contentType);
 
-        char[] buffer = new char[contentLength];
-        int totalRead = 0;
-        while (totalRead < contentLength) {
-            int read = br.read(buffer, totalRead, contentLength - totalRead);
-            if (read == -1) {
-                break;
-            }
-            totalRead += read;
+        char[] bodyChars = new char[contentLength];
+        int read = br.read(bodyChars, 0, contentLength);
+
+        if (read != contentLength) {
+            throw new IOException("Expected " + contentLength + " bytes but read " + read + " bytes.");
         }
 
-        if (totalRead != contentLength) {
-            throw new IOException("Expected " + contentLength + " bytes but read " + totalRead + " bytes.");
-        }
-
-        byte[] bodyBytes = new String(buffer).getBytes(StandardCharsets.UTF_8);
-        return HttpBody.of(bodyBytes, mimeType);
+        return HttpBody.of(new String(bodyChars).getBytes(StandardCharsets.US_ASCII), mimeType);
     }
 
     private String[] parseStartLine(BufferedReader br) throws IOException {
