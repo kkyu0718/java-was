@@ -53,7 +53,7 @@ public class StaticFileHandler implements HttpHandler {
             // 클라이언트에게 쿠키가 없거나 서버 세션에 존재하지 않는다면 GUEST
             if (cookie.isEmpty() || !userSessionService.isActiveSession(UUID.fromString(cookie.get().getValue()))) {
                 paramMap.put("GREETING", GUEST_GREETING);
-                paramMap.put("POSTS", NO_POSTS);
+                paramMap.put("POSTS", NEED_LOGIN);
             } else {
                 // 아니라면 인증된 유저
                 String userId = userSessionService.getUserId(UUID.fromString(cookie.get().getValue()));
@@ -85,6 +85,11 @@ public class StaticFileHandler implements HttpHandler {
 
     private String generatePostsHtml(List<Post> posts) {
         StringBuilder html = new StringBuilder();
+
+        if (posts.isEmpty()) {
+            return NO_POSTS;
+        }
+
         for (Post post : posts) {
             User writer = userDbService.getUser(post.getUserId());
             html.append("<div class=\"post\">")

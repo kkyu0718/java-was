@@ -24,4 +24,9 @@ public class StaticResourceFactory {
             "<h1>텅~~!</h1>" +
             "    <div>작성된 게시글이 없습니다.</div>\n" +
             "</div>";
+
+    public static String NEED_LOGIN = "<div class=\"post__no-posts\">\n" +
+            "<h1>로그인이 필요합니다.</h1>" +
+            "    <div>로그인 후 이용해주세요.</div>\n" +
+            "</div>";
 }
