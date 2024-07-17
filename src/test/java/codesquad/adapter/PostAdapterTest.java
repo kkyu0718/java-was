@@ -26,10 +26,10 @@ class PostAdapterTest {
 
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement()) {
-            stmt.execute("CREATE TABLE IF NOT EXISTS User (id VARCHAR(50) PRIMARY KEY, password VARCHAR(50), name VARCHAR(50), email VARCHAR(100))");
+            stmt.execute("CREATE TABLE IF NOT EXISTS `User` (id VARCHAR(50) PRIMARY KEY, password VARCHAR(50), name VARCHAR(50), email VARCHAR(100))");
             stmt.execute("CREATE TABLE IF NOT EXISTS Post (id INT AUTO_INCREMENT PRIMARY KEY, user_id VARCHAR(50), content VARCHAR(100))");
-            stmt.execute("ALTER TABLE Post ADD FOREIGN KEY (user_id) REFERENCES User(id)");
-            stmt.execute("INSERT INTO User VALUES ('user1', 'pass1', 'User One', 'user1@example.com')");
+            stmt.execute("ALTER TABLE Post ADD FOREIGN KEY (user_id) REFERENCES `User`(id)");
+            stmt.execute("INSERT INTO `User` VALUES ('user1', 'pass1', 'User One', 'user1@example.com')");
         }
     }
 
@@ -38,7 +38,7 @@ class PostAdapterTest {
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute("DROP TABLE IF EXISTS Post");
-            stmt.execute("DROP TABLE IF EXISTS User");
+            stmt.execute("DROP TABLE IF EXISTS `User`");
         }
     }
 

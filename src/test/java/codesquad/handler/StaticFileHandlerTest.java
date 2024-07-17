@@ -38,9 +38,12 @@ public class StaticFileHandlerTest {
                 }
             }
         };
+        DbConfig dbConfig = new DbConfig("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1", "sa", "");
+
+
         userSessionService = new UserSessionService();
         userDbServiceMemory = new UserDbServiceMemory();
-        postService = new PostServiceJdbc(new DbConfig(null, null, null));
+        postService = new PostServiceJdbc(dbConfig);
         staticFileHandler = new StaticFileHandler(staticFileReader, userSessionService, userDbServiceMemory, postService);
     }
 

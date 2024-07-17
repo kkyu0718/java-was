@@ -5,6 +5,7 @@ import codesquad.db.UserSession;
 import codesquad.http.*;
 import codesquad.service.UserDbServiceJdbc;
 import codesquad.service.UserSessionService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,14 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserAdapterTest {
     private UserAdapter userAdapter;
+    private DbConfig dbConfig;
 
     @BeforeEach
     public void setUp() throws SQLException {
-        DbConfig dbConfig = new DbConfig(
-                "jdbc:h2:~/h2db/test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE",
-                "sa",
-                ""
-        );
+        dbConfig = new DbConfig("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1", "sa", "");
+
 
         // 테스트 데이터베이스 설정
         try (Connection conn = dbConfig.getConnection();
@@ -35,6 +34,14 @@ class UserAdapterTest {
         }
 
         userAdapter = new UserAdapter(new UserDbServiceJdbc(dbConfig), new UserSessionService());
+    }
+
+    @AfterEach
+    public void tearDown() throws SQLException {
+        try (Connection conn = dbConfig.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("DROP TABLE IF EXISTS `User`");
+        }
     }
 
     @Test

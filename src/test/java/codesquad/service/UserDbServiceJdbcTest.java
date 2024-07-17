@@ -26,9 +26,9 @@ class UserDbServiceJdbcTest {
         // 테스트 데이터베이스 설정
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement()) {
-            stmt.execute("CREATE TABLE IF NOT EXISTS User (user_id VARCHAR(50) PRIMARY KEY, password VARCHAR(50), name VARCHAR(50), email VARCHAR(100))");
-            stmt.execute("INSERT INTO USER VALUES ('user1', 'pass1', 'User One', 'user1@example.com')");
-            stmt.execute("INSERT INTO USER VALUES ('user2', 'pass2', 'User Two', 'user2@example.com')");
+            stmt.execute("CREATE TABLE IF NOT EXISTS `User` (user_id VARCHAR(50) PRIMARY KEY, password VARCHAR(50), name VARCHAR(50), email VARCHAR(100))");
+            stmt.execute("INSERT INTO `USER` VALUES ('user1', 'pass1', 'User One', 'user1@example.com')");
+            stmt.execute("INSERT INTO `USER` VALUES ('user2', 'pass2', 'User Two', 'user2@example.com')");
         }
     }
 
