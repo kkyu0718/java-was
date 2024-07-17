@@ -1,6 +1,7 @@
 package codesquad.service;
 
 import codesquad.db.DbConfig;
+import codesquad.exception.InternalServerError;
 import codesquad.exception.NotFoundException;
 import codesquad.model.User;
 
@@ -17,7 +18,7 @@ public class UserDbServiceJdbc implements UserDbServiceSpec {
 
     @Override
     public User getUser(String userId) {
-        String sql = "SELECT * FROM USER WHERE user_id = ?";
+        String sql = "SELECT * FROM `USER` WHERE user_id = ?";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, userId);
@@ -39,7 +40,7 @@ public class UserDbServiceJdbc implements UserDbServiceSpec {
 
     @Override
     public List<User> getUsers() {
-        String sql = "SELECT * FROM USER";
+        String sql = "SELECT * FROM `USER`";
         List<User> users = new ArrayList<>();
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement();
@@ -60,7 +61,7 @@ public class UserDbServiceJdbc implements UserDbServiceSpec {
 
     @Override
     public boolean exists(String userId) {
-        String sql = "SELECT COUNT(*) FROM USER WHERE user_id = ?";
+        String sql = "SELECT COUNT(*) FROM `USER` WHERE user_id = ?";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, userId);
@@ -77,7 +78,7 @@ public class UserDbServiceJdbc implements UserDbServiceSpec {
 
     @Override
     public void add(User user) {
-        String sql = "INSERT INTO USER (user_id, password, name, email) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO `USER` (user_id, password, name, email) VALUES (?, ?, ?, ?)";
         try (Connection conn = dbConfig.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, user.getUserId());
@@ -86,7 +87,7 @@ public class UserDbServiceJdbc implements UserDbServiceSpec {
             pstmt.setString(4, user.getEmail());
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to add user", e);
+            throw new InternalServerError("Failed to add user" + e);
         }
     }
 }
