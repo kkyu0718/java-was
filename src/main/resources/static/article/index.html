@@ -8,22 +8,10 @@
 </head>
 <body>
 <div class="container">
-    <header class="header">
-        <a href="/main"><img src="../img/signiture.svg"/></a>
-        <ul class="header__menu">
-            <li class="header__menu__item">
-                <a class="btn btn_contained btn_size_s" href="/article">글쓰기</a>
-            </li>
-            <li class="header__menu__item">
-                <button id="logout-btn" class="btn btn_ghost btn_size_s">
-                    로그아웃
-                </button>
-            </li>
-        </ul>
-    </header>
+    <!-- 헤더 부분은 그대로 유지 -->
     <div class="page">
         <h2 class="page-title">게시글 작성</h2>
-        <form class="form">
+        <form class="form" enctype="multipart/form-data">
             <div class="textfield textfield_size_m">
                 <p class="title_textfield">내용</p>
                 <textarea
@@ -32,6 +20,10 @@
                         placeholder="글의 내용을 입력하세요"
                         autocomplete="username"
                 ></textarea>
+            </div>
+            <div class="textfield textfield_size_m">
+                <p class="title_textfield">사진</p>
+                <input type="file" id="post-image" accept="image/*">
             </div>
             <button
                     id="registration-btn"
@@ -47,18 +39,30 @@
 <script>
     document.getElementById('registration-btn').addEventListener('click', function () {
         const content = document.getElementById('post-content').value;
-        const postData = {
-            content: content
-        };
+        const imageFile = document.getElementById('post-image').files[0];
 
-        console.log('Sending POST request with data:', postData);
+        // 내용과 이미지 유효성 검사
+        if (!content.trim()) {
+            alert('글 내용을 입력해주세요.');
+            return;
+        }
+
+        if (!imageFile) {
+            alert('사진을 업로드해주세요.');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('content', content);
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+
+        console.log('Sending POST request with data:', formData);
 
         fetch('/posts/create', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(postData)
+            body: formData  // FormData 객체를 직접 전송
         })
             .then(response => {
                 if (response.ok) {
