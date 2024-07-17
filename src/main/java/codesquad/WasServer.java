@@ -40,13 +40,14 @@ public class WasServer {
     private final List<HttpHandler> handlers;
     private final ExecutorService executorService;
     private final UserSessionService userSessionService;
+    private final DbConfig dbConfig;
 
-
-    public WasServer(int port) throws IOException {
+    public WasServer(int port, DbConfig dbConfig) throws IOException {
         this.serverSocket = new ServerSocket(port);
         this.userSessionService = new UserSessionService();
-        this.handlers = initializeHandlers();
         this.executorService = Executors.newFixedThreadPool(MAX_THREAD_POOL_SIZE);
+        this.dbConfig = dbConfig;
+        this.handlers = initializeHandlers();
 
         logger.debug("Listening for connection on port {} ....", port);
     }
@@ -69,8 +70,9 @@ public class WasServer {
                     HttpResponse httpResponse = handleRequest(httpRequest);
                     processor.writeResponse(clientOutput, httpResponse);
 
-                } catch (IOException ex) {
-                    logger.error("Server accept failed", ex);
+                } catch (Exception ex) {
+                    logger.error("Server accept failed");
+                    ex.printStackTrace();
                 }
             }
         });
@@ -124,12 +126,11 @@ public class WasServer {
     }
 
     private List<HttpHandler> initializeHandlers() {
-        DbConfig dbConfig = new DbConfig(
-                "jdbc:h2:~/h2db/test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=TRUE",
-                "sa",
-                ""
-        );
-        dbConfig.initializeDatabase();
+//        DbConfig dbConfig = new DbConfig(
+//                "jdbc:h2:~/h2db/test;DB_CLOSE_DELAY=-1",
+//                "sa",
+//                ""
+//        );
 
         UserDbServiceSpec userDbService = new UserDbServiceJdbc(dbConfig);
         List<String> whitelist = List.of(
