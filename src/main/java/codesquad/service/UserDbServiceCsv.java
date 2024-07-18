@@ -15,7 +15,7 @@ import java.util.List;
 
 public class UserDbServiceCsv implements UserDbServiceSpec {
     private static final Logger logger = org.slf4j.LoggerFactory.getLogger(UserDbServiceCsv.class);
-    private static final String CSV_FILE_PATH = System.getProperty("user.home")
+    private String csvFilePath = System.getProperty("user.home")
             + File.separator
             + "database"
             + File.separator
@@ -27,7 +27,7 @@ public class UserDbServiceCsv implements UserDbServiceSpec {
     }
 
     private void initializeCsvFileIfNotExists() {
-        Path path = Paths.get(CSV_FILE_PATH);
+        Path path = Paths.get(csvFilePath);
         if (!Files.exists(path)) {
             try {
                 Files.write(path, CSV_HEADER.getBytes());
@@ -39,7 +39,7 @@ public class UserDbServiceCsv implements UserDbServiceSpec {
 
     @Override
     public User getUser(String userId) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(csvFilePath))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] values = line.split(",");
@@ -56,7 +56,7 @@ public class UserDbServiceCsv implements UserDbServiceSpec {
     @Override
     public List<User> getUsers() {
         List<User> users = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(csvFilePath))) {
             String line;
             reader.readLine(); // Skip header
             while ((line = reader.readLine()) != null) {
@@ -71,7 +71,7 @@ public class UserDbServiceCsv implements UserDbServiceSpec {
 
     @Override
     public boolean exists(String userId) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(csvFilePath))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] values = line.split(",");
@@ -87,7 +87,7 @@ public class UserDbServiceCsv implements UserDbServiceSpec {
 
     @Override
     public void add(User user) {
-        try (FileWriter writer = new FileWriter(CSV_FILE_PATH, true)) {
+        try (FileWriter writer = new FileWriter(csvFilePath, true)) {
             String userLine = String.format("%s,%s,%s,%s%n",
                     user.getUserId(), user.getPassword(), user.getName(), user.getEmail());
             writer.append(userLine);
@@ -101,7 +101,7 @@ public class UserDbServiceCsv implements UserDbServiceSpec {
     // Helper method to update or delete users
     private void updateCsvFile(List<String> lines) {
         try {
-            Files.write(Paths.get(CSV_FILE_PATH), lines);
+            Files.write(Paths.get(csvFilePath), lines);
         } catch (IOException e) {
             throw new InternalServerError("Failed to update CSV file: " + e.getMessage());
         }
