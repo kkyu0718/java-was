@@ -1,7 +1,6 @@
 package codesquad.handler;
 
 import codesquad.db.DbConfig;
-import codesquad.exception.NotFoundException;
 import codesquad.http.*;
 import codesquad.model.User;
 import codesquad.reader.StaticFileReaderSpec;
@@ -13,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import static codesquad.resource.StaticResourceFactory.GUEST_GREETING;
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,14 +37,33 @@ public class StaticFileHandlerTest {
                     return "<html><body>File not found</body></html>";
                 }
             }
+
+            @Override
+            public boolean checkExistWithPrefix(String path) {
+                return path.equals("/index.html") || path.equals("/user/list/index.html");
+            }
+
+            @Override
+            public String readFileLinesWithPrefix(String path) throws IOException {
+                return readFileLines(path);
+            }
+
+            @Override
+            public byte[] readFileBytesWithPrefix(String path) throws IOException {
+                return readFileLines(path).getBytes();
+            }
+
+            @Override
+            public InputStream getResourceAsStream(String path) throws IOException {
+                return null;
+            }
         };
+
         DbConfig dbConfig = new DbConfig("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1", "sa", "");
-
-
         userSessionService = new UserSessionService();
         userDbServiceMemory = new UserDbServiceMemory();
         postService = new PostServiceJdbc(dbConfig);
-        staticFileHandler = new StaticFileHandler(staticFileReader, userSessionService, userDbServiceMemory, postService);
+        staticFileHandler = new StaticFileHandler(userSessionService, userDbServiceMemory, postService, staticFileReader);
     }
 
     @Test
@@ -63,16 +82,13 @@ public class StaticFileHandlerTest {
     @Test
     public void 주어진_정적파일이_존재하지_않을때_404에러를_던진다() {
         // given
-        staticFileHandler = new StaticFileHandler(new StaticFileReaderSpec() {
-            @Override
-            public String readFileLines(String path) throws IOException {
-                throw new NotFoundException("Not found!");
-            }
-        }, userSessionService, userDbServiceMemory, postService);
-        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/index.html", HttpVersion.HTTP11).build();
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/nonexistent.html", HttpVersion.HTTP11).build();
 
         // when
-        assertThrows(NotFoundException.class, () -> staticFileHandler.handle(request));
+        HttpResponse response = staticFileHandler.handle(request);
+
+        // then
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatus());
     }
 
     @Test

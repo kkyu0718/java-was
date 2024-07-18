@@ -36,7 +36,7 @@ class UserDbServiceJdbcTest {
     void tearDown() throws SQLException {
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement()) {
-            stmt.execute("DROP TABLE IF EXISTS User");
+            stmt.execute("DROP TABLE IF EXISTS `User`");
         }
     }
 
