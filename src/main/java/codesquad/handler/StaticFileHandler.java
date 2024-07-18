@@ -1,6 +1,7 @@
 package codesquad.handler;
 
 import codesquad.exception.InternalServerError;
+import codesquad.exception.NotFoundException;
 import codesquad.http.*;
 import codesquad.model.Post;
 import codesquad.model.User;
@@ -19,16 +20,17 @@ import static codesquad.resource.StaticResourceFactory.*;
 
 public class StaticFileHandler implements HttpHandler {
     private static final Logger logger = LoggerFactory.getLogger(StaticFileHandler.class);
-    private final StaticFileReaderSpec staticFileReader;
+    private final List<StaticFileReaderSpec> staticFileReaders;
     private final UserSessionService userSessionService;
     private final UserDbServiceSpec userDbService;
     private final PostServiceSpec postService;
 
+
     public StaticFileHandler(
-            StaticFileReaderSpec staticFileReader,
             UserSessionService userSessionService,
-            UserDbServiceSpec userDbService, PostServiceSpec postService) {
-        this.staticFileReader = staticFileReader;
+            UserDbServiceSpec userDbService,
+            PostServiceSpec postService, StaticFileReaderSpec... staticFileReaders) {
+        this.staticFileReaders = List.of(staticFileReaders);
         this.userSessionService = userSessionService;
         this.userDbService = userDbService;
         this.postService = postService;
@@ -45,7 +47,6 @@ public class StaticFileHandler implements HttpHandler {
             return createDynamicResponse(request, template, paramMap);
         }
 
-
         byte[] bytes = loadFileBytes(path);
         return new HttpResponse.Builder(request, HttpStatus.OK)
                 .body(HttpBody.of(bytes, MimeType.fromExt(request.getExt())))
@@ -56,11 +57,18 @@ public class StaticFileHandler implements HttpHandler {
 
     private byte[] loadFileBytes(String path) {
         try {
-            return staticFileReader.readFileBytes(path);
+            // 시스템 홈 경로와 static 폴더 경로 모두 탐색
+            for (StaticFileReaderSpec reader : staticFileReaders) {
+                if (reader.checkExistWithPrefix(path)) {
+                    return reader.readFileBytesWithPrefix(path);
+                }
+            }
         } catch (IOException ex) {
             ex.printStackTrace();
             throw new InternalServerError("Error loading file " + path);
         }
+
+        throw new NotFoundException("File not found: " + path);
     }
 
     private Map<String, String> createParamMap(HttpRequest request) {
@@ -79,8 +87,6 @@ public class StaticFileHandler implements HttpHandler {
                 String userId = userSessionService.getUserId(UUID.fromString(cookie.get().getValue()));
                 User userInfo = userDbService.getUser(userId);
                 List<Post> posts = postService.getPosts();
-
-                StringBuilder html = new StringBuilder();
 
                 paramMap.put("GREETING", getUserGreeting(userInfo.getName()));
                 paramMap.put("POSTS", generatePostsHtml(posts));
@@ -117,7 +123,7 @@ public class StaticFileHandler implements HttpHandler {
                     .append("<img class=\"post__account__img\" src=\"./img/default_profile.png\"/>")
                     .append("<p class=\"post__account__nickname\">").append(writer.getName()).append("</p>")
                     .append("</div>")
-                    .append("<img class=\"post__img\" src=").append("\"").append("./img/uploads" + post.getImageUrl()).append("\"").append("/>")
+                    .append("<img class=\"post__img\" src=").append("\"").append(post.getImageUrl()).append("\"").append("/>")
                     .append("<div class=\"post__menu\">")
                     .append("<ul class=\"post__menu__personal\">")
                     .append("<li><button class=\"post__menu__btn\"><img src=\"./img/like.svg\"/></button></li>")
@@ -131,12 +137,22 @@ public class StaticFileHandler implements HttpHandler {
         return html.toString();
     }
 
-    private String loadFile(String templatePath) {
+    private String loadFile(String path) {
         try {
-            return staticFileReader.readFileLines(templatePath);
-        } catch (IOException e) {
-            throw new RuntimeException("Error loading file " + templatePath, e);
+            // 시스템 홈 경로와 static 폴더 경로 모두 탐색
+            for (StaticFileReaderSpec reader : staticFileReaders) {
+                logger.debug("reader: {}", reader.getClass().getName());
+                if (reader.checkExistWithPrefix(path)) {
+                    logger.debug("reader.checkExist {}", reader.checkExistWithPrefix(path));
+                    return reader.readFileLinesWithPrefix(path);
+                }
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            throw new InternalServerError("Error loading file " + path);
         }
+
+        throw new NotFoundException("File not found: " + path);
     }
 
     private HttpResponse createDynamicResponse(HttpRequest request, String template, Map<String, String> paramMap) {

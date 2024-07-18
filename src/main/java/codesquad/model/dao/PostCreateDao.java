@@ -30,6 +30,10 @@ public class PostCreateDao {
         return file;
     }
 
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
     public void setUserId(String userId) {
         this.userId = userId;
     }
@@ -43,6 +47,7 @@ public class PostCreateDao {
         return "PostCreateDao{" +
                 "userId='" + userId + '\'' +
                 ", content='" + postContent + '\'' +
+                ", image_url='" + imageUrl + '\'' +
                 ", file='" + (file != null ? file.getFileName() : "null") + '\'' +
                 '}';
     }

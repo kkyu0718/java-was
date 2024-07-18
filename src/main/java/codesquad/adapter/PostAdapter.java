@@ -18,8 +18,8 @@ import java.util.UUID;
 
 public class PostAdapter implements Adapter {
     private static final Logger logger = LoggerFactory.getLogger(PostAdapter.class);
-
-    private static final String UPLOAD_DIR = "static/img/uploads";
+    private static final String STATIC_DIR = "/static";
+    private static final String UPLOAD_DIR = System.getProperty("user.home") + File.separator + "uploads";
     private PostServiceSpec postService;
 
     public PostAdapter(PostServiceSpec postService) {
@@ -30,7 +30,9 @@ public class PostAdapter implements Adapter {
     private void createUploadDir() {
         File uploadDir = new File(UPLOAD_DIR);
         if (!uploadDir.exists()) {
-            uploadDir.mkdirs();
+            if (!uploadDir.mkdirs()) {
+                logger.error("Failed to create upload directory");
+            }
         }
     }
 
@@ -50,6 +52,7 @@ public class PostAdapter implements Adapter {
         if (dao.getFile() != null) {
             String savedFilePath = saveFileToLocalResource(dao.getFile());
             dao.setImageUrl(savedFilePath);  // 저장된 파일 경로를 DAO에 설정
+            logger.debug("savedFilePath : {}", savedFilePath);
         }
 
         logger.debug("PostCreateDao : {}", dao);
@@ -70,7 +73,7 @@ public class PostAdapter implements Adapter {
         }
 
         logger.debug("File saved at: {}", targetFile.getAbsolutePath());
-        return uniqueFileName;
+        return "/uploads/" + uniqueFileName;
     }
 
     private void saveFileToLocalResource(File file) throws IOException {
@@ -86,4 +89,6 @@ public class PostAdapter implements Adapter {
 
         logger.debug("File saved at: {}", targetFile.getAbsolutePath());
     }
+
+
 }

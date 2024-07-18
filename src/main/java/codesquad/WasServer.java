@@ -17,6 +17,7 @@ import codesquad.http.HttpStatus;
 import codesquad.processor.Http11Processor;
 import codesquad.processor.HttpProcessor;
 import codesquad.reader.StaticFileReader;
+import codesquad.reader.SystemFileReader;
 import codesquad.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,7 +149,7 @@ public class WasServer {
         PostAdapter postAdapter = new PostAdapter(postService);
 
         return List.of(
-                new StaticFileHandler(new StaticFileReader(), userSessionService, userDbService, postService),
+                new StaticFileHandler(userSessionService, userDbService, postService, new StaticFileReader(), new SystemFileReader()),
                 new RedirectStaticFileHandler(whitelist),
                 new DynamicHandler(List.of(userAdapter, postAdapter))
         );

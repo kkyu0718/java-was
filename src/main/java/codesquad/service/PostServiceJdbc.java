@@ -26,7 +26,7 @@ public class PostServiceJdbc implements PostServiceSpec {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, dao.getUserId());
             pstmt.setString(2, dao.getContent());
-            pstmt.setString(3, dao.getFile() != null ? dao.getFile().getFileName() : null);
+            pstmt.setString(3, dao.getImageUrl());
             pstmt.executeUpdate();
         } catch (SQLException e) {
             throw new InternalServerError("Failed to create post" + e);
