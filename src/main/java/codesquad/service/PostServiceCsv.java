@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class PostServiceCsv implements PostServiceSpec {
@@ -83,6 +84,9 @@ public class PostServiceCsv implements PostServiceSpec {
         } catch (IOException e) {
             throw new InternalServerError("Failed to read CSV file: " + e.getMessage());
         }
+
+        // 역순으로 반환
+        Collections.reverse(posts); // Reverse the list to show the most recent posts first
         return posts;
     }
 
