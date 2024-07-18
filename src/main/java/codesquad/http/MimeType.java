@@ -13,7 +13,9 @@ public enum MimeType {
     NONE(null, null),
     TEXT_PLAIN("text", "text/plain"),
     APPLICATION_JSON("json", "application/json"),
-    MULTIPART_FORM_DATA(null, "multipart/form-data");
+    MULTIPART_FORM_DATA(null, "multipart/form-data"),
+    GIF("gif", "image/gif"),
+    ;
     private String ext;
     private String mimeType;
     private String boundary;
