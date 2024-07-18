@@ -126,7 +126,8 @@ public class WasServer {
     }
 
     private List<HttpHandler> initializeHandlers() {
-        UserDbServiceSpec userDbService = new UserDbServiceJdbc(dbConfig);
+        UserDbServiceSpec userDbService = new UserDbServiceCsv();
+//        UserDbServiceSpec userDbService = new UserDbServiceJdbc(dbConfig);
         List<String> whitelist = List.of(
                 "/",
                 "/registration",
