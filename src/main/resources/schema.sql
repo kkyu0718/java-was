@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS Comment (
                                        post_id BIGINT NOT NULL,
                                        user_id VARCHAR(20) NOT NULL,
     content TEXT NOT NULL,
+    image_url VARCHAR(200) NOT NULL,
     FOREIGN KEY (post_id) REFERENCES Post(id),
     FOREIGN KEY (user_id) REFERENCES `User`(user_id)
     );
