@@ -86,6 +86,7 @@ public class WasServer {
             }
         }
         // 핸들러를 찾지 못한 경우 NOT FOUND 응답
+        logger.debug("No handler found for request: {}", httpRequest.getPath());
         return new HttpResponse.Builder(httpRequest, HttpStatus.FOUND)
                 .redirect("/exception/404.html")
                 .build();
@@ -138,7 +139,8 @@ public class WasServer {
                 "/user/list"
         );
 
-        PostServiceSpec postService = new PostServiceJdbc(dbConfig);
+        PostServiceSpec postService = new PostServiceCsv();
+//        PostServiceSpec postService = new PostServiceJdbc(dbConfig);
 
         UserAdapter userAdapter = new UserAdapter(userDbService, userSessionService);
         PostAdapter postAdapter = new PostAdapter(postService);
