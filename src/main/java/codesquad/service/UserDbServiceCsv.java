@@ -11,7 +11,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class UserDbServiceCsv implements UserDbServiceSpec {
     private static final Logger logger = org.slf4j.LoggerFactory.getLogger(UserDbServiceCsv.class);
@@ -22,8 +24,11 @@ public class UserDbServiceCsv implements UserDbServiceSpec {
             + "users.csv";
     private static final String CSV_HEADER = "user_id,password,name,email" + StringUtils.LINE_SEPERATOR;
 
+    private final Map<String, Long> userIdToPositionIndex = new HashMap<>();
+
     public UserDbServiceCsv() {
         initializeCsvFileIfNotExists();
+        buildIndex();
     }
 
     private void initializeCsvFileIfNotExists() {
@@ -37,20 +42,36 @@ public class UserDbServiceCsv implements UserDbServiceSpec {
         }
     }
 
+    private void buildIndex() {
+        try (RandomAccessFile file = new RandomAccessFile(CSV_FILE_PATH, "r")) {
+            String line;
+            long position = 0;
+            file.readLine(); // Skip header
+            while ((line = file.readLine()) != null) {
+                String[] values = line.split(",");
+                userIdToPositionIndex.put(values[0], position);
+                position = file.getFilePointer();
+            }
+        } catch (IOException e) {
+            throw new InternalServerError("Failed to build index: " + e.getMessage());
+        }
+    }
+
     @Override
     public User getUser(String userId) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] values = line.split(",");
-                if (values[0].equals(userId)) {
-                    return User.of(values[0], values[1], values[2], values[3]);
-                }
-            }
+        Long position = userIdToPositionIndex.get(userId);
+        if (position == null) {
+            throw new NotFoundException("User not found: " + userId);
+        }
+
+        try (RandomAccessFile file = new RandomAccessFile(CSV_FILE_PATH, "r")) {
+            file.seek(position);
+            String line = file.readLine();
+            String[] values = line.split(",");
+            return User.of(values[0], values[1], values[2], values[3]);
         } catch (IOException e) {
             throw new InternalServerError("Failed to read CSV file: " + e.getMessage());
         }
-        throw new NotFoundException("User not found: " + userId);
     }
 
     @Override
@@ -71,26 +92,20 @@ public class UserDbServiceCsv implements UserDbServiceSpec {
 
     @Override
     public boolean exists(String userId) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] values = line.split(",");
-                if (values[0].equals(userId)) {
-                    return true;
-                }
-            }
-        } catch (IOException e) {
-            throw new InternalServerError("Failed to read CSV file: " + e.getMessage());
-        }
-        return false;
+        return userIdToPositionIndex.containsKey(userId);
     }
 
     @Override
     public void add(User user) {
-        try (FileWriter writer = new FileWriter(CSV_FILE_PATH, true)) {
+        try (RandomAccessFile file = new RandomAccessFile(CSV_FILE_PATH, "rw")) {
+            file.seek(file.length());
+            long position = file.getFilePointer();
             String userLine = String.format("%s,%s,%s,%s%n",
                     user.getUserId(), user.getPassword(), user.getName(), user.getEmail());
-            writer.append(userLine);
+            file.writeBytes(userLine);
+
+            // Update index
+            userIdToPositionIndex.put(user.getUserId(), position);
 
             logger.info("User added: {}", user);
         } catch (IOException e) {
@@ -102,6 +117,7 @@ public class UserDbServiceCsv implements UserDbServiceSpec {
     private void updateCsvFile(List<String> lines) {
         try {
             Files.write(Paths.get(CSV_FILE_PATH), lines);
+            buildIndex(); // Rebuild index after update
         } catch (IOException e) {
             throw new InternalServerError("Failed to update CSV file: " + e.getMessage());
         }
