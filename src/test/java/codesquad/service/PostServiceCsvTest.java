@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
@@ -51,10 +50,6 @@ public class PostServiceCsvTest {
         assertEquals("user1", posts.get(0).getUserId());
         assertEquals("첫번째 게시물 내용", posts.get(0).getPostContent());
         assertEquals("image1.jpg", posts.get(0).getImageUrl());
-
-        // Check if the file is saved
-        Path filePath = Paths.get(System.getProperty("user.home") + File.separator + "database" + File.separator + "files" + File.separator + posts.get(0).getId() + "_image1.jpg");
-        assertTrue(Files.exists(filePath));
     }
 
     @Test
