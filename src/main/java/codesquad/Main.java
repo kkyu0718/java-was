@@ -15,7 +15,6 @@ public class Main {
 
     public static void main(String[] args) throws IOException, SQLException {
         Server.createWebServer("-web", "-webAllowOthers", "-webPort", "9092").start();
-        // JDBC URL을 TCP 모드로 변경
         DbConfig dbConfig = new DbConfig(
                 "jdbc:h2:~/h2db/test;DB_CLOSE_DELAY=-1",
                 "sa",
