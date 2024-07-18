@@ -128,8 +128,6 @@ public class WasServer {
     }
 
     private List<HttpHandler> initializeHandlers() {
-        UserDbServiceSpec userDbService = new UserDbServiceCsv();
-//        UserDbServiceSpec userDbService = new UserDbServiceJdbc(dbConfig);
         List<String> whitelist = List.of(
                 "/",
                 "/registration",
@@ -141,11 +139,9 @@ public class WasServer {
         );
         String csvFilePath = System.getProperty("user.home")
                 + File.separator
-                + "database"
-                + File.separator
-                + "posts.csv";
-        PostServiceSpec postService = new PostServiceCsv(csvFilePath);
-//        PostServiceSpec postService = new PostServiceJdbc(dbConfig);
+                + "database";
+        UserDbServiceSpec userDbService = new UserDbServiceCsv(csvFilePath + File.separator + "users.csv");
+        PostServiceSpec postService = new PostServiceCsv(csvFilePath + File.separator + "posts.csv");
 
         UserAdapter userAdapter = new UserAdapter(userDbService, userSessionService);
         PostAdapter postAdapter = new PostAdapter(postService);
