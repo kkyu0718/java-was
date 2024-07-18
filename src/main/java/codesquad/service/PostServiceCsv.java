@@ -2,6 +2,7 @@ package codesquad.service;
 
 import codesquad.exception.InternalServerError;
 import codesquad.exception.NotFoundException;
+import codesquad.model.MultipartFile;
 import codesquad.model.Post;
 import codesquad.model.dao.PostCreateDao;
 import codesquad.utils.StringUtils;
@@ -17,19 +18,16 @@ import java.util.List;
 
 public class PostServiceCsv implements PostServiceSpec {
     private static final Logger logger = org.slf4j.LoggerFactory.getLogger(PostServiceCsv.class);
-    private static final String CSV_FILE_PATH = System.getProperty("user.home")
-            + File.separator
-            + "database"
-            + File.separator
-            + "posts.csv";
+    private final String csvFilePath;
     private static final String CSV_HEADER = "id,userId,postContent,imageUrl" + StringUtils.LINE_SEPERATOR;
 
-    public PostServiceCsv() {
+    public PostServiceCsv(String csvFilePath) {
+        this.csvFilePath = csvFilePath;
         initializeCsvFileIfNotExists();
     }
 
     private void initializeCsvFileIfNotExists() {
-        Path path = Paths.get(CSV_FILE_PATH);
+        Path path = Paths.get(csvFilePath);
         if (!Files.exists(path)) {
             try {
                 Files.write(path, CSV_HEADER.getBytes());
@@ -44,10 +42,15 @@ public class PostServiceCsv implements PostServiceSpec {
         long nextId = getNextId();
         Post post = new Post(nextId, dao.getUserId(), dao.getContent(), dao.getImageUrl());
 
-        try (FileWriter writer = new FileWriter(CSV_FILE_PATH, true)) {
+        try (FileWriter writer = new FileWriter(csvFilePath, true)) {
             String postLine = String.format("%d,%s,%s,%s%n",
                     post.getId(), post.getUserId(), post.getPostContent(), post.getImageUrl());
             writer.append(postLine);
+
+            // Save the file if it exists
+            if (dao.getFile() != null) {
+                saveFile(dao.getFile(), nextId);
+            }
 
             logger.info("Post created: {}", post);
         } catch (IOException e) {
@@ -57,7 +60,7 @@ public class PostServiceCsv implements PostServiceSpec {
 
     @Override
     public Post getPost(Long id) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(csvFilePath))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] values = line.split(",");
@@ -74,7 +77,7 @@ public class PostServiceCsv implements PostServiceSpec {
     @Override
     public List<Post> getPosts() {
         List<Post> posts = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(csvFilePath))) {
             String line;
             reader.readLine(); // Skip header
             while ((line = reader.readLine()) != null) {
@@ -92,7 +95,7 @@ public class PostServiceCsv implements PostServiceSpec {
 
     private long getNextId() {
         long maxId = 0;
-        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(csvFilePath))) {
             String line;
             reader.readLine(); // Skip header
             while ((line = reader.readLine()) != null) {
@@ -106,5 +109,16 @@ public class PostServiceCsv implements PostServiceSpec {
             throw new InternalServerError("Failed to read CSV file: " + e.getMessage());
         }
         return maxId + 1;
+    }
+
+    private void saveFile(MultipartFile file, long postId) {
+        Path filePath = Paths.get(System.getProperty("user.home") + File.separator + "database" + File.separator + "files" + File.separator + postId + "_" + file.getFileName());
+        try {
+            Files.createDirectories(filePath.getParent());
+            Files.write(filePath, file.getContent());
+            logger.info("File saved: {}", filePath.toString());
+        } catch (IOException e) {
+            throw new InternalServerError("Failed to save file: " + e.getMessage());
+        }
     }
 }
