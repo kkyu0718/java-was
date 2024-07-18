@@ -3,6 +3,7 @@ package codesquad.reader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +30,6 @@ public class SystemFileReader implements StaticFileReaderSpec {
     @Override
     public InputStream getResourceAsStream(String path) throws IOException {
         logger.debug("file input stream", path);
-        return new FileInputStream(path);
+        return new BufferedInputStream(new FileInputStream(path));
     }
 }

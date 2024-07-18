@@ -126,12 +126,6 @@ public class WasServer {
     }
 
     private List<HttpHandler> initializeHandlers() {
-//        DbConfig dbConfig = new DbConfig(
-//                "jdbc:h2:~/h2db/test;DB_CLOSE_DELAY=-1",
-//                "sa",
-//                ""
-//        );
-
         UserDbServiceSpec userDbService = new UserDbServiceJdbc(dbConfig);
         List<String> whitelist = List.of(
                 "/",

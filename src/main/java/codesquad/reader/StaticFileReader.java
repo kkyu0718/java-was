@@ -16,13 +16,11 @@ public class StaticFileReader implements StaticFileReaderSpec {
 
     @Override
     public boolean checkExistWithPrefix(String path) {
-//        return checkExist(path);
         return checkExist(prefix + path);
     }
 
     @Override
     public String readFileLinesWithPrefix(String path) throws IOException {
-//        return readFileLines(path);
         return readFileLines(prefix + path);
     }
 

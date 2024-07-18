@@ -4,10 +4,7 @@ import codesquad.http.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
@@ -73,13 +70,15 @@ public class Http11Processor implements HttpProcessor {
 
     @Override
     public void writeResponse(OutputStream os, HttpResponse response) throws IOException {
-        writeStatusLine(os, response);
-        writeHeaders(os, response);
-        os.write(LINE_SEPERATOR.getBytes());
+        try (BufferedOutputStream bos = new BufferedOutputStream(os)) {
+            writeStatusLine(os, response);
+            writeHeaders(os, response);
+            os.write(LINE_SEPERATOR.getBytes());
 
-        writeBody(os, response);
+            writeBody(os, response);
 
-        os.flush();
+            os.flush();
+        }
     }
 
     private void writeBody(OutputStream os, HttpResponse response) throws IOException {
