@@ -19,7 +19,7 @@ import java.util.UUID;
 public class PostAdapter implements Adapter {
     private static final Logger logger = LoggerFactory.getLogger(PostAdapter.class);
 
-    private static final String UPLOAD_DIR = "./uploads";
+    private static final String UPLOAD_DIR = "static/img/uploads";
     private PostServiceSpec postService;
 
     public PostAdapter(PostServiceSpec postService) {

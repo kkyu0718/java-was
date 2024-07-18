@@ -24,9 +24,7 @@ public class StaticFileReader implements StaticFileReaderSpec {
     @Override
     public String readFileLines(String path) throws IOException {
         try (InputStream resourceAsStream = getResourceAsStream(path)) {
-            if (resourceAsStream == null) {
-                throw new NotFoundException("File not found: " + path);
-            }
+            checkExist(path, resourceAsStream);
 
             StringBuilder content = new StringBuilder();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAsStream, StandardCharsets.UTF_8))) {
@@ -36,6 +34,21 @@ public class StaticFileReader implements StaticFileReaderSpec {
                 }
             }
             return content.toString();
+        }
+    }
+
+    private static void checkExist(String path, InputStream resourceAsStream) {
+        if (resourceAsStream == null) {
+            throw new NotFoundException("File not found: " + path);
+        }
+    }
+
+    @Override
+    public byte[] readFileBytes(String path) throws IOException {
+        try (InputStream resourceAsStream = getResourceAsStream(path)) {
+            checkExist(path, resourceAsStream);
+
+            return resourceAsStream.readAllBytes();
         }
     }
 

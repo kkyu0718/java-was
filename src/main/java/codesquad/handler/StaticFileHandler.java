@@ -1,5 +1,6 @@
 package codesquad.handler;
 
+import codesquad.exception.InternalServerError;
 import codesquad.http.*;
 import codesquad.model.Post;
 import codesquad.model.User;
@@ -36,11 +37,30 @@ public class StaticFileHandler implements HttpHandler {
     @Override
     public HttpResponse handle(HttpRequest request) {
         String path = request.getPath();
-        String template = loadFile(path);
 
-        Map<String, String> paramMap = createParamMap(request);
+        if (request.getExt().equals("html")) {
+            String template = loadFile(path);
+            Map<String, String> paramMap = createParamMap(request);
 
-        return createDynamicResponse(request, template, paramMap);
+            return createDynamicResponse(request, template, paramMap);
+        }
+
+
+        byte[] bytes = loadFileBytes(path);
+        return new HttpResponse.Builder(request, HttpStatus.OK)
+                .body(HttpBody.of(bytes, MimeType.fromExt(request.getExt())))
+                .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(bytes.length))
+                .header(HttpHeaders.CONTENT_TYPE, MimeType.fromExt(request.getExt()).getMimeType())
+                .build();
+    }
+
+    private byte[] loadFileBytes(String path) {
+        try {
+            return staticFileReader.readFileBytes(path);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            throw new InternalServerError("Error loading file " + path);
+        }
     }
 
     private Map<String, String> createParamMap(HttpRequest request) {
@@ -97,7 +117,7 @@ public class StaticFileHandler implements HttpHandler {
                     .append("<img class=\"post__account__img\" src=\"./img/default_profile.png\"/>")
                     .append("<p class=\"post__account__nickname\">").append(writer.getName()).append("</p>")
                     .append("</div>")
-                    .append("<img class=\"post__img\" src=\"./img/default_post.png\"/>")
+                    .append("<img class=\"post__img\" src=").append("\"").append("./img/uploads" + post.getImageUrl()).append("\"").append("/>")
                     .append("<div class=\"post__menu\">")
                     .append("<ul class=\"post__menu__personal\">")
                     .append("<li><button class=\"post__menu__btn\"><img src=\"./img/like.svg\"/></button></li>")
