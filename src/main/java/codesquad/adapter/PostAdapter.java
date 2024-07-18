@@ -12,8 +12,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.util.UUID;
 
 public class PostAdapter implements Adapter {
@@ -75,20 +73,4 @@ public class PostAdapter implements Adapter {
         logger.debug("File saved at: {}", targetFile.getAbsolutePath());
         return "/uploads/" + uniqueFileName;
     }
-
-    private void saveFileToLocalResource(File file) throws IOException {
-        if (!file.exists()) {
-            throw new NoSuchFileException(file.getName());
-        }
-
-        String uniqueFileName = UUID.randomUUID().toString() + "_" + file.getName();
-        File targetFile = new File(UPLOAD_DIR, uniqueFileName);
-        try (FileOutputStream outStream = new FileOutputStream(targetFile)) {
-            Files.copy(file.toPath(), outStream);
-        }
-
-        logger.debug("File saved at: {}", targetFile.getAbsolutePath());
-    }
-
-
 }
