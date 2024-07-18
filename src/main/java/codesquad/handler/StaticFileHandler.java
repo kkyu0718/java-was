@@ -120,7 +120,7 @@ public class StaticFileHandler implements HttpHandler {
             User writer = userDbService.getUser(post.getUserId());
             html.append("<div class=\"post\">")
                     .append("<div class=\"post__account\">")
-                    .append("<img class=\"post__account__img\" src=\"./img/default_profile.png\"/>")
+//                    .append("<img class=\"post__account__img\" src=\"./img/default_profile.png\"/>")
                     .append("<p class=\"post__account__nickname\">").append(writer.getName()).append("</p>")
                     .append("</div>")
                     .append("<img class=\"post__img\" src=").append("\"").append(post.getImageUrl()).append("\"").append("/>")
