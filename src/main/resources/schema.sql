@@ -49,17 +49,17 @@ WHERE NOT EXISTS (SELECT 1 FROM `User` LIMIT 1);
 -- Insert data into Post table (only if the table is empty)
 INSERT INTO Post (user_id, content, image_url)
 SELECT * FROM (
-                  SELECT '규원' AS user_id, '와아아 성공이당~' AS content, '/p2.png' AS image_url
+                  SELECT '규원' AS user_id, '와아아 성공이당~' AS content, './img/uploads/p2.png' AS image_url
                   UNION ALL
-                  SELECT '규원', '이모지도 됨? 🔍', '/죽여줘짤.png'
+                  SELECT '규원', '이모지도 됨? 🔍', './img/uploads/죽여줘짤.png'
                   UNION ALL
-                  SELECT '파이리', '화난다 파이파이리~', '/p3.png'
+                  SELECT '파이리', '화난다 파이파이리~', './img/uploads/p3.png'
                   UNION ALL
-                  SELECT '꼬부기', '물폭탄 워터밤을 만들어보자', '/p1.png'
+                  SELECT '꼬부기', '물폭탄 워터밤을 만들어보자', './img/uploads/p1.png'
                   UNION ALL
-                  SELECT '피카츄', '피카츄는 언제 은퇴할까 🫨', '/p4.png'
+                  SELECT '피카츄', '피카츄는 언제 은퇴할까 🫨', './img/uploads/p4.png'
                   UNION ALL
-                  SELECT '규원', '이번 주도 아주 짜릿하다 🫢', '/p5.png'
+                  SELECT '규원', '이번 주도 아주 짜릿하다 🫢', './img/uploads/p5.png'
               ) AS tmp
 WHERE NOT EXISTS (SELECT 1 FROM Post LIMIT 1);
 
