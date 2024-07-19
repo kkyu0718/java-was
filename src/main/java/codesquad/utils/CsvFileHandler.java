@@ -2,10 +2,7 @@ package codesquad.utils;
 
 import codesquad.exception.InternalServerError;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,7 +16,31 @@ public class CsvFileHandler {
     public CsvFileHandler(String csvFilePath, String csvHeader) {
         this.csvFilePath = csvFilePath;
         this.csvHeader = csvHeader;
+        initializeFolederIfNotExists();
         initializeCsvFileIfNotExists();
+    }
+
+    private void initializeFolederIfNotExists() {
+        // 사용자의 홈 디렉토리 경로 가져오기
+        String userHome = System.getProperty("user.home");
+
+        // database 폴더 경로
+        String databaseFolderPath = userHome + File.separator + "database";
+
+        // File 객체 생성
+        File databaseFolder = new File(databaseFolderPath);
+
+        // 폴더가 존재하지 않으면 생성
+        if (!databaseFolder.exists()) {
+            boolean created = databaseFolder.mkdirs(); // 폴더 생성
+            if (created) {
+                System.out.println("Database folder created successfully.");
+            } else {
+                System.out.println("Failed to create database folder.");
+            }
+        } else {
+            System.out.println("Database folder already exists.");
+        }
     }
 
     private void initializeCsvFileIfNotExists() {
