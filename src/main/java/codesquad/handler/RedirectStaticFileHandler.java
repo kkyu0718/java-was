@@ -1,5 +1,6 @@
 package codesquad.handler;
 
+import codesquad.http.HttpMethod;
 import codesquad.http.HttpRequest;
 import codesquad.http.HttpResponse;
 import codesquad.http.HttpStatus;
@@ -31,6 +32,6 @@ public class RedirectStaticFileHandler implements HttpHandler {
 
     @Override
     public boolean canHandle(HttpRequest request) {
-        return whitelist.contains(request.getPath());
+        return whitelist.contains(request.getPath()) && request.getMethod() == HttpMethod.GET;
     }
 }

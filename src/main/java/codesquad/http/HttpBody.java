@@ -1,6 +1,10 @@
 package codesquad.http;
 
-import java.net.URLDecoder;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+
+import static codesquad.utils.ParserUtils.*;
 
 public class HttpBody {
     private byte[] bytes;
@@ -16,29 +20,45 @@ public class HttpBody {
     }
 
     public static HttpBody empty() {
-        return new HttpBody(null, null);
+        return new HttpBody(new byte[0], null);
     }
 
     public byte[] getBytes() {
         return bytes;
     }
 
-    public Parameters getParameters() {
-        if (contentType == MimeType.X_WWW_FORM_URLENCODED) {
-            String decode = URLDecoder.decode(new String(bytes));
-            return Parameters.of(decode);
-        }
-
-        //TODO contentType 처리
-        return null;
-    }
-
     @Override
     public String toString() {
-        return new String(bytes);
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     public boolean isEmpty() {
-        return bytes == null;
+        return bytes.length == 0;
+    }
+
+    public <T> T parse(Class<T> clazz) {
+        return parseByContentType(clazz);
+    }
+
+    private <T> T parseByContentType(Class<T> clazz) {
+        T instance;
+        try {
+            instance = clazz.getDeclaredConstructor().newInstance();
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                 NoSuchMethodException e) {
+            throw new RuntimeException("Error creating new instance", e);
+        }
+        if (contentType == MimeType.APPLICATION_JSON) {
+            return parseJson(new String(bytes, StandardCharsets.UTF_8), clazz);
+        } else if (contentType == MimeType.X_WWW_FORM_URLENCODED) {
+            return parseXWWWFormUrlEncoded(new String(bytes, StandardCharsets.UTF_8), clazz);
+        } else if (contentType == MimeType.MULTIPART_FORM_DATA) {
+            Map<String, Object> stringObjectMap = parseMultiPartFormData(bytes, contentType.getBoundary());
+            populateObject(instance, stringObjectMap);
+            return instance;
+        } else {
+            throw new UnsupportedOperationException("Content type not supported: " + contentType);
+        }
+
     }
 }

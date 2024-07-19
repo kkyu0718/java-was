@@ -3,15 +3,20 @@ package codesquad.handler;
 import codesquad.adapter.Adapter;
 import codesquad.annotation.RequestMapping;
 import codesquad.annotation.Session;
+import codesquad.exception.InternalServerError;
+import codesquad.exception.MethodNotAllowedException;
+import codesquad.exception.NotFoundException;
 import codesquad.http.HttpRequest;
 import codesquad.http.HttpResponse;
-import codesquad.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.List;
 
 public class DynamicHandler implements HttpHandler {
+    private static final Logger logger = LoggerFactory.getLogger(DynamicHandler.class);
     private List<Adapter> adapters;
 
     public DynamicHandler(List<Adapter> adapters) {
@@ -28,23 +33,26 @@ public class DynamicHandler implements HttpHandler {
                 Method[] methods = adapter.getClass().getMethods();
                 for (Method method : methods) {
                     RequestMapping mapping = method.getAnnotation(RequestMapping.class);
-                    if (mapping != null &&
-                            mapping.path().equals(request.getPath()) &&
-                            mapping.method().equalsIgnoreCase(request.getMethod().toString())) {
+                    if (mapping != null && mapping.path().equals(request.getPath())) {
+                        if (!mapping.method().equals(request.getMethod())) {
+                            // HTTP 메서드가 일치하지 않으면 405 응답 반환
+                            throw new MethodNotAllowedException("Method Not Allowed");
+                        }
 
                         Object[] args = buildMethodArguments(method, request);
                         try {
                             return (HttpResponse) method.invoke(adapter, args);
                         } catch (Exception e) {
                             // 예외 처리
-                            return new HttpResponse.Builder(request, HttpStatus.INTERNAL_SERVER_ERROR).build();
+                            e.printStackTrace();
+                            throw new InternalServerError("Internal Server Error");
                         }
                     }
                 }
             }
         }
         // 처리할 수 없는 요청에 대한 응답
-        return new HttpResponse.Builder(request, HttpStatus.NOT_FOUND).build();
+        throw new NotFoundException("Not Found");
     }
 
     private Object[] buildMethodArguments(Method method, HttpRequest request) {

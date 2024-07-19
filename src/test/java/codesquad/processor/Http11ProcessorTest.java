@@ -6,10 +6,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.StringReader;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 import static codesquad.utils.StringUtils.LINE_SEPERATOR;
@@ -18,19 +18,23 @@ import static org.junit.jupiter.api.Assertions.*;
 class Http11ProcessorTest {
     HttpProcessor processor;
 
+    @BeforeEach
+    void setup() {
+        processor = new Http11Processor();
+    }
+
     @Test
     public void 주어진_유효한_요청에서_스타트라인을_파싱하면_올바르게_파싱된다() throws IOException {
         String requestString = "GET /index.html HTTP/1.1" + LINE_SEPERATOR
                 + "Host: localhost" + LINE_SEPERATOR
                 + "Connection: keep-alive" + LINE_SEPERATOR
-                + LINE_SEPERATOR
                 + LINE_SEPERATOR;
-        BufferedReader br = new BufferedReader(new StringReader(requestString));
+        InputStream is = new ByteArrayInputStream(requestString.getBytes(StandardCharsets.UTF_8));
 
-        HttpRequest request = processor.parseRequest(br);
+        HttpRequest request = processor.parseRequest(is);
 
         assertEquals(HttpMethod.GET, request.getMethod());
-        assertEquals("/index.html", request.getPath().toString());
+        assertEquals("/index.html", request.getPath());
         assertEquals(HttpVersion.HTTP11, request.getHttpVersion());
     }
 
@@ -45,13 +49,12 @@ class Http11ProcessorTest {
                 + "Content-Length: 0" + LINE_SEPERATOR
                 + "Content-Type: text/plain;charset=UTF-8" + LINE_SEPERATOR
                 + LINE_SEPERATOR;
+        InputStream is = new ByteArrayInputStream(requestString.getBytes(StandardCharsets.UTF_8));
 
-        BufferedReader br = new BufferedReader(new StringReader(requestString));
-
-        HttpRequest request = processor.parseRequest(br);
+        HttpRequest request = processor.parseRequest(is);
 
         assertEquals(HttpMethod.GET, request.getMethod());
-        assertEquals("/index.html", request.getPath().toString());
+        assertEquals("/index.html", request.getPath());
         assertEquals(HttpVersion.HTTP11, request.getHttpVersion());
         assertEquals("localhost:8080", request.getHeaders().get(HttpHeaders.HOST));
         assertEquals(7, request.getHeaders().size());
@@ -69,13 +72,12 @@ class Http11ProcessorTest {
         String param2 = "p2";
 
         String requestString = String.format("GET /index.html?param1=%s&param2=%s HTTP/1.1" + LINE_SEPERATOR + "Host: localhost:8080" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR + LINE_SEPERATOR, param1, param2);
+        InputStream is = new ByteArrayInputStream(requestString.getBytes(StandardCharsets.UTF_8));
 
-        BufferedReader br = new BufferedReader(new StringReader(requestString));
-
-        HttpRequest request = processor.parseRequest(br);
+        HttpRequest request = processor.parseRequest(is);
 
         assertEquals(HttpMethod.GET, request.getMethod());
-        assertEquals("/index.html", request.getPath().toString());
+        assertEquals("/index.html", request.getPath());
         assertEquals(HttpVersion.HTTP11, request.getHttpVersion());
         assertEquals("localhost:8080", request.getHeaders().get(HttpHeaders.HOST));
         assertEquals(2, request.getParameters().size());
@@ -87,41 +89,40 @@ class Http11ProcessorTest {
     public void 헤더에_세미콜론이_누락된_경우_400_에러가_발생한다() {
         String headerString = "Host localhost" + LINE_SEPERATOR // ':' 누락
                 + "Content-Type: text/html" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR + LINE_SEPERATOR;
-        BufferedReader br = new BufferedReader(new StringReader("GET /index.html HTTP/1.1\r\n" + headerString));
+        InputStream is = new ByteArrayInputStream(("GET /index.html HTTP/1.1\r\n" + headerString).getBytes(StandardCharsets.UTF_8));
 
         assertThrows(IllegalArgumentException.class, () -> {
-            processor.parseRequest(br);
+            processor.parseRequest(is);
         });
     }
 
     @Test
     public void 헤더의_키와_세미콜론_사이에_공백이_존재하는_경우_400_에러가_발생한다() {
         String headerString = "Host : localhost" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR + LINE_SEPERATOR;
-        BufferedReader br = new BufferedReader(new StringReader("GET /index.html HTTP/1.1\r\n" + headerString));
+        InputStream is = new ByteArrayInputStream(("GET /index.html HTTP/1.1\r\n" + headerString).getBytes(StandardCharsets.UTF_8));
 
         assertThrows(IllegalArgumentException.class, () -> {
-            processor.parseRequest(br);
+            processor.parseRequest(is);
         });
     }
 
     @ParameterizedTest
     @CsvSource({"Host:localhost", "Host:localhost", "Host: localhost", "Host: localhost "})
     public void 헤더의_값_양옆에_공백이_존재하는_경우_적절히_파싱된다(String header) throws IOException {
-        BufferedReader br = new BufferedReader(new StringReader("GET /index.html HTTP/1.1" + LINE_SEPERATOR + header + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR + LINE_SEPERATOR));
+        String requestString = "GET /index.html HTTP/1.1" + LINE_SEPERATOR + header + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR + LINE_SEPERATOR;
+        InputStream is = new ByteArrayInputStream(requestString.getBytes(StandardCharsets.UTF_8));
 
-        HttpRequest httpRequest = processor.parseRequest(br);
+        HttpRequest httpRequest = processor.parseRequest(is);
         HttpHeaders headers = httpRequest.getHeaders();
         assertEquals("localhost", headers.get("Host"));
     }
 
-
     @Test
     void 중복되는_헤더가_존재하는_경우_뒤에_오는_값으로_덮어쓴다() throws IOException {
         String requestString = "GET /index.html HTTP/1.1" + LINE_SEPERATOR + "Host: localhost:8080" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR + "header1: a" + LINE_SEPERATOR + "header1: b" + LINE_SEPERATOR + LINE_SEPERATOR;
-        ;
-        BufferedReader reader = new BufferedReader(new StringReader(requestString));
+        InputStream is = new ByteArrayInputStream(requestString.getBytes(StandardCharsets.UTF_8));
 
-        HttpRequest request = processor.parseRequest(reader);
+        HttpRequest request = processor.parseRequest(is);
 
         assertNotNull(request);
         assertEquals(HttpMethod.GET, request.getMethod());
@@ -132,9 +133,9 @@ class Http11ProcessorTest {
     @Test
     void 중복되는_파라미터가_존재하는_경우_뒤에_오는_값으로_덮어쓴다() throws IOException {
         String requestString = "GET /index.html?param1=a&param1=b HTTP/1.1" + LINE_SEPERATOR + "Host: localhost:8080" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR + LINE_SEPERATOR;
-        BufferedReader reader = new BufferedReader(new StringReader(requestString));
+        InputStream is = new ByteArrayInputStream(requestString.getBytes(StandardCharsets.UTF_8));
 
-        HttpRequest request = processor.parseRequest(reader);
+        HttpRequest request = processor.parseRequest(is);
 
         assertNotNull(request);
         assertEquals(HttpMethod.GET, request.getMethod());
@@ -145,10 +146,10 @@ class Http11ProcessorTest {
     @Test
     void 시작_라인에_HTTP_버전이_없는_경우_예외가_발생한다() {
         String invalidStartLine = "GET http://example.com/path/to/resource" + "Host: localhost:8080" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR; // HTTP 버전 없음
-        BufferedReader reader = new BufferedReader(new StringReader(invalidStartLine));
+        InputStream is = new ByteArrayInputStream(invalidStartLine.getBytes(StandardCharsets.UTF_8));
 
         assertThrows(IllegalArgumentException.class, () -> {
-            processor.parseRequest(reader);
+            processor.parseRequest(is);
         });
     }
 
@@ -156,23 +157,23 @@ class Http11ProcessorTest {
     void 시작_라인에_HTTP_메서드가_없는_경우_예외가_발생한다() {
         String invalidStartLine = "/path/to/resource HTTP/1.1" + LINE_SEPERATOR
                 + "Host: localhost:8080" + LINE_SEPERATOR + "Connection: keep-alive" + LINE_SEPERATOR; // 메서드 없음
-        BufferedReader reader = new BufferedReader(new StringReader(invalidStartLine));
+        InputStream is = new ByteArrayInputStream(invalidStartLine.getBytes(StandardCharsets.UTF_8));
 
         assertThrows(IllegalArgumentException.class, () -> {
-            processor.parseRequest(reader);
+            processor.parseRequest(is);
         });
     }
 
     @Test
-    void Host헤더와_Connection혜더는_항상_존재해야한다() {
+    void Host헤더와_Connection헤더는_항상_존재해야한다() {
         String validStartLine = "GET /path/to/resource HTTP/1.1" + LINE_SEPERATOR
                 + "Host: localhost:8080" + LINE_SEPERATOR
                 + "Connection: keep-alive" + LINE_SEPERATOR
                 + LINE_SEPERATOR;
-        BufferedReader reader = new BufferedReader(new StringReader(validStartLine));
+        InputStream is = new ByteArrayInputStream(validStartLine.getBytes(StandardCharsets.UTF_8));
 
         assertDoesNotThrow(() -> {
-            processor.parseRequest(reader);
+            processor.parseRequest(is);
         });
     }
 
@@ -180,20 +181,20 @@ class Http11ProcessorTest {
     void Host헤더가_존재하지않으면_400에러를_던진다() {
         String validStartLine = "/path/to/resource HTTP/1.1" + LINE_SEPERATOR
                 + "Connection: keep-alive" + LINE_SEPERATOR;
-        BufferedReader reader = new BufferedReader(new StringReader(validStartLine));
+        InputStream is = new ByteArrayInputStream(validStartLine.getBytes(StandardCharsets.UTF_8));
 
         assertThrows(IllegalArgumentException.class, () -> {
-            processor.parseRequest(reader);
+            processor.parseRequest(is);
         });
     }
 
     @Test
     void Connection헤더가_존재하지않으면_400에러를_던진다() {
         String validStartLine = "/path/to/resource HTTP/1.1" + "Host: localhost:8080" + LINE_SEPERATOR;
-        BufferedReader reader = new BufferedReader(new StringReader(validStartLine));
+        InputStream is = new ByteArrayInputStream(validStartLine.getBytes(StandardCharsets.UTF_8));
 
         assertThrows(IllegalArgumentException.class, () -> {
-            processor.parseRequest(reader);
+            processor.parseRequest(is);
         });
     }
 
@@ -202,12 +203,10 @@ class Http11ProcessorTest {
         String requestString = "GET /path/to/resource HTTP/1.1" + LINE_SEPERATOR
                 + "Host: localhost:8080" + LINE_SEPERATOR
                 + "Connection: keep-alive" + LINE_SEPERATOR
-                + LINE_SEPERATOR
                 + LINE_SEPERATOR;
-        ;
-        BufferedReader reader = new BufferedReader(new StringReader(requestString));
+        InputStream is = new ByteArrayInputStream(requestString.getBytes(StandardCharsets.UTF_8));
 
-        HttpRequest request = processor.parseRequest(reader);
+        HttpRequest request = processor.parseRequest(is);
         assertEquals(HttpMethod.GET, request.getMethod());
         assertEquals("/path/to/resource", request.getPath());
         assertEquals(HttpVersion.HTTP11, request.getHttpVersion());
@@ -229,11 +228,10 @@ class Http11ProcessorTest {
                 + "Content-Length: " + body.getBytes().length + LINE_SEPERATOR
                 + "Content-Type: " + "text/html" + LINE_SEPERATOR
                 + LINE_SEPERATOR
-                + body + LINE_SEPERATOR;
+                + body;
+        InputStream is = new ByteArrayInputStream(requestString.getBytes(StandardCharsets.UTF_8));
 
-        BufferedReader reader = new BufferedReader(new StringReader(requestString));
-
-        HttpRequest request = processor.parseRequest(reader);
+        HttpRequest request = processor.parseRequest(is);
         assertEquals(HttpMethod.GET, request.getMethod());
         assertEquals("/path/to/resource", request.getPath());
         assertEquals(HttpVersion.HTTP11, request.getHttpVersion());
@@ -244,6 +242,33 @@ class Http11ProcessorTest {
         assertEquals("localhost:8080", request.getHeaders().get("Host"));
         assertEquals("body body body".getBytes().length, Integer.parseInt(request.getHeaders().get(HttpHeaders.CONTENT_LENGTH)));
         assertEquals(MimeType.HTML.getMimeType(), request.getHeaders().get(HttpHeaders.CONTENT_TYPE));
+
+        assertFalse(request.getBody().isEmpty());
+    }
+
+    @Test
+    void 시작라인O_헤더O_바디가_json으로_존재하는_경우_파싱하면_올바르게_파싱된다() throws IOException {
+        String body = "{\"content\":\"규원안녕\"}";
+        String requestString = "GET /path/to/resource HTTP/1.1" + LINE_SEPERATOR
+                + "Host: localhost:8080" + LINE_SEPERATOR
+                + "Connection: keep-alive" + LINE_SEPERATOR
+                + "Content-Length: " + body.getBytes().length + LINE_SEPERATOR
+                + "Content-Type: " + "application/json" + LINE_SEPERATOR
+                + LINE_SEPERATOR
+                + body;
+        InputStream is = new ByteArrayInputStream(requestString.getBytes(StandardCharsets.UTF_8));
+
+        HttpRequest request = processor.parseRequest(is);
+        assertEquals(HttpMethod.GET, request.getMethod());
+        assertEquals("/path/to/resource", request.getPath());
+        assertEquals(HttpVersion.HTTP11, request.getHttpVersion());
+
+        assertNotNull(request);
+        assertEquals(4, request.getHeaders().size());
+        assertEquals("keep-alive", request.getHeaders().get("Connection"));
+        assertEquals("localhost:8080", request.getHeaders().get("Host"));
+        assertEquals(body.getBytes().length, Integer.parseInt(request.getHeaders().get(HttpHeaders.CONTENT_LENGTH)));
+        assertEquals(MimeType.APPLICATION_JSON.getMimeType(), request.getHeaders().get(HttpHeaders.CONTENT_TYPE));
 
         assertFalse(request.getBody().isEmpty());
     }
@@ -296,10 +321,5 @@ class Http11ProcessorTest {
                 LINE_SEPERATOR +
                 "Hello, world!";
         assertEquals(expectedResponse, outputStream.toString(StandardCharsets.UTF_8));
-    }
-
-    @BeforeEach
-    void setup() {
-        processor = new Http11Processor();
     }
 }

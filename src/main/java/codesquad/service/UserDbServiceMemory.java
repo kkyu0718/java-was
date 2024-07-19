@@ -5,7 +5,7 @@ import codesquad.model.User;
 
 import java.util.List;
 
-public class UserDbService {
+public class UserDbServiceMemory implements UserDbServiceSpec {
     public User getUser(String userId) {
         return UserDb.get(userId);
     }

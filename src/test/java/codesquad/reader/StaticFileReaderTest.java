@@ -1,5 +1,6 @@
 package codesquad.reader;
 
+import codesquad.exception.NotFoundException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,7 @@ class StaticFileReaderTest {
 
     @Test
     void readFileLines_메서드가_존재하지_않는_파일에_대해_예외를_던지는지_검증한다() {
-        Assertions.assertThrows(IOException.class, () -> {
+        Assertions.assertThrows(NotFoundException.class, () -> {
             reader.readFileLines("/non_existent_file.html");
         });
     }

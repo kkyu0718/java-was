@@ -1,47 +1,84 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="../reset.css" rel="stylesheet" />
-    <link href="../global.css" rel="stylesheet" />
-  </head>
-  <body>
-    <div class="container">
-      <header class="header">
-        <a href="/main"><img src="../img/signiture.svg" /></a>
-        <ul class="header__menu">
-          <li class="header__menu__item">
-            <a class="btn btn_contained btn_size_s" href="/article">글쓰기</a>
-          </li>
-          <li class="header__menu__item">
-            <button id="logout-btn" class="btn btn_ghost btn_size_s">
-              로그아웃
-            </button>
-          </li>
-        </ul>
-      </header>
-      <div class="page">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link href="../reset.css" rel="stylesheet"/>
+    <link href="../global.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="container">
+    <!-- 헤더 부분은 그대로 유지 -->
+    <div class="page">
         <h2 class="page-title">게시글 작성</h2>
-        <form class="form">
-          <div class="textfield textfield_size_m">
-            <p class="title_textfield">내용</p>
-            <textarea
-              class="input_textfield"
-              placeholder="글의 내용을 입력하세요"
-              autocomplete="username"
-            ></textarea>
-          </div>
-          <button
-            id="registration-btn"
-            class="btn btn_contained btn_size_m"
-            style="margin-top: 24px"
-            type="button"
-          >
-            작성 완료
-          </button>
+        <form class="form" enctype="multipart/form-data">
+            <div class="textfield textfield_size_m">
+                <p class="title_textfield">내용</p>
+                <textarea
+                        id="post-content"
+                        class="input_textfield"
+                        placeholder="글의 내용을 입력하세요"
+                        autocomplete="username"
+                ></textarea>
+            </div>
+            <div class="textfield textfield_size_m">
+                <p class="title_textfield">사진</p>
+                <input type="file" id="post-image" accept="image/*">
+            </div>
+            <button
+                    id="registration-btn"
+                    class="btn btn_contained btn_size_m"
+                    style="margin-top: 24px"
+                    type="button"
+            >
+                작성 완료
+            </button>
         </form>
-      </div>
     </div>
-  </body>
+</div>
+<script>
+    document.getElementById('registration-btn').addEventListener('click', function () {
+        const content = document.getElementById('post-content').value;
+        const imageFile = document.getElementById('post-image').files[0];
+
+        // 내용과 이미지 유효성 검사
+        if (!content.trim()) {
+            alert('글 내용을 입력해주세요.');
+            return;
+        }
+
+        if (!imageFile) {
+            alert('사진을 업로드해주세요.');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('postContent', content);
+        if (imageFile) {
+            formData.append('file', imageFile);
+        }
+
+        console.log('Sending POST request with data:', formData);
+
+        fetch('/posts/create', {
+            method: 'POST',
+            body: formData  // FormData 객체를 직접 전송
+        })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/'; // 성공 시 리다이렉트할 페이지
+                    window.alert("글 작성 성공 ^^");
+                } else {
+                    return response.text().then(text => {
+                        throw new Error(text);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('글 작성 중 오류가 발생했습니다.');
+            });
+    });
+</script>
+</body>
 </html>

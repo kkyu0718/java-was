@@ -1,25 +1,47 @@
 package codesquad.adapter;
 
-import codesquad.db.UserDb;
+import codesquad.db.DbConfig;
 import codesquad.db.UserSession;
 import codesquad.http.*;
-import codesquad.service.UserDbService;
+import codesquad.service.UserDbServiceJdbc;
 import codesquad.service.UserSessionService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserAdapterTest {
     private UserAdapter userAdapter;
+    private DbConfig dbConfig;
 
     @BeforeEach
-    public void setUp() {
-        userAdapter = new UserAdapter(new UserDbService(), new UserSessionService());
-        UserSession.refresh();
-        UserDb.refresh();
+    public void setUp() throws SQLException {
+        dbConfig = new DbConfig("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1", "sa", "");
+
+
+        // 테스트 데이터베이스 설정
+        try (Connection conn = dbConfig.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("CREATE TABLE IF NOT EXISTS User (user_id VARCHAR(50) PRIMARY KEY, password VARCHAR(50), name VARCHAR(50), email VARCHAR(100))");
+            stmt.execute("DELETE FROM USER");
+        }
+
+        userAdapter = new UserAdapter(new UserDbServiceJdbc(dbConfig), new UserSessionService());
+    }
+
+    @AfterEach
+    public void tearDown() throws SQLException {
+        try (Connection conn = dbConfig.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("DROP TABLE IF EXISTS `User`");
+        }
     }
 
     @Test
@@ -50,7 +72,6 @@ class UserAdapterTest {
 
         assertEquals(HttpStatus.FOUND, response1.getStatus());
         assertEquals(HttpStatus.FOUND, response2.getStatus());
-        assertEquals(2, UserDb.size());
     }
 
     @Test
@@ -71,7 +92,6 @@ class UserAdapterTest {
 
         HttpResponse response2 = userAdapter.createUser(request2);
         assertEquals(HttpStatus.ILLEGAL_ARGUMENT, response2.getStatus());
-        assertEquals(1, UserDb.size());
     }
 
     @Test
@@ -119,6 +139,7 @@ class UserAdapterTest {
         HttpResponse response = userAdapter.login(loginRequest);
 
         Assertions.assertEquals(302, response.getStatus().getStatusCode());
+        assertEquals("/login/error.html", response.getHeaders().get("Location"));
     }
 
     @Test

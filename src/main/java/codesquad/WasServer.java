@@ -1,25 +1,29 @@
 package codesquad;
 
+import codesquad.adapter.PostAdapter;
 import codesquad.adapter.UserAdapter;
+import codesquad.db.DbConfig;
+import codesquad.exception.MethodNotAllowedException;
+import codesquad.exception.NotFoundException;
 import codesquad.filter.FilterChain;
 import codesquad.filter.SessionFilter;
 import codesquad.handler.DynamicHandler;
+import codesquad.handler.HttpHandler;
 import codesquad.handler.RedirectStaticFileHandler;
 import codesquad.handler.StaticFileHandler;
-import codesquad.http.HttpMethod;
 import codesquad.http.HttpRequest;
 import codesquad.http.HttpResponse;
+import codesquad.http.HttpStatus;
 import codesquad.processor.Http11Processor;
 import codesquad.processor.HttpProcessor;
 import codesquad.reader.StaticFileReader;
-import codesquad.service.UserDbService;
-import codesquad.service.UserSessionService;
+import codesquad.reader.SystemFileReader;
+import codesquad.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -28,18 +32,101 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class WasServer {
-    private static Logger logger = LoggerFactory.getLogger(WasServer.class);
-    private static int MAX_THREAD_POOL_SIZE = 100;
+    private static final Logger logger = LoggerFactory.getLogger(WasServer.class);
+    private static final int DEFAULT_PORT = 8080;
+    private static final int MAX_THREAD_POOL_SIZE = 100;
 
-    private ServerSocket serverSocket;
-    private DynamicHandler dynamicHandler;
-    private StaticFileHandler staticFileHandler;
-    private RedirectStaticFileHandler redirectStaticFileHandler;
-    private ExecutorService executorService;
-    private UserSessionService userSessionService;
+    private final ServerSocket serverSocket;
+    private final List<HttpHandler> handlers;
+    private final ExecutorService executorService;
+    private final UserSessionService userSessionService;
+    private final DbConfig dbConfig;
 
-    public WasServer(int port) throws IOException {
-        UserDbService userDbService = new UserDbService();
+    public WasServer(int port, DbConfig dbConfig) throws IOException {
+        this.serverSocket = new ServerSocket(port);
+        this.userSessionService = new UserSessionService();
+        this.executorService = Executors.newFixedThreadPool(MAX_THREAD_POOL_SIZE);
+        this.dbConfig = dbConfig;
+        this.handlers = initializeHandlers();
+
+        logger.debug("Listening for connection on port {} ....", port);
+    }
+
+    public void run() {
+        executorService.execute(() -> {
+            while (true) {
+                try (Socket clientSocket = serverSocket.accept();
+                     InputStream is = clientSocket.getInputStream()) {
+
+                    logger.debug("Client connected");
+                    OutputStream clientOutput = clientSocket.getOutputStream();
+                    HttpProcessor processor = new Http11Processor();
+
+                    // 요청 파싱
+                    HttpRequest httpRequest = processor.parseRequest(is);
+                    logger.debug(httpRequest.toString());
+
+                    // 요청 처리
+                    HttpResponse httpResponse = handleRequest(httpRequest);
+                    processor.writeResponse(clientOutput, httpResponse);
+
+                } catch (Exception ex) {
+                    logger.error("Server accept failed");
+                    ex.printStackTrace();
+                }
+            }
+        });
+    }
+
+    private HttpResponse handleRequest(HttpRequest httpRequest) {
+        for (HttpHandler handler : handlers) {
+            if (handler.canHandle(httpRequest)) {
+                logger.debug("Forwarding request to handler: {}", handler.getClass().getName());
+                return doDispatch(handler, httpRequest);
+            }
+        }
+        // 핸들러를 찾지 못한 경우 NOT FOUND 응답
+        return new HttpResponse.Builder(httpRequest, HttpStatus.FOUND)
+                .redirect("/exception/404.html")
+                .build();
+    }
+
+    private HttpResponse doDispatch(HttpHandler handler, HttpRequest httpRequest) {
+        FilterChain filterChain = getFilterChain();
+        HttpResponse httpResponse = filterChain.doFilter(httpRequest);
+
+        if (httpResponse != null) {
+            return httpResponse;
+        }
+
+        try {
+            return handler.handle(httpRequest);
+        } catch (NotFoundException ex) {
+            logger.error("Resource not found", ex);
+            return new HttpResponse.Builder(httpRequest, HttpStatus.FOUND)
+                    .redirect("/exception/404.html")
+                    .build();
+        } catch (MethodNotAllowedException ex) {
+            logger.error("Method not allowed", ex);
+            return new HttpResponse.Builder(httpRequest, HttpStatus.FOUND)
+                    .redirect("/exception/405.html")
+                    .build();
+        } catch (Exception ex) {
+            logger.error("Internal server error", ex);
+            return new HttpResponse.Builder(httpRequest, HttpStatus.FOUND)
+                    .redirect("/exception/500.html")
+                    .build();
+        }
+    }
+
+    private FilterChain getFilterChain() {
+        FilterChain filterChain = new FilterChain();
+        filterChain.addFilter(new SessionFilter(userSessionService));
+        return filterChain;
+    }
+
+    private List<HttpHandler> initializeHandlers() {
+        UserDbServiceSpec userDbService = new UserDbServiceJdbc(dbConfig);
         List<String> whitelist = List.of(
                 "/",
                 "/registration",
@@ -50,78 +137,15 @@ public class WasServer {
                 "/user/list"
         );
 
-        userSessionService = new UserSessionService();
+        PostServiceSpec postService = new PostServiceJdbc(dbConfig);
+
         UserAdapter userAdapter = new UserAdapter(userDbService, userSessionService);
-        serverSocket = new ServerSocket(port);
-        dynamicHandler = new DynamicHandler(List.of(userAdapter));
-        staticFileHandler = new StaticFileHandler(new StaticFileReader(), userSessionService, userDbService);
-        redirectStaticFileHandler = new RedirectStaticFileHandler(whitelist);
-        executorService = Executors.newFixedThreadPool(MAX_THREAD_POOL_SIZE);
+        PostAdapter postAdapter = new PostAdapter(postService);
 
-        logger.debug("Listening for connection on port 8080 ....");
-    }
-
-    public void run() {
-        executorService.execute(() -> {
-            while (true) {
-                try (Socket clientSocket = serverSocket.accept();
-                     BufferedReader br = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
-                    handleClientSocket(clientSocket, br);
-                } catch (Exception ex) {
-                    logger.error("Server accept failed ");
-                    ex.printStackTrace();
-                }
-            }
-        });
-    }
-
-    public void handleClientSocket(Socket clientSocket, BufferedReader br) {
-        try {
-            logger.debug("Client connected");
-
-            // 요청 파싱
-            HttpProcessor processor = new Http11Processor();
-            HttpRequest httpRequest = processor.parseRequest(br);
-            logger.debug(httpRequest.toString());
-
-            // 필터 체인 생성
-            FilterChain filterChain = getFilterChain();
-            HttpResponse httpResponse = filterChain.doFilter(httpRequest);
-
-            // 모든 필터를 통과했으므로 핸들러로 처리
-            if (httpResponse == null) {
-                httpResponse = getHttpResponse(httpRequest);
-                logger.debug(httpResponse.getStatus().toString());
-                logger.debug(httpResponse.getHeaders().toString());
-                logger.debug(httpResponse.toString());
-            }
-
-            // 응답 쓰기
-            OutputStream clientOutput = clientSocket.getOutputStream();
-            processor.writeResponse(clientOutput, httpResponse);
-        } catch (Exception ex) {
-            logger.error("Error handling client socket", ex);
-        }
-    }
-
-    private HttpResponse getHttpResponse(HttpRequest httpRequest) {
-        if (httpRequest.getMethod() == HttpMethod.GET && staticFileHandler.canHandle(httpRequest)) {
-            logger.info("forward to staticFileHandler" + httpRequest.getPath());
-            return staticFileHandler.handle(httpRequest);
-        } else if (httpRequest.getMethod() == HttpMethod.GET && redirectStaticFileHandler.canHandle(httpRequest)) {
-            logger.info("forward to redirect" + httpRequest.getPath());
-            return redirectStaticFileHandler.handle(httpRequest);
-        } else if (dynamicHandler.canHandle(httpRequest)) {
-            logger.info("forward to dynamicHandler" + httpRequest.getPath());
-
-            return dynamicHandler.handle(httpRequest);
-        }
-        throw new RuntimeException("no handler found for " + httpRequest.getPath());
-    }
-
-    private FilterChain getFilterChain() {
-        FilterChain filterChain = new FilterChain();
-        filterChain.addFilter(new SessionFilter(userSessionService));
-        return filterChain;
+        return List.of(
+                new StaticFileHandler(userSessionService, userDbService, postService, new StaticFileReader(), new SystemFileReader()),
+                new RedirectStaticFileHandler(whitelist),
+                new DynamicHandler(List.of(userAdapter, postAdapter))
+        );
     }
 }
