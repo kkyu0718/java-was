@@ -29,8 +29,8 @@ class UserAdapterTest {
         // 테스트 데이터베이스 설정
         try (Connection conn = dbConfig.getConnection();
              Statement stmt = conn.createStatement()) {
-            stmt.execute("CREATE TABLE IF NOT EXISTS User (user_id VARCHAR(50) PRIMARY KEY, password VARCHAR(50), name VARCHAR(50), email VARCHAR(100))");
-            stmt.execute("DELETE FROM USER");
+            stmt.execute("CREATE TABLE IF NOT EXISTS `User` (user_id VARCHAR(50) PRIMARY KEY, password VARCHAR(50), name VARCHAR(50), email VARCHAR(100))");
+            stmt.execute("DELETE FROM `USER`");
         }
 
         userAdapter = new UserAdapter(new UserDbServiceJdbc(dbConfig), new UserSessionService());

@@ -38,6 +38,7 @@ public enum MimeType {
     }
 
     public static MimeType fromExt(String ext) {
+        ext = ext.toLowerCase();
         for (MimeType mimeType : MimeType.values()) {
             if (ext.equals(mimeType.ext)) {
                 return mimeType;

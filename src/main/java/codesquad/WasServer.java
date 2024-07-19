@@ -22,6 +22,7 @@ import codesquad.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -86,6 +87,7 @@ public class WasServer {
             }
         }
         // 핸들러를 찾지 못한 경우 NOT FOUND 응답
+        logger.debug("No handler found for request: {}", httpRequest.getPath());
         return new HttpResponse.Builder(httpRequest, HttpStatus.FOUND)
                 .redirect("/exception/404.html")
                 .build();
@@ -126,7 +128,6 @@ public class WasServer {
     }
 
     private List<HttpHandler> initializeHandlers() {
-        UserDbServiceSpec userDbService = new UserDbServiceJdbc(dbConfig);
         List<String> whitelist = List.of(
                 "/",
                 "/registration",
@@ -136,8 +137,11 @@ public class WasServer {
                 "/login",
                 "/user/list"
         );
-
-        PostServiceSpec postService = new PostServiceJdbc(dbConfig);
+        String csvFilePath = System.getProperty("user.home")
+                + File.separator
+                + "database";
+        UserDbServiceSpec userDbService = new UserDbServiceCsv(csvFilePath + File.separator + "users.csv");
+        PostServiceSpec postService = new PostServiceCsv(csvFilePath + File.separator + "posts.csv");
 
         UserAdapter userAdapter = new UserAdapter(userDbService, userSessionService);
         PostAdapter postAdapter = new PostAdapter(postService);
