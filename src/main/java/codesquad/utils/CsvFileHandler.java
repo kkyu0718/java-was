@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CsvFileHandler {
+public class CsvFileHandler implements CsvFileHandlerSpec {
     private final String csvFilePath;
     private final String csvHeader;
 
@@ -54,6 +54,7 @@ public class CsvFileHandler {
         }
     }
 
+    @Override
     public List<String[]> readCsvFile() {
         List<String[]> records = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(csvFilePath))) {
@@ -79,6 +80,7 @@ public class CsvFileHandler {
         }
     }
 
+    @Override
     public void appendToCsvFile(String[] record) {
         try (FileWriter writer = new FileWriter(csvFilePath, true)) {
             writer.write(String.join(",", record) + System.lineSeparator());
