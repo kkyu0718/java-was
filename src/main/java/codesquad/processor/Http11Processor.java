@@ -156,26 +156,7 @@ public class Http11Processor implements HttpProcessor {
 
         return headers;
     }
-
-    /*
-
-   A recipient MUST parse an HTTP message as a sequence of octets in an
-   encoding that is a superset of US-ASCII [USASCII].  Parsing an HTTP
-   message as a stream of Unicode characters, without regard for the
-   specific encoding, creates security vulnerabilities due to the
-   varying ways that string processing libraries handle invalid
-   multibyte character sequences that contain the octet LF (%x0A).
-   String-based parsers can only be safely used within protocol elements
-   after the element has been extracted from the message, such as within
-   a header field-value after message parsing has delineated the
-   individual fields.
-
-   An HTTP message can be parsed as a stream for incremental processing
-   or forwarding downstream.  However, recipients cannot rely on
-   incremental delivery of partial messages, since some implementations
-   will buffer or delay message forwarding for the sake of network
-   efficiency, security checks, or payload transformations.
-     */
+    
     private HttpBody parseBody(InputStream is, HttpHeaders headers) throws IOException {
         if (!headers.contains(HttpHeaders.CONTENT_LENGTH)) {
             return HttpBody.empty();
