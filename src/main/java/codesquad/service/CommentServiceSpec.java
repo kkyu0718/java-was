@@ -11,4 +11,6 @@ public interface CommentServiceSpec {
     Comment getComment(Long id);
 
     List<Comment> getComments();
+
+    List<Comment> getCommentsByPostId(Long postId);
 }

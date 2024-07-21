@@ -1,5 +1,6 @@
 package codesquad;
 
+import codesquad.adapter.CommentAdapter;
 import codesquad.adapter.PostAdapter;
 import codesquad.adapter.UserAdapter;
 import codesquad.db.DbConfig;
@@ -142,14 +143,16 @@ public class WasServer {
                 + "database";
         UserDbServiceSpec userDbService = new UserDbServiceCsv(csvFilePath + File.separator + "users.csv");
         PostServiceSpec postService = new PostServiceCsv(csvFilePath + File.separator + "posts.csv");
+        CommentServiceSpec commentService = new CommentServiceCsv(csvFilePath + File.separator + "comments.csv");
 
         UserAdapter userAdapter = new UserAdapter(userDbService, userSessionService);
         PostAdapter postAdapter = new PostAdapter(postService);
+        CommentAdapter commentAdapter = new CommentAdapter(commentService, userDbService);
 
         return List.of(
-                new StaticFileHandler(userSessionService, userDbService, postService, new StaticFileReader(), new SystemFileReader()),
+                new StaticFileHandler(userSessionService, userDbService, postService, commentService, new StaticFileReader(), new SystemFileReader()),
                 new RedirectStaticFileHandler(whitelist),
-                new DynamicHandler(List.of(userAdapter, postAdapter))
+                new DynamicHandler(List.of(userAdapter, postAdapter, commentAdapter))
         );
     }
 }

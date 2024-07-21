@@ -17,16 +17,16 @@ public class CommentServiceCsv implements CommentServiceSpec {
     private final CsvFileHandler csvFileHandler;
 
     public CommentServiceCsv(String csvFilePath) {
-        this.csvFileHandler = new CsvFileHandler(csvFilePath, "commentId,userId,content" + StringUtils.LINE_SEPERATOR);
+        this.csvFileHandler = new CsvFileHandler(csvFilePath, "commentId,postId,userId,content" + StringUtils.LINE_SEPERATOR);
     }
 
     @Override
     public void createComment(CommentCreateDao dao) {
-        long nextId = getNextId();
-        Comment comment = new Comment(nextId, dao.getUserId(), dao.getContent());
+        int nextId = getNextId();
+        Comment comment = new Comment(nextId, dao.getPostId(), dao.getUserId(), dao.getContent());
 
         csvFileHandler.appendToCsvFile(new String[]{
-                String.valueOf(comment.getCommentId()), comment.getUserId(), comment.getContent()
+                String.valueOf(comment.getCommentId()), String.valueOf(comment.getPostId()), comment.getUserId(), comment.getContent()
         });
 
         logger.info("Comment created: {}", comment);
@@ -37,7 +37,7 @@ public class CommentServiceCsv implements CommentServiceSpec {
         List<String[]> records = csvFileHandler.readCsvFile();
         for (String[] values : records) {
             if (values[0].equals(id.toString())) {
-                return new Comment(Long.parseLong(values[0]), values[1], values[2]);
+                return new Comment(Integer.parseInt(values[0]), Integer.parseInt(values[1]), values[2], values[3]);
             }
         }
         throw new NotFoundException("Comment not found: " + id);
@@ -48,17 +48,29 @@ public class CommentServiceCsv implements CommentServiceSpec {
         List<Comment> comments = new ArrayList<>();
         List<String[]> records = csvFileHandler.readCsvFile();
         for (String[] values : records) {
-            comments.add(new Comment(Long.parseLong(values[0]), values[1], values[2]));
+            comments.add(new Comment(Integer.parseInt(values[0]), Integer.parseInt(values[1]), values[2], values[3]));
         }
         Collections.reverse(comments);
         return comments;
     }
 
-    private long getNextId() {
-        long maxId = 0;
+    @Override
+    public List<Comment> getCommentsByPostId(Long postId) {
+        List<Comment> comments = new ArrayList<>();
         List<String[]> records = csvFileHandler.readCsvFile();
         for (String[] values : records) {
-            long id = Long.parseLong(values[0]);
+            if (values[1].equals(postId.toString())) {
+                comments.add(new Comment(Integer.parseInt(values[0]), Integer.parseInt(values[1]), values[2], values[3]));
+            }
+        }
+        return comments;
+    }
+
+    private int getNextId() {
+        int maxId = 0;
+        List<String[]> records = csvFileHandler.readCsvFile();
+        for (String[] values : records) {
+            int id = Integer.parseInt(values[0]);
             if (id > maxId) {
                 maxId = id;
             }
