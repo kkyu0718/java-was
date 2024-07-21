@@ -39,7 +39,7 @@ public class CommentServiceCsvTest {
     @Test
     public void testCreateComment() {
         // Given
-        CommentCreateDao dao = new CommentCreateDao("user1", "첫번째 댓글 내용");
+        CommentCreateDao dao = new CommentCreateDao(1, "user1", "첫번째 댓글 내용");
 
         // When
         commentService.createComment(dao);
@@ -47,6 +47,7 @@ public class CommentServiceCsvTest {
         // Then
         List<Comment> comments = commentService.getComments();
         assertEquals(1, comments.size());
+        assertEquals(1, comments.get(0).getPostId());
         assertEquals("user1", comments.get(0).getUserId());
         assertEquals("첫번째 댓글 내용", comments.get(0).getContent());
     }
@@ -54,8 +55,8 @@ public class CommentServiceCsvTest {
     @Test
     public void testGetCommentById() {
         // Given
-        CommentCreateDao dao1 = new CommentCreateDao("user1", "첫번째 댓글 내용");
-        CommentCreateDao dao2 = new CommentCreateDao("user2", "두번째 댓글 내용");
+        CommentCreateDao dao1 = new CommentCreateDao(1, "user1", "첫번째 댓글 내용");
+        CommentCreateDao dao2 = new CommentCreateDao(1, "user2", "두번째 댓글 내용");
         commentService.createComment(dao1);
         commentService.createComment(dao2);
 
@@ -63,7 +64,8 @@ public class CommentServiceCsvTest {
         Comment comment = commentService.getComment(2L);
 
         // Then
-        assertEquals(2L, comment.getCommentId());
+        assertEquals(2, comment.getCommentId());
+        assertEquals(1, comment.getPostId());
         assertEquals("user2", comment.getUserId());
         assertEquals("두번째 댓글 내용", comment.getContent());
     }
@@ -71,7 +73,7 @@ public class CommentServiceCsvTest {
     @Test
     public void testGetCommentByIdNotFound() {
         // Given
-        CommentCreateDao dao = new CommentCreateDao("user1", "첫번째 댓글 내용");
+        CommentCreateDao dao = new CommentCreateDao(1, "user1", "첫번째 댓글 내용");
         commentService.createComment(dao);
 
         // When, Then
@@ -81,8 +83,8 @@ public class CommentServiceCsvTest {
     @Test
     public void testGetCommentsInReverseOrder() {
         // Given
-        CommentCreateDao dao1 = new CommentCreateDao("user1", "첫번째 댓글 내용");
-        CommentCreateDao dao2 = new CommentCreateDao("user2", "두번째 댓글 내용");
+        CommentCreateDao dao1 = new CommentCreateDao(1, "user1", "첫번째 댓글 내용");
+        CommentCreateDao dao2 = new CommentCreateDao(1, "user2", "두번째 댓글 내용");
         commentService.createComment(dao1);
         commentService.createComment(dao2);
 
@@ -91,11 +93,36 @@ public class CommentServiceCsvTest {
 
         // Then
         assertEquals(2, comments.size());
-        assertEquals(2L, comments.get(0).getCommentId());
+        assertEquals(2, comments.get(0).getCommentId());
+        assertEquals(1, comments.get(0).getPostId());
         assertEquals("user2", comments.get(0).getUserId());
         assertEquals("두번째 댓글 내용", comments.get(0).getContent());
-        assertEquals(1L, comments.get(1).getCommentId());
+        assertEquals(1, comments.get(1).getCommentId());
+        assertEquals(1, comments.get(1).getPostId());
         assertEquals("user1", comments.get(1).getUserId());
         assertEquals("첫번째 댓글 내용", comments.get(1).getContent());
+    }
+
+    @Test
+    public void testGetCommentsByPostId() {
+        // Given
+        CommentCreateDao dao1 = new CommentCreateDao(1, "user1", "첫번째 댓글 내용");
+        CommentCreateDao dao2 = new CommentCreateDao(2, "user2", "두번째 댓글 내용");
+        CommentCreateDao dao3 = new CommentCreateDao(1, "user3", "세번째 댓글 내용");
+        commentService.createComment(dao1);
+        commentService.createComment(dao2);
+        commentService.createComment(dao3);
+
+        // When
+        List<Comment> commentsForPost1 = commentService.getCommentsByPostId(1L);
+
+        // Then
+        assertEquals(2, commentsForPost1.size());
+        assertEquals(1, commentsForPost1.get(0).getPostId());
+        assertEquals("user1", commentsForPost1.get(0).getUserId());
+        assertEquals("첫번째 댓글 내용", commentsForPost1.get(0).getContent());
+        assertEquals(1, commentsForPost1.get(1).getPostId());
+        assertEquals("user3", commentsForPost1.get(1).getUserId());
+        assertEquals("세번째 댓글 내용", commentsForPost1.get(1).getContent());
     }
 }

@@ -1,13 +1,12 @@
 package codesquad.handler;
 
 import codesquad.db.DbConfig;
+import codesquad.exception.NotFoundException;
 import codesquad.http.*;
 import codesquad.model.User;
 import codesquad.reader.StaticFileReaderSpec;
-import codesquad.service.PostServiceJdbc;
-import codesquad.service.PostServiceSpec;
-import codesquad.service.UserDbServiceMemory;
-import codesquad.service.UserSessionService;
+import codesquad.service.*;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +20,7 @@ public class StaticFileHandlerTest {
     private StaticFileHandler staticFileHandler;
     private StaticFileReaderSpec staticFileReader;
     private UserSessionService userSessionService;
-    private UserDbServiceMemory userDbServiceMemory;
+    private UserDbServiceSpec userDbService;
     private PostServiceSpec postService;
 
     @BeforeEach
@@ -61,9 +60,10 @@ public class StaticFileHandlerTest {
 
         DbConfig dbConfig = new DbConfig("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1", "sa", "");
         userSessionService = new UserSessionService();
-        userDbServiceMemory = new UserDbServiceMemory();
-        postService = new PostServiceJdbc(dbConfig);
-        staticFileHandler = new StaticFileHandler(userSessionService, userDbServiceMemory, postService, staticFileReader);
+        userDbService = new UserDbServiceCsv("test.csv");
+        postService = new PostServiceCsv("post.csv");
+        CommentServiceCsv commentService = new CommentServiceCsv("test.csv");
+        staticFileHandler = new StaticFileHandler(userSessionService, userDbService, postService, commentService, staticFileReader);
     }
 
     @Test
@@ -84,11 +84,8 @@ public class StaticFileHandlerTest {
         // given
         HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/nonexistent.html", HttpVersion.HTTP11).build();
 
-        // when
-        HttpResponse response = staticFileHandler.handle(request);
-
-        // then
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatus());
+        // when, then
+        Assertions.assertThrows(NotFoundException.class, () -> staticFileHandler.handle(request));
     }
 
     @Test
@@ -108,7 +105,7 @@ public class StaticFileHandlerTest {
     public void 주어진_세션쿠키가_유효할때_인덱스페이지에_유저이름을_표시한다() {
         // given
         String sessionId = userSessionService.createSession("testuser");
-        userDbServiceMemory.add(User.of("testuser", "password", "테스트유저", "test@example.com"));
+        userDbService.add(User.of("testuser", "password", "테스트유저", "test@example.com"));
 
         HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/index.html", HttpVersion.HTTP11)
                 .cookie(new HttpCookie.Builder("sid", sessionId).build())
@@ -125,8 +122,8 @@ public class StaticFileHandlerTest {
     @Test
     public void 주어진_유저목록을_표시한다() {
         // given
-        userDbServiceMemory.add(User.of("user1", "password1", "유저1", "user1@example.com"));
-        userDbServiceMemory.add(User.of("user2", "password2", "유저2", "user2@example.com"));
+        userDbService.add(User.of("user1", "password1", "유저1", "user1@example.com"));
+        userDbService.add(User.of("user2", "password2", "유저2", "user2@example.com"));
 
         HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/user/list/index.html", HttpVersion.HTTP11).build();
 
