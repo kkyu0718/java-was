@@ -3,10 +3,12 @@ package codesquad.handler;
 import codesquad.exception.InternalServerError;
 import codesquad.exception.NotFoundException;
 import codesquad.http.*;
+import codesquad.model.Comment;
 import codesquad.model.Post;
 import codesquad.model.User;
 import codesquad.reader.StaticFileReaderSpec;
 import codesquad.render.TemplateEngine;
+import codesquad.service.CommentServiceSpec;
 import codesquad.service.PostServiceSpec;
 import codesquad.service.UserDbServiceSpec;
 import codesquad.service.UserSessionService;
@@ -24,16 +26,19 @@ public class StaticFileHandler implements HttpHandler {
     private final UserSessionService userSessionService;
     private final UserDbServiceSpec userDbService;
     private final PostServiceSpec postService;
-
+    private final CommentServiceSpec commentService;
 
     public StaticFileHandler(
             UserSessionService userSessionService,
             UserDbServiceSpec userDbService,
-            PostServiceSpec postService, StaticFileReaderSpec... staticFileReaders) {
+            PostServiceSpec postService,
+            CommentServiceSpec commentService,
+            StaticFileReaderSpec... staticFileReaders) {
         this.staticFileReaders = List.of(staticFileReaders);
         this.userSessionService = userSessionService;
         this.userDbService = userDbService;
         this.postService = postService;
+        this.commentService = commentService;
     }
 
     @Override
@@ -118,9 +123,10 @@ public class StaticFileHandler implements HttpHandler {
 
         for (Post post : posts) {
             User writer = userDbService.getUser(post.getUserId());
+            List<Comment> commentsByPostId = commentService.getCommentsByPostId(post.getId());
+
             html.append("<div class=\"post\">")
                     .append("<div class=\"post__account\">")
-//                    .append("<img class=\"post__account__img\" src=\"./img/default_profile.png\"/>")
                     .append("<p class=\"post__account__nickname\">").append(writer.getName()).append("</p>")
                     .append("</div>")
                     .append("<img class=\"post__img\" src=").append("\"").append(post.getImageUrl()).append("\"").append("/>")
@@ -131,12 +137,35 @@ public class StaticFileHandler implements HttpHandler {
                     .append("</ul>")
                     .append("<button class=\"post__menu__btn\"><img src=\"./img/bookMark.svg\"/></button>")
                     .append("</div>")
-                    .append("<p class=\"post__article\" id=\"post-article\">").append(post.getPostContent()).append("</p>")
+                    .append("<p class=\"post__article\" id=\"post-article\">").append(post.getPostContent()).append("</p>");
+
+            // 댓글 목록 추가
+            html.append("<div class=\"comments-section\">");
+            for (Comment comment : commentsByPostId) {
+                User commentUser = userDbService.getUser(comment.getUserId());
+                html.append("<div class=\"comment\">")
+                        .append("<div class=\"comment__header\">")
+                        .append("<p class=\"comment__user\">").append(commentUser.getName()).append("</p>")
+                        .append("</div>")
+                        .append("<p class=\"comment__content\">").append(comment.getContent()).append("</p>")
+                        .append("</div>");
+            }
+            html.append("</div>");
+
+            // 댓글 입력 폼 추가
+            String commentInputId = "comment-content-" + post.getId();
+            html.append("<div class=\"comment-form-container\">")
+                    .append("<form class=\"comment-form\" onsubmit=\"submitComment(event, ").append(post.getId()).append(", '").append(commentInputId).append("')\">")
+                    .append("<input id=\"").append(commentInputId).append("\" type=\"text\" class=\"comment-input\" placeholder=\"Add a comment...\"/>")
+                    .append("<button class=\"comment-submit\" type=\"submit\">Submit</button>")
+                    .append("</form>")
+                    .append("</div>")
                     .append("</div>");
         }
+
         return html.toString();
     }
-
+    
     private String loadFile(String path) {
         try {
             // 시스템 홈 경로와 static 폴더 경로 모두 탐색

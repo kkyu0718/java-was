@@ -45,7 +45,7 @@ public class DynamicHandler implements HttpHandler {
                         } catch (Exception e) {
                             // 예외 처리
                             e.printStackTrace();
-                            throw new InternalServerError("Internal Server Error");
+                            throw new InternalServerError("Internal Server Error " + e);
                         }
                     }
                 }

@@ -1,18 +1,24 @@
 package codesquad.model;
 
 public class Comment {
-    private Long commentId;
+    private Integer commentId;
+    private Integer postId;
     private String userId;
     private String content;
 
-    public Comment(Long commentId, String userId, String content) {
+    public Comment(Integer commentId, Integer postId, String userId, String content) {
         this.commentId = commentId;
+        this.postId = postId;
         this.userId = userId;
         this.content = content;
     }
 
-    public Long getCommentId() {
+    public Integer getCommentId() {
         return commentId;
+    }
+
+    public Integer getPostId() {
+        return postId;
     }
 
     public String getUserId() {
@@ -27,6 +33,7 @@ public class Comment {
     public String toString() {
         return "Comment{" +
                 "commentId=" + commentId +
+                ", postId=" + postId +
                 ", userId='" + userId + '\'' +
                 ", content='" + content + '\'' +
                 '}';

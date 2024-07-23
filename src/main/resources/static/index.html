@@ -25,6 +25,33 @@
     </div>
 </div>
 <script>
+    function submitComment(event, postId, inputId) {
+        event.preventDefault();
+        const commentContent = document.getElementById(inputId).value;
+        const data = new URLSearchParams();
+        data.append('content', commentContent);
+        data.append('postId', postId);
+
+        fetch('/comments', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: data.toString()
+        })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('댓글 작성에 실패했습니다.');
+                }
+            })
+            .catch(error => {
+                console.error('Error submitting comment:', error);
+                alert('댓글 작성 중 오류가 발생했습니다.');
+            });
+    }
+
     let currentPostId = 1; // 현재 보여지고 있는 post의 ID를 저장합니다. 초기 값은 임시로 1로 설정했습니다.
 
     document.getElementById('next-post-btn').addEventListener('click', function () {

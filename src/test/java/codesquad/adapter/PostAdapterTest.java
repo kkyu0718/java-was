@@ -45,7 +45,7 @@ class PostAdapterTest {
     @Test
     void createPost() throws Exception {
         // Given
-        String json = "{\"userId\":\"user1\", \"content\":\"Test content\"}";
+        String json = "{\"userId\":\"user1\", \"postContent\":\"Test content\", \"imageUrl\":\"\"test.png\"}";
         HttpRequest request = new HttpRequest.Builder(HttpMethod.POST, "/posts/create", HttpVersion.HTTP11)
                 .body(HttpBody.of(json.getBytes(), MimeType.APPLICATION_JSON))
                 .build();
