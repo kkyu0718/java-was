@@ -1,12 +1,17 @@
 package codesquad.handler;
 
+import codesquad.db.DbConfig;
+import codesquad.exception.NotFoundException;
 import codesquad.http.*;
 import codesquad.model.User;
 import codesquad.reader.StaticFileReaderSpec;
-import codesquad.service.UserDbService;
-import codesquad.service.UserSessionService;
+import codesquad.service.*;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 import static codesquad.resource.StaticResourceFactory.GUEST_GREETING;
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,7 +20,8 @@ public class StaticFileHandlerTest {
     private StaticFileHandler staticFileHandler;
     private StaticFileReaderSpec staticFileReader;
     private UserSessionService userSessionService;
-    private UserDbService userDbService;
+    private UserDbServiceSpec userDbService;
+    private PostServiceSpec postService;
 
     @BeforeEach
     public void setUp() {
@@ -30,10 +36,34 @@ public class StaticFileHandlerTest {
                     return "<html><body>File not found</body></html>";
                 }
             }
+
+            @Override
+            public boolean checkExistWithPrefix(String path) {
+                return path.equals("/index.html") || path.equals("/user/list/index.html");
+            }
+
+            @Override
+            public String readFileLinesWithPrefix(String path) throws IOException {
+                return readFileLines(path);
+            }
+
+            @Override
+            public byte[] readFileBytesWithPrefix(String path) throws IOException {
+                return readFileLines(path).getBytes();
+            }
+
+            @Override
+            public InputStream getResourceAsStream(String path) throws IOException {
+                return null;
+            }
         };
+
+        DbConfig dbConfig = new DbConfig("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1", "sa", "");
         userSessionService = new UserSessionService();
-        userDbService = new UserDbService();
-        staticFileHandler = new StaticFileHandler(staticFileReader, userSessionService, userDbService);
+        userDbService = new UserDbServiceCsv("test.csv");
+        postService = new PostServiceCsv("post.csv");
+        CommentServiceCsv commentService = new CommentServiceCsv("test.csv");
+        staticFileHandler = new StaticFileHandler(userSessionService, userDbService, postService, commentService, staticFileReader);
     }
 
     @Test
@@ -47,6 +77,15 @@ public class StaticFileHandlerTest {
         // then
         assertEquals(HttpStatus.OK, response.getStatus());
         assertNotNull(response.getBody());
+    }
+
+    @Test
+    public void 주어진_정적파일이_존재하지_않을때_404에러를_던진다() {
+        // given
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/nonexistent.html", HttpVersion.HTTP11).build();
+
+        // when, then
+        Assertions.assertThrows(NotFoundException.class, () -> staticFileHandler.handle(request));
     }
 
     @Test

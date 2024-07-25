@@ -109,12 +109,20 @@ public class HttpRequest {
     }
 
     public boolean isFilePath() {
-        return path.split("\\.").length == 2;
+        String[] split = path.split("\\.");
+        String ext = split[split.length - 1];
+        try {
+            MimeType.fromExt(ext);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
     public String getExt() {
         if (isFilePath()) {
-            return path.split("\\.")[1];
+            String[] split = path.split("\\.");
+            return split[split.length - 1];
         }
 
         throw new IllegalArgumentException("확장자가 존재하지 않습니다. " + path);
@@ -132,10 +140,10 @@ public class HttpRequest {
         sb.append("*headers*").append(StringUtils.LINE_SEPERATOR);
         sb.append(headers.toString());
 
-        if (!body.isEmpty()) {
-            sb.append("*body*").append(StringUtils.LINE_SEPERATOR);
-            sb.append(body);
-        }
+//        if (!body.isEmpty()) {
+//            sb.append("*body*").append(StringUtils.LINE_SEPERATOR);
+//            sb.append(body);
+//        }
 
         return sb.toString();
     }

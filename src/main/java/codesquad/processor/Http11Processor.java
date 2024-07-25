@@ -4,9 +4,7 @@ import codesquad.http.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
@@ -23,8 +21,8 @@ public class Http11Processor implements HttpProcessor {
 
      */
     @Override
-    public HttpRequest parseRequest(BufferedReader br) throws IOException {
-        String[] startLineSplits = parseStartLine(br);
+    public HttpRequest parseRequest(InputStream is) throws IOException {
+        String[] startLineSplits = parseStartLine(is);
 
         if (startLineSplits.length != 3) {
             throw new IllegalArgumentException("Invalid start line format");
@@ -36,13 +34,13 @@ public class Http11Processor implements HttpProcessor {
         URI url = URI.create(uri);
         HttpVersion httpVersion = HttpVersion.fromRepresentation(startLineSplits[2]);
 
-        HttpHeaders headers = parseHeaders(br);
+        HttpHeaders headers = parseHeaders(is);
         verifyMendatoryHeaders(headers);
 
         String query = url.getQuery();
         Parameters parameters = Parameters.of(query);
 
-        HttpBody httpBody = parseBody(br, headers);
+        HttpBody httpBody = parseBody(is, headers);
 
         HttpCookies cookies = new HttpCookies();
         // cookie 처리
@@ -72,13 +70,15 @@ public class Http11Processor implements HttpProcessor {
 
     @Override
     public void writeResponse(OutputStream os, HttpResponse response) throws IOException {
-        writeStatusLine(os, response);
-        writeHeaders(os, response);
-        os.write(LINE_SEPERATOR.getBytes());
+        try (BufferedOutputStream bos = new BufferedOutputStream(os)) {
+            writeStatusLine(os, response);
+            writeHeaders(os, response);
+            os.write(LINE_SEPERATOR.getBytes());
 
-        writeBody(os, response);
+            writeBody(os, response);
 
-        os.flush();
+            os.flush();
+        }
     }
 
     private void writeBody(OutputStream os, HttpResponse response) throws IOException {
@@ -112,43 +112,52 @@ public class Http11Processor implements HttpProcessor {
         os.write(sb.toString().getBytes());
     }
 
-    private HttpHeaders parseHeaders(BufferedReader br) throws IOException {
-        HttpHeaders headers = new HttpHeaders();
-        String line;
+    private HttpHeaders parseHeaders(InputStream is) throws IOException {
         String headerPattern = "^[\\w-]+:\\s*.*\\s*$"; // 정규 표현식 패턴
 
-        //header-field   = field-name ":" OWS field-value OWS
-        while (!(line = br.readLine()).isEmpty()) {
-            if (!line.matches(headerPattern)) {
-                throw new IllegalArgumentException("Invalid header field format: " + line);
+
+        HttpHeaders headers = new HttpHeaders();
+        StringBuilder buffer = new StringBuilder();
+        int ch;
+        boolean isEndOfHeaders = false;
+
+        while (!isEndOfHeaders && (ch = is.read()) != -1) {
+            if (ch == '\r') {
+                ch = is.read();
+                if (ch == '\n') {
+                    if (buffer.length() == 0) {
+                        isEndOfHeaders = true;
+                    } else {
+                        String headerLine = buffer.toString().trim();
+                        //header-field   = field-name ":" OWS field-value OWS
+                        if (!headerLine.matches(headerPattern)) {
+                            throw new IllegalArgumentException("Invalid header field format: " + headerLine);
+                        }
+                        int colonIndex = headerLine.indexOf(':');
+                        if (colonIndex > 0) {
+                            String key = headerLine.substring(0, colonIndex).trim();
+                            String value = headerLine.substring(colonIndex + 1).trim();
+                            headers.put(key, value);
+                        } else {
+                            throw new IllegalArgumentException("Invalid header field format: " + headerLine);
+                        }
+                        buffer.setLength(0);
+                    }
+                } else {
+                    buffer.append('\r');
+                    if (ch != -1) {
+                        buffer.append((char) ch);
+                    }
+                }
+            } else {
+                buffer.append((char) ch);
             }
-            String[] headerSplits = line.split(":", 2);
-            headers.put(headerSplits[0], headerSplits[1].trim());
         }
 
         return headers;
     }
-
-    /*
-
-   A recipient MUST parse an HTTP message as a sequence of octets in an
-   encoding that is a superset of US-ASCII [USASCII].  Parsing an HTTP
-   message as a stream of Unicode characters, without regard for the
-   specific encoding, creates security vulnerabilities due to the
-   varying ways that string processing libraries handle invalid
-   multibyte character sequences that contain the octet LF (%x0A).
-   String-based parsers can only be safely used within protocol elements
-   after the element has been extracted from the message, such as within
-   a header field-value after message parsing has delineated the
-   individual fields.
-
-   An HTTP message can be parsed as a stream for incremental processing
-   or forwarding downstream.  However, recipients cannot rely on
-   incremental delivery of partial messages, since some implementations
-   will buffer or delay message forwarding for the sake of network
-   efficiency, security checks, or payload transformations.
-     */
-    private HttpBody parseBody(BufferedReader br, HttpHeaders headers) throws IOException {
+    
+    private HttpBody parseBody(InputStream is, HttpHeaders headers) throws IOException {
         if (!headers.contains(HttpHeaders.CONTENT_LENGTH)) {
             return HttpBody.empty();
         }
@@ -162,19 +171,35 @@ public class Http11Processor implements HttpProcessor {
 
         MimeType mimeType = MimeType.fromMimeType(contentType);
 
-        char[] bodyChars = new char[contentLength];
-        int read = br.read(bodyChars, 0, contentLength);
-
-        if (read != contentLength) {
-            throw new IOException("Expected " + contentLength + " bytes but read " + read + " bytes.");
+        byte[] bodyBytes = new byte[contentLength];
+        int totalRead = 0;
+        while (totalRead < contentLength) {
+            int read = is.read(bodyBytes, totalRead, contentLength - totalRead);
+            if (read == -1) {
+                break;
+            }
+            totalRead += read;
         }
 
-        return HttpBody.of(new String(bodyChars).getBytes(StandardCharsets.US_ASCII), mimeType);
+        if (totalRead != contentLength) {
+            throw new IOException("Expected " + contentLength + " bytes but read " + totalRead + " bytes.");
+        }
+
+        return HttpBody.of(bodyBytes, mimeType);
     }
 
-    private String[] parseStartLine(BufferedReader br) throws IOException {
-        String startLine = br.readLine();
-        if (startLine == null || startLine.trim().isEmpty()) {
+    private String[] parseStartLine(InputStream is) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        int previous = 0, current;
+        while ((current = is.read()) != -1) {
+            if (previous == '\r' && current == '\n') {
+                break;
+            }
+            buffer.write(current);
+            previous = current;
+        }
+        String startLine = new String(buffer.toByteArray(), StandardCharsets.UTF_8).trim();
+        if (startLine.isEmpty()) {
             throw new IllegalArgumentException("Invalid start line: " + startLine);
         }
         return startLine.split(" ");

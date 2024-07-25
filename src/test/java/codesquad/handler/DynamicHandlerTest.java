@@ -1,6 +1,9 @@
 package codesquad.handler;
 
 import codesquad.adapter.Adapter;
+import codesquad.annotation.RequestMapping;
+import codesquad.exception.MethodNotAllowedException;
+import codesquad.exception.NotFoundException;
 import codesquad.http.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +22,11 @@ class DynamicHandlerTest {
             public boolean supports(String path) {
                 return path.equals("/exist");
             }
+
+            @RequestMapping(path = "/exist", method = HttpMethod.GET)
+            public HttpResponse handle(HttpRequest request) {
+                return new HttpResponse.Builder(request, HttpStatus.OK).build();
+            }
         }));
     }
 
@@ -35,8 +43,7 @@ class DynamicHandlerTest {
     void DynamicHandler가_주어지고_존재하지않는_어댑터에_대한_요청이_주어졌을때_404응답을_준다() {
         HttpRequest request = new HttpRequest.Builder(HttpMethod.GET, "/non-existent", HttpVersion.HTTP11).build();
 
-        HttpResponse response = handler.handle(request);
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatus());
+        assertThrows(NotFoundException.class, () -> handler.handle(request));
     }
 
     @Test
@@ -48,5 +55,12 @@ class DynamicHandlerTest {
         // 지원하지 않는 경로에 대한 요청
         HttpRequest unsupportedRequest = new HttpRequest.Builder(HttpMethod.GET, "/non-existent", HttpVersion.HTTP11).build();
         assertFalse(handler.canHandle(unsupportedRequest));
+    }
+
+    @Test
+    void DynamicHandler가_주어지고_존재하지않는_메소드에_대한_요청이_주어졌을때_405응답을_준다() {
+        HttpRequest request = new HttpRequest.Builder(HttpMethod.POST, "/exist", HttpVersion.HTTP11).build();
+
+        assertThrows(MethodNotAllowedException.class, () -> handler.handle(request));
     }
 }

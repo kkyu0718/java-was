@@ -50,7 +50,8 @@ public class SessionFilter implements Filter {
             ".woff2",
             ".ttf",
             ".eot",
-            ".ico");
+            ".ico",
+            ".html");
 
     @Override
     public HttpResponse doFilter(HttpRequest request, FilterChain chain) {

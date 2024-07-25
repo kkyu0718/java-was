@@ -9,12 +9,12 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class UserDbServiceTest {
-    private UserDbService userDbService;
+public class UserDbServiceMemoryTest {
+    private UserDbServiceMemory userDbServiceMemory;
 
     @BeforeEach
     public void setUp() {
-        userDbService = new UserDbService();
+        userDbServiceMemory = new UserDbServiceMemory();
         UserDb.refresh();
     }
 
@@ -24,22 +24,22 @@ public class UserDbServiceTest {
         User user = User.of("user1", "password1", "User One", "user1@example.com");
 
         // when
-        userDbService.add(user);
+        userDbServiceMemory.add(user);
 
         // then
-        assertTrue(userDbService.exists("user1"));
-        assertEquals(user, userDbService.getUser("user1"));
+        assertTrue(userDbServiceMemory.exists("user1"));
+        assertEquals(user, userDbServiceMemory.getUser("user1"));
     }
 
     @Test
     public void 주어진_중복된유저가_있을때_예외를_발생시킨다() {
         // given
         User user = User.of("user1", "password1", "User One", "user1@example.com");
-        userDbService.add(user);
+        userDbServiceMemory.add(user);
 
         // when
         // then
-        assertThrows(IllegalArgumentException.class, () -> userDbService.add(user));
+        assertThrows(IllegalArgumentException.class, () -> userDbServiceMemory.add(user));
     }
 
     @Test
@@ -47,11 +47,11 @@ public class UserDbServiceTest {
         // given
         User user1 = User.of("user1", "password1", "User One", "user1@example.com");
         User user2 = User.of("user2", "password2", "User Two", "user2@example.com");
-        userDbService.add(user1);
-        userDbService.add(user2);
+        userDbServiceMemory.add(user1);
+        userDbServiceMemory.add(user2);
 
         // when
-        List<User> users = userDbService.getUsers();
+        List<User> users = userDbServiceMemory.getUsers();
 
         // then
         assertEquals(2, users.size());
@@ -65,7 +65,7 @@ public class UserDbServiceTest {
         String nonExistentUserId = "nonexistent";
 
         // when
-        User user = userDbService.getUser(nonExistentUserId);
+        User user = userDbServiceMemory.getUser(nonExistentUserId);
 
         // then
         assertNull(user);
@@ -75,10 +75,10 @@ public class UserDbServiceTest {
     public void 유저가_존재하는지_확인한다() {
         // given
         User user = User.of("user1", "password1", "User One", "user1@example.com");
-        userDbService.add(user);
+        userDbServiceMemory.add(user);
 
         // when
-        boolean exists = userDbService.exists("user1");
+        boolean exists = userDbServiceMemory.exists("user1");
 
         // then
         assertTrue(exists);
@@ -90,7 +90,7 @@ public class UserDbServiceTest {
         String nonExistentUserId = "nonexistent";
 
         // when
-        boolean exists = userDbService.exists(nonExistentUserId);
+        boolean exists = userDbServiceMemory.exists(nonExistentUserId);
 
         // then
         assertFalse(exists);
